@@ -6,6 +6,10 @@ export const trafficSimulationConfig = {
   requestsPerUserPerSecond: 0.1,
 } as const
 
+export const simulationSpeedOptions = [0, 1, 2, 4] as const
+export type SimulationSpeed = (typeof simulationSpeedOptions)[number]
+export const defaultSimulationSpeed: SimulationSpeed = 1
+
 export const appServerSimulationConfig = {
   elevatedCpuThreshold: 60,
   highCpuThreshold: 80,

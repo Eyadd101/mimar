@@ -43,9 +43,21 @@ export function createInitialTrafficState(): TrafficSimulationState {
 
 export function advanceTrafficSimulation(
   currentState: TrafficSimulationState,
+  elapsedGameSeconds = 1,
 ): TrafficSimulationState {
-  const gameTimeSeconds =
-    currentState.gameTimeSeconds + trafficSimulationConfig.tickIntervalMs / 1_000
+  let simulation = currentState
+
+  for (let elapsed = 0; elapsed < elapsedGameSeconds; elapsed += 1) {
+    simulation = advanceOneGameSecond(simulation)
+  }
+
+  return simulation
+}
+
+function advanceOneGameSecond(
+  currentState: TrafficSimulationState,
+): TrafficSimulationState {
+  const gameTimeSeconds = currentState.gameTimeSeconds + 1
   const completedGrowthIntervals = Math.floor(
     gameTimeSeconds / trafficSimulationConfig.activeUserGrowthIntervalSeconds,
   )
@@ -58,7 +70,7 @@ export function advanceTrafficSimulation(
   const satisfaction = advanceCustomerSatisfaction(
     currentState,
     appServer.latencyMs,
-    trafficSimulationConfig.tickIntervalMs / 1_000,
+    1,
   )
 
   return {

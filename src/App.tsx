@@ -10,9 +10,10 @@ import {
 import '@xyflow/react/dist/style.css'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
+import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
-import { useTrafficSimulation } from './hooks/useTrafficSimulation'
+import { useGameSimulation } from './hooks/useGameSimulation'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -21,7 +22,7 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const traffic = useTrafficSimulation()
+  const { simulation: traffic, gameSpeed, setGameSpeed } = useGameSimulation()
   const displayNodes = useMemo(
     () =>
       nodes.map((node) =>
@@ -103,6 +104,10 @@ function App() {
 
       <footer className="game-footer">
         <p><span className="hint-dot" aria-hidden="true" />Drag nodes to rearrange<span className="secondary-hint"> · Scroll to zoom · Drag canvas to pan</span></p>
+        <SimulationSpeedControls
+          gameSpeed={gameSpeed}
+          onSpeedChange={setGameSpeed}
+        />
         <p className="graph-count">3 nodes <span>/</span> 2 connections</p>
       </footer>
     </main>

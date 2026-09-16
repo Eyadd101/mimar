@@ -497,6 +497,41 @@
   color: #53665a;
 }
 
+.speed-controls {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #34443b;
+  border-radius: 6px;
+  background: #17201c;
+}
+
+.speed-controls__button {
+  min-width: 34px;
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-right: 1px solid #34443b;
+  color: #82958a;
+  background: transparent;
+  font: 9px var(--mono);
+  cursor: pointer;
+}
+
+.speed-controls__button:last-child {
+  border-right: 0;
+}
+
+.speed-controls__button:hover {
+  color: #dce8e1;
+  background: #202c26;
+}
+
+.speed-controls__button[aria-pressed='true'] {
+  color: #b8e8c4;
+  background: #263a2e;
+}
+
 @media (max-width: 640px) {
   .game-header,
   .game-footer {
@@ -553,6 +588,15 @@
   .game-footer {
     gap: 12px;
     font-size: 10px;
+  }
+
+  .graph-count {
+    display: none;
+  }
+
+  .speed-controls__button {
+    min-width: 30px;
+    padding-inline: 7px;
   }
 }
 
