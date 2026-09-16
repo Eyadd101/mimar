@@ -80,9 +80,13 @@
   color: var(--accent);
 }
 
+.traffic-hud-shell {
+  position: relative;
+}
+
 .traffic-hud {
   display: grid;
-  grid-template-columns: repeat(4, minmax(84px, 1fr));
+  grid-template-columns: repeat(5, minmax(80px, 1fr));
   margin: 0;
   overflow: hidden;
   border: 1px solid #35463c;
@@ -115,6 +119,24 @@
   color: #d9e8df;
   font: 13px var(--mono);
   font-variant-numeric: tabular-nums;
+}
+
+.traffic-hud__notice {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  z-index: 5;
+  width: max-content;
+  max-width: min(460px, calc(100vw - 40px));
+  padding: 8px 11px;
+  border: 1px solid #6a4b42;
+  border-radius: 6px;
+  color: #e4b2a3;
+  background: #251b18ee;
+  box-shadow: 0 10px 30px #00000040;
+  font-size: 10px;
+  text-align: center;
+  transform: translateX(-50%);
 }
 
 .canvas {
@@ -494,14 +516,26 @@
     display: none;
   }
 
-  .traffic-hud {
+  .traffic-hud-shell {
     grid-row: 2;
     grid-column: 1 / -1;
     width: 100%;
   }
 
+  .traffic-hud {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+  }
+
   .traffic-hud__metric {
+    padding-inline: 4px;
     padding-block: 5px;
+  }
+
+  .traffic-hud dt {
+    overflow: hidden;
+    font-size: 7px;
+    text-overflow: ellipsis;
   }
 
   .canvas-heading {

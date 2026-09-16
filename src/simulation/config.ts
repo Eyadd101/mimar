@@ -30,3 +30,10 @@ export const latencySimulationConfig = {
   nearCapacityPenaltyMs: 280,
   overloadPenaltyMsPerUtilization: 1_200,
 } as const
+
+export const customerSatisfactionConfig = {
+  initialSatisfaction: 100,
+  badLatencyThresholdMs: 400,
+  sustainedBadLatencySeconds: 10,
+  satisfactionDecreasePerSecond: 0.25,
+} as const

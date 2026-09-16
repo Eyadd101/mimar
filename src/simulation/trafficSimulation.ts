@@ -3,8 +3,13 @@ import {
   calculateAppServerMetrics,
   type AppServerMetrics,
 } from './appServerSimulation'
+import {
+  advanceCustomerSatisfaction,
+  createInitialCustomerSatisfactionState,
+  type CustomerSatisfactionState,
+} from './customerSatisfactionSimulation'
 
-export type TrafficSimulationState = {
+export type TrafficSimulationState = CustomerSatisfactionState & {
   activeUsers: number
   requestsPerSecond: number
   gameTimeSeconds: number
@@ -32,6 +37,7 @@ export function createInitialTrafficState(): TrafficSimulationState {
     requestsPerSecond,
     gameTimeSeconds: 0,
     appServer: calculateAppServerMetrics(requestsPerSecond),
+    ...createInitialCustomerSatisfactionState(),
   }
 }
 
@@ -48,11 +54,18 @@ export function advanceTrafficSimulation(
     completedGrowthIntervals *
       trafficSimulationConfig.activeUsersAddedPerInterval
   const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
+  const appServer = calculateAppServerMetrics(requestsPerSecond)
+  const satisfaction = advanceCustomerSatisfaction(
+    currentState,
+    appServer.latencyMs,
+    trafficSimulationConfig.tickIntervalMs / 1_000,
+  )
 
   return {
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds,
-    appServer: calculateAppServerMetrics(requestsPerSecond),
+    appServer,
+    ...satisfaction,
   }
 }

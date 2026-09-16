@@ -57,6 +57,8 @@ function App() {
           activeUsers={traffic.activeUsers}
           requestsPerSecond={traffic.requestsPerSecond}
           latencyMs={traffic.appServer.latencyMs}
+          customerSatisfaction={traffic.customerSatisfaction}
+          satisfactionReason={traffic.satisfactionReason}
           gameTimeSeconds={traffic.gameTimeSeconds}
         />
         <span className="prototype-badge">Prototype <span>01</span></span>
