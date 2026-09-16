@@ -6,8 +6,7 @@ export type CustomerSatisfactionState = {
   satisfactionReason: string | null
 }
 
-const satisfactionDecreaseReason =
-  'Customer satisfaction decreased because latency remained above 400 ms.'
+const satisfactionDecreaseReason = `Customer satisfaction decreased because latency remained above ${customerSatisfactionConfig.badLatencyThresholdMs} ms.`
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(Math.max(value, minimum), maximum)

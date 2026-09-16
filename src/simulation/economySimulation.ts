@@ -17,3 +17,7 @@ export function canAffordCost(balance: number, cost: number) {
 export function deductCost(balance: number, cost: number) {
   return canAffordCost(balance, cost) ? balance - cost : balance
 }
+
+export function deductInfrastructureCost(balance: number, cost: number) {
+  return Math.max(balance - cost, 0)
+}

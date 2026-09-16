@@ -17,6 +17,7 @@ import {
   canAffordCost,
   createInitialEconomyState,
   deductCost,
+  deductInfrastructureCost,
   type EconomyState,
 } from './economySimulation'
 
@@ -145,6 +146,14 @@ function advanceOneGameSecond(
     ? null
     : currentState.serverDeployment
   const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
+  const infrastructureCostIsDue =
+    gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
+  const balance = infrastructureCostIsDue
+    ? deductInfrastructureCost(
+        currentState.balance,
+        appServer.costPerPeriod,
+      )
+    : currentState.balance
   const satisfaction = advanceCustomerSatisfaction(
     currentState,
     appServer.latencyMs,
@@ -155,7 +164,7 @@ function advanceOneGameSecond(
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds,
-    balance: currentState.balance,
+    balance,
     appServer,
     serverDeployment,
     ...satisfaction,
