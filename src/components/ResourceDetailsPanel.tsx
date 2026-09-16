@@ -76,6 +76,10 @@ export function ResourceDetailsPanel({
             <dd>{simulation.appServer.memoryUsage.toFixed(1)}%</dd>
           </div>
           <div>
+            <dt>Latency</dt>
+            <dd>{simulation.appServer.latencyMs} ms</dd>
+          </div>
+          <div>
             <dt>Status</dt>
             <dd data-status={simulation.appServer.status}>
               {formatStatus(simulation.appServer.status)}

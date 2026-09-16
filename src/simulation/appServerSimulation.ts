@@ -1,6 +1,7 @@
 import {
   appServerResourceConfig,
   appServerSimulationConfig,
+  latencySimulationConfig,
 } from './config'
 
 export type AppServerStatus =
@@ -14,6 +15,7 @@ export type AppServerMetrics = {
   utilizationRatio: number
   cpuUsage: number
   memoryUsage: number
+  latencyMs: number
   isOverloaded: boolean
   status: AppServerStatus
 }
@@ -22,6 +24,35 @@ const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(Math.max(value, minimum), maximum)
 
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
+
+/**
+ * Latency adds a small linear load cost, a quadratic penalty from 70% to
+ * 100% utilization, and a steep linear penalty for traffic above capacity.
+ */
+export function calculateLatencyMs(utilizationRatio: number) {
+  const {
+    baseLatencyMs,
+    loadLatencyAtCapacityMs,
+    nearCapacityStartRatio,
+    nearCapacityPenaltyMs,
+    overloadPenaltyMsPerUtilization,
+  } = latencySimulationConfig
+  const boundedUtilization = clamp(utilizationRatio, 0, 1)
+  const nearCapacityFactor = clamp(
+    (utilizationRatio - nearCapacityStartRatio) /
+      (1 - nearCapacityStartRatio),
+    0,
+    1,
+  )
+  const overloadRatio = Math.max(utilizationRatio - 1, 0)
+
+  return Math.round(
+    baseLatencyMs +
+      loadLatencyAtCapacityMs * boundedUtilization +
+      nearCapacityPenaltyMs * nearCapacityFactor ** 2 +
+      overloadPenaltyMsPerUtilization * overloadRatio,
+  )
+}
 
 /**
  * CPU usage is the share of request capacity currently in use:
@@ -54,6 +85,7 @@ export function calculateAppServerMetrics(
       100,
     ),
   )
+  const latencyMs = calculateLatencyMs(utilizationRatio)
 
   let status: AppServerStatus = 'normal'
 
@@ -70,6 +102,7 @@ export function calculateAppServerMetrics(
     utilizationRatio,
     cpuUsage,
     memoryUsage,
+    latencyMs,
     isOverloaded,
     status,
   }

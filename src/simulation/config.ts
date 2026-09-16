@@ -22,3 +22,11 @@ export const appServerResourceConfig = {
   costPerPeriod: 8,
   costPeriodSeconds: 60,
 } as const
+
+export const latencySimulationConfig = {
+  baseLatencyMs: 80,
+  loadLatencyAtCapacityMs: 40,
+  nearCapacityStartRatio: 0.7,
+  nearCapacityPenaltyMs: 280,
+  overloadPenaltyMsPerUtilization: 1_200,
+} as const

@@ -53,7 +53,12 @@ function App() {
           <span className="brand-divider" aria-hidden="true" />
           <span className="header-caption">Infrastructure playground</span>
         </div>
-        <TrafficHud {...traffic} />
+        <TrafficHud
+          activeUsers={traffic.activeUsers}
+          requestsPerSecond={traffic.requestsPerSecond}
+          latencyMs={traffic.appServer.latencyMs}
+          gameTimeSeconds={traffic.gameTimeSeconds}
+        />
         <span className="prototype-badge">Prototype <span>01</span></span>
       </header>
 

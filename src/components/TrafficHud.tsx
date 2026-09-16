@@ -1,4 +1,9 @@
-import type { TrafficSimulationState } from '../simulation/trafficSimulation'
+type TrafficHudProps = {
+  activeUsers: number
+  requestsPerSecond: number
+  latencyMs: number
+  gameTimeSeconds: number
+}
 
 function formatGameTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60)
@@ -10,8 +15,9 @@ function formatGameTime(totalSeconds: number) {
 export function TrafficHud({
   activeUsers,
   requestsPerSecond,
+  latencyMs,
   gameTimeSeconds,
-}: TrafficSimulationState) {
+}: TrafficHudProps) {
   return (
     <dl className="traffic-hud" aria-label="Traffic simulation">
       <div className="traffic-hud__metric">
@@ -21,6 +27,10 @@ export function TrafficHud({
       <div className="traffic-hud__metric">
         <dt>Requests/sec</dt>
         <dd>{requestsPerSecond.toFixed(1)}</dd>
+      </div>
+      <div className="traffic-hud__metric">
+        <dt>Latency</dt>
+        <dd>{latencyMs} ms</dd>
       </div>
       <div className="traffic-hud__metric">
         <dt>Game Time</dt>
