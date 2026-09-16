@@ -11,7 +11,9 @@ export type AppServerStatus =
 
 export type AppServerMetrics = {
   requestCapacity: number
+  utilizationRatio: number
   cpuUsage: number
+  memoryUsage: number
   isOverloaded: boolean
   status: AppServerStatus
 }
@@ -30,10 +32,27 @@ export function calculateAppServerMetrics(
   requestsPerSecond: number,
 ): AppServerMetrics {
   const { requestCapacity } = appServerResourceConfig
-  const { elevatedCpuThreshold, highCpuThreshold } = appServerSimulationConfig
+  const {
+    elevatedCpuThreshold,
+    highCpuThreshold,
+    baselineMemoryUsage,
+    memoryLoadAtCapacity,
+  } = appServerSimulationConfig
+  const utilizationRatio = requestsPerSecond / requestCapacity
   const isOverloaded = requestsPerSecond > requestCapacity
   const cpuUsage = roundToOneDecimal(
-    clamp((requestsPerSecond / requestCapacity) * 100, 0, 100),
+    clamp(utilizationRatio * 100, 0, 100),
+  )
+  /**
+   * Memory has a fixed application footprint plus a load-sensitive portion:
+   * memoryUsage = baselineMemoryUsage + utilizationRatio * memoryLoadAtCapacity
+   */
+  const memoryUsage = roundToOneDecimal(
+    clamp(
+      baselineMemoryUsage + utilizationRatio * memoryLoadAtCapacity,
+      0,
+      100,
+    ),
   )
 
   let status: AppServerStatus = 'normal'
@@ -48,7 +67,9 @@ export function calculateAppServerMetrics(
 
   return {
     requestCapacity,
+    utilizationRatio,
     cpuUsage,
+    memoryUsage,
     isOverloaded,
     status,
   }

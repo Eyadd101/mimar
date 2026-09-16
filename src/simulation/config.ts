@@ -9,6 +9,8 @@ export const trafficSimulationConfig = {
 export const appServerSimulationConfig = {
   elevatedCpuThreshold: 60,
   highCpuThreshold: 80,
+  baselineMemoryUsage: 30,
+  memoryLoadAtCapacity: 55,
 } as const
 
 export const appServerResourceConfig = {
