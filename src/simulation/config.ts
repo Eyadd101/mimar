@@ -5,3 +5,9 @@ export const trafficSimulationConfig = {
   activeUsersAddedPerInterval: 1,
   requestsPerUserPerSecond: 0.1,
 } as const
+
+export const appServerSimulationConfig = {
+  requestCapacity: 6,
+  elevatedCpuThreshold: 60,
+  highCpuThreshold: 80,
+} as const

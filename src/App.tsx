@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Background,
   BackgroundVariant,
@@ -19,6 +20,21 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const traffic = useTrafficSimulation()
+  const displayNodes = useMemo(
+    () =>
+      nodes.map((node) =>
+        node.id === 'server'
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                appServerMetrics: traffic.appServer,
+              },
+            }
+          : node,
+      ),
+    [nodes, traffic.appServer],
+  )
 
   return (
     <main className="game">
@@ -40,7 +56,7 @@ function App() {
 
       <section className="canvas" aria-label="Infrastructure canvas">
         <ReactFlow
-          nodes={nodes}
+          nodes={displayNodes}
           edges={initialEdges}
           onNodesChange={onNodesChange}
           nodeTypes={nodeTypes}

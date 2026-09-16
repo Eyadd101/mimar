@@ -1,10 +1,12 @@
 import { MarkerType, type Edge, type Node } from '@xyflow/react'
+import type { AppServerMetrics } from '../simulation/appServerSimulation'
 
 export type InfrastructureNodeData = {
   label: string
   kind: 'users' | 'server' | 'database'
   description: string
   number: string
+  appServerMetrics?: AppServerMetrics
 }
 
 export type InfrastructureFlowNode = Node<InfrastructureNodeData, 'infrastructure'>

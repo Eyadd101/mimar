@@ -10,6 +10,13 @@ const roleLabels: Record<InfrastructureNodeData['kind'], string> = {
   database: 'STORAGE',
 }
 
+const statusLabels = {
+  normal: 'Normal',
+  elevated: 'Elevated',
+  high: 'High',
+  overloaded: 'Overloaded',
+} as const
+
 function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
   return (
     <svg
@@ -61,6 +68,33 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
       </div>
       <h2 className="node-label">{data.label}</h2>
       <p className="node-description">{data.description}</p>
+      {data.kind === 'server' && data.appServerMetrics && (
+        <div
+          className="server-cpu"
+          data-status={data.appServerMetrics.status}
+        >
+          <div className="server-cpu__summary">
+            <span>CPU</span>
+            <strong>{data.appServerMetrics.cpuUsage.toFixed(1)}%</strong>
+          </div>
+          <div
+            className="server-cpu__track"
+            role="progressbar"
+            aria-label="App Server CPU usage"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={data.appServerMetrics.cpuUsage}
+          >
+            <span
+              className="server-cpu__fill"
+              style={{ width: `${data.appServerMetrics.cpuUsage}%` }}
+            />
+          </div>
+          <span className="server-cpu__status">
+            {statusLabels[data.appServerMetrics.status]}
+          </span>
+        </div>
+      )}
       <div className="node-footer">
         <span>{roleLabels[data.kind]}</span>
         <svg
