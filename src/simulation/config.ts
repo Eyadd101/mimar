@@ -46,6 +46,10 @@ export const serverUpgradeConfig = {
   deploymentDurationSeconds: 30,
 } as const
 
+export const economyConfig = {
+  initialBalance: 500,
+} as const
+
 export const latencySimulationConfig = {
   baseLatencyMs: 80,
   loadLatencyAtCapacityMs: 40,

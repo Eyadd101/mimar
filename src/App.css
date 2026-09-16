@@ -86,7 +86,7 @@
 
 .traffic-hud {
   display: grid;
-  grid-template-columns: repeat(5, minmax(80px, 1fr));
+  grid-template-columns: repeat(7, minmax(72px, 1fr));
   margin: 0;
   overflow: hidden;
   border: 1px solid #35463c;
@@ -181,11 +181,14 @@
 
 .resource-panel-position {
   margin: 28px;
+  max-height: calc(100% - 56px);
 }
 
 .resource-panel {
   width: min(320px, calc(100vw - 40px));
-  overflow: hidden;
+  max-height: inherit;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #3a4841;
   border-radius: 12px;
   background: #18211d;
@@ -242,7 +245,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-block: 10px;
+  padding-block: 7px;
   border-bottom: 1px solid #2b3731;
 }
 
@@ -335,6 +338,13 @@
 .resource-panel__upgrade-button:hover {
   border-color: #71957d;
   background: #2d4636;
+}
+
+.resource-panel__upgrade-button:disabled {
+  border-color: #3b4740;
+  color: #748278;
+  background: #202823;
+  cursor: not-allowed;
 }
 
 .deployment-progress {
@@ -597,6 +607,35 @@
   background: #263a2e;
 }
 
+@media (max-width: 1100px) {
+  .game-header {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    height: 108px;
+    padding-block: 10px;
+  }
+
+  .header-caption,
+  .brand-divider {
+    display: none;
+  }
+
+  .traffic-hud-shell {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .traffic-hud {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .traffic-hud__metric {
+    padding-block: 5px;
+  }
+}
+
 @media (max-width: 640px) {
   .game-header,
   .game-footer {
@@ -606,7 +645,7 @@
   .game-header {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    height: 104px;
+    height: 148px;
     padding-block: 10px;
   }
 
@@ -623,7 +662,7 @@
   }
 
   .traffic-hud {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
   }
 
@@ -644,6 +683,7 @@
 
   .resource-panel-position {
     margin: 16px;
+    max-height: calc(100% - 32px);
   }
 
   .canvas .react-flow__controls {

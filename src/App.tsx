@@ -14,6 +14,7 @@ import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
 import { useGameSimulation } from './hooks/useGameSimulation'
+import { appServerResourceConfig } from './simulation/config'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -65,6 +66,9 @@ function App() {
           latencyMs={traffic.appServer.latencyMs}
           customerSatisfaction={traffic.customerSatisfaction}
           satisfactionReason={traffic.satisfactionReason}
+          balance={traffic.balance}
+          infrastructureCost={traffic.appServer.costPerPeriod}
+          costPeriodSeconds={appServerResourceConfig.costPeriodSeconds}
           gameTimeSeconds={traffic.gameTimeSeconds}
         />
         <span className="prototype-badge">Prototype <span>01</span></span>

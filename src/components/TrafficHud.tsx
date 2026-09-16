@@ -4,6 +4,9 @@ type TrafficHudProps = {
   latencyMs: number
   customerSatisfaction: number
   satisfactionReason: string | null
+  balance: number
+  infrastructureCost: number
+  costPeriodSeconds: number
   gameTimeSeconds: number
 }
 
@@ -20,6 +23,9 @@ export function TrafficHud({
   latencyMs,
   customerSatisfaction,
   satisfactionReason,
+  balance,
+  infrastructureCost,
+  costPeriodSeconds,
   gameTimeSeconds,
 }: TrafficHudProps) {
   return (
@@ -40,6 +46,14 @@ export function TrafficHud({
         <div className="traffic-hud__metric">
           <dt>Satisfaction</dt>
           <dd>{customerSatisfaction.toFixed(1)}%</dd>
+        </div>
+        <div className="traffic-hud__metric">
+          <dt>Balance</dt>
+          <dd>{balance} cr</dd>
+        </div>
+        <div className="traffic-hud__metric">
+          <dt>Infra Cost</dt>
+          <dd>{infrastructureCost} / {costPeriodSeconds}s</dd>
         </div>
         <div className="traffic-hud__metric">
           <dt>Game Time</dt>

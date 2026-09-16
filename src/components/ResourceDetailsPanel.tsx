@@ -4,6 +4,7 @@ import {
   serverTierConfigs,
   serverUpgradeConfig,
 } from '../simulation/config'
+import { canAffordCost } from '../simulation/economySimulation'
 import {
   calculateDeploymentProgress,
   type TrafficSimulationState,
@@ -44,6 +45,10 @@ export function ResourceDetailsPanel({
       )
     : 0
   const upgradeTarget = serverTierConfigs[serverUpgradeConfig.targetTierId]
+  const canAffordUpgrade = canAffordCost(
+    simulation.balance,
+    serverUpgradeConfig.upgradeCost,
+  )
 
   return (
     <aside className="resource-panel nodrag nopan" aria-label="Resource details">
@@ -155,12 +160,16 @@ export function ResourceDetailsPanel({
                 {serverUpgradeConfig.upgradeCost} credits ·{' '}
                 {serverUpgradeConfig.deploymentDurationSeconds} game seconds
               </p>
+              <p>Available balance: {simulation.balance} credits</p>
               <button
                 type="button"
                 className="resource-panel__upgrade-button"
                 onClick={onStartUpgrade}
+                disabled={!canAffordUpgrade}
               >
-                Upgrade to Medium Server
+                {canAffordUpgrade
+                  ? 'Upgrade to Medium Server'
+                  : 'Insufficient balance'}
               </button>
             </>
           )}

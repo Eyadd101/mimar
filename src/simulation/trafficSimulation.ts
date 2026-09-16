@@ -13,8 +13,15 @@ import {
   createInitialCustomerSatisfactionState,
   type CustomerSatisfactionState,
 } from './customerSatisfactionSimulation'
+import {
+  canAffordCost,
+  createInitialEconomyState,
+  deductCost,
+  type EconomyState,
+} from './economySimulation'
 
-export type TrafficSimulationState = CustomerSatisfactionState & {
+export type TrafficSimulationState = CustomerSatisfactionState &
+  EconomyState & {
   activeUsers: number
   requestsPerSecond: number
   gameTimeSeconds: number
@@ -53,6 +60,7 @@ export function createInitialTrafficState(): TrafficSimulationState {
     appServer: calculateAppServerMetrics(requestsPerSecond, tierId),
     serverDeployment: null,
     ...createInitialCustomerSatisfactionState(),
+    ...createInitialEconomyState(),
   }
 }
 
@@ -61,13 +69,18 @@ export function startServerUpgrade(
 ): TrafficSimulationState {
   if (
     currentState.appServer.tierId === serverUpgradeConfig.targetTierId ||
-    currentState.serverDeployment
+    currentState.serverDeployment ||
+    !canAffordCost(currentState.balance, serverUpgradeConfig.upgradeCost)
   ) {
     return currentState
   }
 
   return {
     ...currentState,
+    balance: deductCost(
+      currentState.balance,
+      serverUpgradeConfig.upgradeCost,
+    ),
     serverDeployment: {
       targetTierId: serverUpgradeConfig.targetTierId,
       startedAtGameTimeSeconds: currentState.gameTimeSeconds,
@@ -142,6 +155,7 @@ function advanceOneGameSecond(
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds,
+    balance: currentState.balance,
     appServer,
     serverDeployment,
     ...satisfaction,
