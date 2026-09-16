@@ -7,7 +7,16 @@ export const trafficSimulationConfig = {
 } as const
 
 export const appServerSimulationConfig = {
-  requestCapacity: 6,
   elevatedCpuThreshold: 60,
   highCpuThreshold: 80,
+} as const
+
+export const appServerResourceConfig = {
+  name: 'App Server',
+  type: 'App Server',
+  awsReference: 'EC2',
+  tierName: 'Small Server',
+  requestCapacity: 6,
+  costPerPeriod: 8,
+  costPeriodSeconds: 60,
 } as const

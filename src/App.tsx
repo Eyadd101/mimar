@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Background,
   BackgroundVariant,
@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { InfrastructureNode } from './components/InfrastructureNode'
+import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
 import { useTrafficSimulation } from './hooks/useTrafficSimulation'
@@ -19,6 +20,7 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const traffic = useTrafficSimulation()
   const displayNodes = useMemo(
     () =>
@@ -35,6 +37,7 @@ function App() {
       ),
     [nodes, traffic.appServer],
   )
+  const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
 
   return (
     <main className="game">
@@ -59,6 +62,8 @@ function App() {
           nodes={displayNodes}
           edges={initialEdges}
           onNodesChange={onNodesChange}
+          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
           colorMode="dark"
           fitView
@@ -76,6 +81,15 @@ function App() {
             <h1>Your first infrastructure.</h1>
             <p>Three nodes. One simple connection path.</p>
           </Panel>
+          {selectedNode && (
+            <Panel position="top-right" className="resource-panel-position">
+              <ResourceDetailsPanel
+                node={selectedNode}
+                simulation={traffic}
+                onClose={() => setSelectedNodeId(null)}
+              />
+            </Panel>
+          )}
           <Controls showInteractive={false} orientation="horizontal" fitViewOptions={fitViewOptions} />
         </ReactFlow>
       </section>

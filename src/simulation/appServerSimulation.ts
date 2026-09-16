@@ -1,4 +1,7 @@
-import { appServerSimulationConfig } from './config'
+import {
+  appServerResourceConfig,
+  appServerSimulationConfig,
+} from './config'
 
 export type AppServerStatus =
   | 'normal'
@@ -26,8 +29,8 @@ const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
 export function calculateAppServerMetrics(
   requestsPerSecond: number,
 ): AppServerMetrics {
-  const { requestCapacity, elevatedCpuThreshold, highCpuThreshold } =
-    appServerSimulationConfig
+  const { requestCapacity } = appServerResourceConfig
+  const { elevatedCpuThreshold, highCpuThreshold } = appServerSimulationConfig
   const isOverloaded = requestsPerSecond > requestCapacity
   const cpuUsage = roundToOneDecimal(
     clamp((requestsPerSecond / requestCapacity) * 100, 0, 100),
