@@ -33,6 +33,10 @@
   letter-spacing: -0.4px;
 }
 
+.brand-name {
+  white-space: nowrap;
+}
+
 .brand-mark {
   display: grid;
   place-items: center;
@@ -524,6 +528,28 @@
   background: #91b7a4;
 }
 
+.request-flow__pulse {
+  fill: none;
+  stroke: #b0ebc0;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray:
+    var(--request-flow-dash-length) var(--request-flow-dash-gap);
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px #87c99b80);
+  animation: request-flow-travel var(--request-flow-duration) linear infinite;
+}
+
+.request-flow__pulse[data-paused='true'] {
+  animation-play-state: paused;
+}
+
+@keyframes request-flow-travel {
+  to {
+    stroke-dashoffset: calc(-1 * var(--request-flow-distance));
+  }
+}
+
 .canvas .react-flow__controls {
   margin: 24px 28px;
   overflow: hidden;
@@ -605,6 +631,13 @@
 .speed-controls__button[aria-pressed='true'] {
   color: #b8e8c4;
   background: #263a2e;
+}
+
+@media (max-width: 1350px) {
+  .header-caption,
+  .brand-divider {
+    display: none;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -710,5 +743,10 @@
   .server-cpu__fill,
   .deployment-progress span {
     transition: none;
+  }
+
+  .request-flow__pulse {
+    animation: none;
+    opacity: 0.65;
   }
 }

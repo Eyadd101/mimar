@@ -10,6 +10,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
+import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
@@ -18,6 +19,7 @@ import { appServerResourceConfig } from './simulation/config'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
+const edgeTypes = { requestFlow: RequestFlowEdge }
 const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 
 function App() {
@@ -45,6 +47,18 @@ function App() {
     [nodes, traffic.appServer],
   )
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
+  const displayEdges = useMemo(
+    () =>
+      initialEdges.map((edge) => ({
+        ...edge,
+        type: 'requestFlow',
+        data: {
+          requestsPerSecond: traffic.requestsPerSecond,
+          isPaused: gameSpeed === 0,
+        },
+      })),
+    [gameSpeed, traffic.requestsPerSecond],
+  )
 
   return (
     <main className="game">
@@ -77,11 +91,12 @@ function App() {
       <section className="canvas" aria-label="Infrastructure canvas">
         <ReactFlow
           nodes={displayNodes}
-          edges={initialEdges}
+          edges={displayEdges}
           onNodesChange={onNodesChange}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
           onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           colorMode="dark"
           fitView
           fitViewOptions={fitViewOptions}
