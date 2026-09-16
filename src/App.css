@@ -572,6 +572,8 @@
 }
 
 .game-footer {
+  position: relative;
+  z-index: 10;
   min-height: 44px;
   border-top: 1px solid var(--border);
   color: #8fa197;
@@ -596,6 +598,76 @@
 .graph-count span {
   margin-inline: 8px;
   color: #53665a;
+}
+
+.game-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hint-control {
+  position: relative;
+}
+
+.hint-button {
+  min-width: 52px;
+  height: 27px;
+  padding-inline: 11px;
+  border: 1px solid #405148;
+  border-radius: 6px;
+  color: #a9bcb1;
+  background: #1b2520;
+  font: 9px var(--mono);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.hint-button:hover {
+  color: #dbe9e1;
+  border-color: #5f7668;
+  background: #253129;
+}
+
+.hint-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(290px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid #45594d;
+  border-radius: 9px;
+  color: #b9c9c0;
+  background: #19221dee;
+  box-shadow: 0 16px 40px #00000060;
+}
+
+.hint-popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #a9d9b6;
+  font: 8px var(--mono);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.hint-popover__header button {
+  padding: 0;
+  border: 0;
+  color: #8ea097;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hint-popover p {
+  color: #c4d0ca;
+  font-size: 11px;
+  line-height: 1.55;
 }
 
 .speed-controls {

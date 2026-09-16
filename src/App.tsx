@@ -8,6 +8,7 @@ import {
   useNodesState,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { HintPanel } from './components/HintPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
@@ -16,6 +17,7 @@ import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
 import { useGameSimulation } from './hooks/useGameSimulation'
 import { appServerResourceConfig } from './simulation/config'
+import { getContextualHint } from './simulation/hintSimulation'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -25,6 +27,7 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [hint, setHint] = useState<string | null>(null)
   const {
     simulation: traffic,
     gameSpeed,
@@ -133,7 +136,14 @@ function App() {
           gameSpeed={gameSpeed}
           onSpeedChange={setGameSpeed}
         />
-        <p className="graph-count">3 nodes <span>/</span> 2 connections</p>
+        <div className="game-footer__actions">
+          <HintPanel
+            hint={hint}
+            onRequestHint={() => setHint(getContextualHint(traffic))}
+            onDismissHint={() => setHint(null)}
+          />
+          <p className="graph-count">3 nodes <span>/</span> 2 connections</p>
+        </div>
       </footer>
     </main>
   )
