@@ -8,7 +8,9 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { InfrastructureNode } from './components/InfrastructureNode'
+import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
+import { useTrafficSimulation } from './hooks/useTrafficSimulation'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -16,6 +18,7 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
+  const traffic = useTrafficSimulation()
 
   return (
     <main className="game">
@@ -27,10 +30,11 @@ function App() {
               <path d="M9 14l3-3 3 3M12 11v10" />
             </svg>
           </span>
-          <span>Cloud Game</span>
+          <span className="brand-name">Cloud Game</span>
           <span className="brand-divider" aria-hidden="true" />
           <span className="header-caption">Infrastructure playground</span>
         </div>
+        <TrafficHud {...traffic} />
         <span className="prototype-badge">Prototype <span>01</span></span>
       </header>
 
