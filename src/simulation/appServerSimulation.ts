@@ -1,7 +1,8 @@
 import {
-  appServerResourceConfig,
   appServerSimulationConfig,
   latencySimulationConfig,
+  serverTierConfigs,
+  type ServerTierId,
 } from './config'
 
 export type AppServerStatus =
@@ -11,6 +12,9 @@ export type AppServerStatus =
   | 'overloaded'
 
 export type AppServerMetrics = {
+  tierId: ServerTierId
+  tierName: string
+  costPerPeriod: number
   requestCapacity: number
   utilizationRatio: number
   cpuUsage: number
@@ -61,8 +65,10 @@ export function calculateLatencyMs(utilizationRatio: number) {
  */
 export function calculateAppServerMetrics(
   requestsPerSecond: number,
+  tierId: ServerTierId,
 ): AppServerMetrics {
-  const { requestCapacity } = appServerResourceConfig
+  const tier = serverTierConfigs[tierId]
+  const { requestCapacity } = tier
   const {
     elevatedCpuThreshold,
     highCpuThreshold,
@@ -98,6 +104,9 @@ export function calculateAppServerMetrics(
   }
 
   return {
+    tierId,
+    tierName: tier.name,
+    costPerPeriod: tier.costPerPeriod,
     requestCapacity,
     utilizationRatio,
     cpuUsage,

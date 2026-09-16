@@ -22,7 +22,12 @@ const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 function App() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const { simulation: traffic, gameSpeed, setGameSpeed } = useGameSimulation()
+  const {
+    simulation: traffic,
+    gameSpeed,
+    setGameSpeed,
+    startServerUpgrade,
+  } = useGameSimulation()
   const displayNodes = useMemo(
     () =>
       nodes.map((node) =>
@@ -95,6 +100,7 @@ function App() {
                 node={selectedNode}
                 simulation={traffic}
                 onClose={() => setSelectedNodeId(null)}
+                onStartUpgrade={startServerUpgrade}
               />
             </Panel>
           )}

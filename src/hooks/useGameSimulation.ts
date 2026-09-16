@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   defaultSimulationSpeed,
   trafficSimulationConfig,
@@ -7,6 +7,7 @@ import {
 import {
   advanceTrafficSimulation,
   createInitialTrafficState,
+  startServerUpgrade,
 } from '../simulation/trafficSimulation'
 
 export function useGameSimulation() {
@@ -28,9 +29,14 @@ export function useGameSimulation() {
     return () => window.clearInterval(timerId)
   }, [gameSpeed])
 
+  const beginServerUpgrade = useCallback(() => {
+    setSimulation(startServerUpgrade)
+  }, [])
+
   return {
     simulation,
     gameSpeed,
     setGameSpeed,
+    startServerUpgrade: beginServerUpgrade,
   }
 }

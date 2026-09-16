@@ -1,4 +1,9 @@
-import { trafficSimulationConfig } from './config'
+import {
+  appServerResourceConfig,
+  serverUpgradeConfig,
+  trafficSimulationConfig,
+  type ServerTierId,
+} from './config'
 import {
   calculateAppServerMetrics,
   type AppServerMetrics,
@@ -14,6 +19,14 @@ export type TrafficSimulationState = CustomerSatisfactionState & {
   requestsPerSecond: number
   gameTimeSeconds: number
   appServer: AppServerMetrics
+  serverDeployment: ServerDeployment | null
+}
+
+export type ServerDeployment = {
+  targetTierId: ServerTierId
+  startedAtGameTimeSeconds: number
+  completesAtGameTimeSeconds: number
+  cost: number
 }
 
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
@@ -31,14 +44,57 @@ export function calculateRequestsPerSecond(activeUsers: number) {
 export function createInitialTrafficState(): TrafficSimulationState {
   const activeUsers = trafficSimulationConfig.initialActiveUsers
   const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
+  const tierId = appServerResourceConfig.initialTierId
 
   return {
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds: 0,
-    appServer: calculateAppServerMetrics(requestsPerSecond),
+    appServer: calculateAppServerMetrics(requestsPerSecond, tierId),
+    serverDeployment: null,
     ...createInitialCustomerSatisfactionState(),
   }
+}
+
+export function startServerUpgrade(
+  currentState: TrafficSimulationState,
+): TrafficSimulationState {
+  if (
+    currentState.appServer.tierId === serverUpgradeConfig.targetTierId ||
+    currentState.serverDeployment
+  ) {
+    return currentState
+  }
+
+  return {
+    ...currentState,
+    serverDeployment: {
+      targetTierId: serverUpgradeConfig.targetTierId,
+      startedAtGameTimeSeconds: currentState.gameTimeSeconds,
+      completesAtGameTimeSeconds:
+        currentState.gameTimeSeconds +
+        serverUpgradeConfig.deploymentDurationSeconds,
+      cost: serverUpgradeConfig.upgradeCost,
+    },
+  }
+}
+
+export function calculateDeploymentProgress(
+  deployment: ServerDeployment,
+  gameTimeSeconds: number,
+) {
+  const deploymentDuration =
+    deployment.completesAtGameTimeSeconds -
+    deployment.startedAtGameTimeSeconds
+
+  return Math.min(
+    Math.max(
+      (gameTimeSeconds - deployment.startedAtGameTimeSeconds) /
+        deploymentDuration,
+      0,
+    ),
+    1,
+  )
 }
 
 export function advanceTrafficSimulation(
@@ -66,7 +122,16 @@ function advanceOneGameSecond(
     completedGrowthIntervals *
       trafficSimulationConfig.activeUsersAddedPerInterval
   const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
-  const appServer = calculateAppServerMetrics(requestsPerSecond)
+  const deploymentCompleted =
+    currentState.serverDeployment !== null &&
+    gameTimeSeconds >= currentState.serverDeployment.completesAtGameTimeSeconds
+  const tierId = deploymentCompleted
+    ? currentState.serverDeployment!.targetTierId
+    : currentState.appServer.tierId
+  const serverDeployment = deploymentCompleted
+    ? null
+    : currentState.serverDeployment
+  const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
   const satisfaction = advanceCustomerSatisfaction(
     currentState,
     appServer.latencyMs,
@@ -78,6 +143,7 @@ function advanceOneGameSecond(
     requestsPerSecond,
     gameTimeSeconds,
     appServer,
+    serverDeployment,
     ...satisfaction,
   }
 }

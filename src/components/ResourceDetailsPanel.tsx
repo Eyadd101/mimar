@@ -1,11 +1,19 @@
 import type { InfrastructureFlowNode } from '../data/infrastructure'
-import { appServerResourceConfig } from '../simulation/config'
-import type { TrafficSimulationState } from '../simulation/trafficSimulation'
+import {
+  appServerResourceConfig,
+  serverTierConfigs,
+  serverUpgradeConfig,
+} from '../simulation/config'
+import {
+  calculateDeploymentProgress,
+  type TrafficSimulationState,
+} from '../simulation/trafficSimulation'
 
 type ResourceDetailsPanelProps = {
   node: InfrastructureFlowNode
   simulation: TrafficSimulationState
   onClose: () => void
+  onStartUpgrade: () => void
 }
 
 const placeholderTypes = {
@@ -21,8 +29,21 @@ export function ResourceDetailsPanel({
   node,
   simulation,
   onClose,
+  onStartUpgrade,
 }: ResourceDetailsPanelProps) {
   const isAppServer = node.data.kind === 'server'
+  const deployment = simulation.serverDeployment
+  const deploymentProgress = deployment
+    ? calculateDeploymentProgress(deployment, simulation.gameTimeSeconds)
+    : 0
+  const deploymentPercent = Math.round(deploymentProgress * 100)
+  const deploymentSecondsRemaining = deployment
+    ? Math.max(
+        deployment.completesAtGameTimeSeconds - simulation.gameTimeSeconds,
+        0,
+      )
+    : 0
+  const upgradeTarget = serverTierConfigs[serverUpgradeConfig.targetTierId]
 
   return (
     <aside className="resource-panel nodrag nopan" aria-label="Resource details">
@@ -57,7 +78,7 @@ export function ResourceDetailsPanel({
           </div>
           <div>
             <dt>Current tier</dt>
-            <dd>{appServerResourceConfig.tierName}</dd>
+            <dd>{simulation.appServer.tierName}</dd>
           </div>
           <div>
             <dt>Request capacity</dt>
@@ -87,13 +108,62 @@ export function ResourceDetailsPanel({
           </div>
           <div>
             <dt>Cost / {appServerResourceConfig.costPeriodSeconds} sec</dt>
-            <dd>{appServerResourceConfig.costPerPeriod} credits</dd>
+            <dd>{simulation.appServer.costPerPeriod} credits</dd>
           </div>
         </dl>
       ) : (
         <div className="resource-panel__placeholder">
           <p>{placeholderTypes[node.data.kind]}</p>
           <span>More resource details will be added in a later step.</span>
+        </div>
+      )}
+
+      {isAppServer && (
+        <div className="resource-panel__upgrade">
+          {deployment ? (
+            <>
+              <div className="resource-panel__upgrade-heading">
+                <span>Deploying {upgradeTarget.name}</span>
+                <strong>{deploymentPercent}%</strong>
+              </div>
+              <div
+                className="deployment-progress"
+                role="progressbar"
+                aria-label="Server upgrade deployment"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={deploymentPercent}
+              >
+                <span style={{ width: `${deploymentPercent}%` }} />
+              </div>
+              <p>{deploymentSecondsRemaining} game seconds remaining</p>
+            </>
+          ) : simulation.appServer.tierId ===
+            serverUpgradeConfig.targetTierId ? (
+            <p className="resource-panel__upgrade-complete">
+              Medium Server is active.
+            </p>
+          ) : (
+            <>
+              <div className="resource-panel__upgrade-heading">
+                <span>{upgradeTarget.name}</span>
+                <strong>
+                  {upgradeTarget.requestCapacity} req/s
+                </strong>
+              </div>
+              <p>
+                {serverUpgradeConfig.upgradeCost} credits ·{' '}
+                {serverUpgradeConfig.deploymentDurationSeconds} game seconds
+              </p>
+              <button
+                type="button"
+                className="resource-panel__upgrade-button"
+                onClick={onStartUpgrade}
+              >
+                Upgrade to Medium Server
+              </button>
+            </>
+          )}
         </div>
       )}
     </aside>

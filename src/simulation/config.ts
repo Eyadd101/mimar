@@ -17,14 +17,33 @@ export const appServerSimulationConfig = {
   memoryLoadAtCapacity: 55,
 } as const
 
+export const serverTierConfigs = {
+  small: {
+    name: 'Small Server',
+    requestCapacity: 6,
+    costPerPeriod: 8,
+  },
+  medium: {
+    name: 'Medium Server',
+    requestCapacity: 14,
+    costPerPeriod: 18,
+  },
+} as const
+
+export type ServerTierId = keyof typeof serverTierConfigs
+
 export const appServerResourceConfig = {
   name: 'App Server',
   type: 'App Server',
   awsReference: 'EC2',
-  tierName: 'Small Server',
-  requestCapacity: 6,
-  costPerPeriod: 8,
+  initialTierId: 'small' satisfies ServerTierId,
   costPeriodSeconds: 60,
+} as const
+
+export const serverUpgradeConfig = {
+  targetTierId: 'medium' satisfies ServerTierId,
+  upgradeCost: 180,
+  deploymentDurationSeconds: 30,
 } as const
 
 export const latencySimulationConfig = {
