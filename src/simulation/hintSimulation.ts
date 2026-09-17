@@ -1,12 +1,14 @@
 import { customerSatisfactionConfig } from './config'
 import type { StageConfig } from '../data/stages'
 import type { TrafficSimulationState } from './trafficSimulation'
+import { getMostLoadedAppServer } from './trafficSimulation'
 
 export function getContextualHint(
   simulation: TrafficSimulationState,
   stage?: StageConfig,
 ) {
-  const { appServer, badLatencyDurationSeconds, requestsPerSecond } = simulation
+  const { badLatencyDurationSeconds, requestsPerSecond } = simulation
+  const appServer = getMostLoadedAppServer(simulation)
 
   if (
     badLatencyDurationSeconds >=

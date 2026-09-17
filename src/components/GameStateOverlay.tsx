@@ -60,7 +60,7 @@ export function GameStateOverlay({
           </div>
           <div>
             <dt>Latency</dt>
-            <dd>{simulation.appServer.latencyMs} ms</dd>
+            <dd>{simulation.applicationLatencyMs} ms</dd>
           </div>
         </dl>
 

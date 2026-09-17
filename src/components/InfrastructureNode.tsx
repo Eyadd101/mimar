@@ -8,6 +8,7 @@ const roleLabels: Record<InfrastructureNodeData['kind'], string> = {
   users: 'ENTRY POINT',
   server: 'COMPUTE',
   database: 'STORAGE',
+  'load-balancer': 'TRAFFIC ROUTING',
 }
 
 const statusLabels = {
@@ -47,6 +48,13 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
         <>
           <ellipse cx="12" cy="5" rx="8" ry="3" />
           <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
+        </>
+      )}
+      {kind === 'load-balancer' && (
+        <>
+          <path d="M4 7h6M14 7h6M12 5v4M7 7v10M17 7v10" />
+          <rect x="3" y="17" width="8" height="4" rx="1.5" />
+          <rect x="13" y="17" width="8" height="4" rx="1.5" />
         </>
       )}
     </svg>

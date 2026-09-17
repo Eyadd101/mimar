@@ -4,13 +4,22 @@ import {
   type StageConfig,
 } from '../data/stages'
 import {
+  addAdditionalAppServerResource,
+  addLoadBalancerResource,
+  applyResourceUnlocks,
   createInitialCampaignState,
   createNextCampaignState,
-  getPrimaryAppServer,
+  createTrafficInfrastructure,
+  hasLoadBalancer,
   syncCampaignWithSimulation,
   updateResourcePosition,
   type CampaignState,
 } from './campaignSimulation'
+import {
+  additionalAppServerConfig,
+  loadBalancerResourceConfig,
+} from './config'
+import { canAffordCost, deductCost } from './economySimulation'
 import {
   advanceStageObjectives,
   createStageObjectiveProgress,
@@ -53,6 +62,14 @@ export type StageRuntimeState = {
   stageRating: StageRating | null
   briefingDismissed: boolean
   trafficEvents: StageTrafficEventRuntime
+  infrastructureDeployment: InfrastructureDeployment | null
+}
+
+export type InfrastructureDeployment = {
+  kind: 'load-balancer' | 'app-server'
+  startedAtGameTimeSeconds: number
+  completesAtGameTimeSeconds: number
+  cost: number
 }
 
 export type GameState = {
@@ -76,10 +93,19 @@ const serviceFailureReason: GameOverReason = {
 export function createInitialGameState(
   campaign = createInitialCampaignState(),
 ): GameState {
-  return {
+  const stage = getCampaignStage(campaign.currentStageIndex)
+  if (!stage) {
+    throw new Error('Campaign stage configuration is missing.')
+  }
+  const preparedCampaign = applyResourceUnlocks(
     campaign,
-    stageRuntime: createStageRuntime(campaign),
-    stageStartSnapshot: campaign,
+    stage.unlocksResourceTypes,
+  )
+
+  return {
+    campaign: preparedCampaign,
+    stageRuntime: createStageRuntime(preparedCampaign),
+    stageStartSnapshot: preparedCampaign,
   }
 }
 
@@ -123,24 +149,54 @@ export function advanceGameState(
   return gameState
 }
 
-export function beginServerUpgrade(currentState: GameState): GameState {
+export function beginServerUpgrade(
+  currentState: GameState,
+  resourceId: string,
+): GameState {
   if (currentState.stageRuntime.status !== 'playing') {
     return currentState
   }
 
   const simulation = startServerUpgrade(
     currentState.stageRuntime.simulation,
+    resourceId,
   )
 
   if (simulation === currentState.stageRuntime.simulation) {
     return currentState
   }
 
-  return {
+  return applyImmediateFailure({
     ...currentState,
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
+  })
+}
+
+export function beginLoadBalancerDeployment(
+  currentState: GameState,
+): GameState {
+  return beginInfrastructureDeployment(
+    currentState,
+    'load-balancer',
+    loadBalancerResourceConfig.deploymentCost,
+    loadBalancerResourceConfig.deploymentDurationSeconds,
+  )
+}
+
+export function beginAdditionalAppServerDeployment(
+  currentState: GameState,
+): GameState {
+  if (!hasLoadBalancer(currentState.campaign)) {
+    return currentState
   }
+
+  return beginInfrastructureDeployment(
+    currentState,
+    'app-server',
+    additionalAppServerConfig.deploymentCost,
+    additionalAppServerConfig.deploymentDurationSeconds,
+  )
 }
 
 export function dismissStageBriefing(currentState: GameState): GameState {
@@ -172,6 +228,23 @@ export function moveCampaignResource(
   }
 }
 
+export function calculateInfrastructureDeploymentProgress(
+  deployment: InfrastructureDeployment,
+  gameTimeSeconds: number,
+) {
+  const duration =
+    deployment.completesAtGameTimeSeconds -
+    deployment.startedAtGameTimeSeconds
+
+  return Math.min(
+    Math.max(
+      (gameTimeSeconds - deployment.startedAtGameTimeSeconds) / duration,
+      0,
+    ),
+    1,
+  )
+}
+
 export function restartStage(currentState: GameState): GameState {
   return createInitialGameState(currentState.stageStartSnapshot)
 }
@@ -201,12 +274,10 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     throw new Error('Campaign stage configuration is missing.')
   }
 
-  const appServer = getPrimaryAppServer(campaign)
-
   return {
     status: 'playing',
     simulation: createInitialTrafficState({
-      tierId: appServer.tierId,
+      infrastructure: createTrafficInfrastructure(campaign),
       balance: campaign.balance,
       trafficProfile: stage.trafficProfile,
     }),
@@ -216,6 +287,7 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     stageRating: null,
     briefingDismissed: stage.tutorialSteps.length === 0,
     trafficEvents: createStageTrafficEvents(stage, campaign.seed),
+    infrastructureDeployment: null,
   }
 }
 
@@ -228,14 +300,20 @@ function advanceOneGameSecond(currentState: GameState): GameState {
     currentState.stageRuntime.trafficEvents,
     nextGameTimeSeconds,
   )
+  const deploymentResult = advanceInfrastructureDeployment(
+    currentState.campaign,
+    currentState.stageRuntime.infrastructureDeployment,
+    nextGameTimeSeconds,
+  )
   const simulation = advanceTrafficSimulation(
     currentState.stageRuntime.simulation,
     1,
     stage.trafficProfile,
     getActiveTrafficMultiplier(trafficEvents),
+    createTrafficInfrastructure(deploymentResult.campaign),
   )
   const campaign = syncCampaignWithSimulation(
-    currentState.campaign,
+    deploymentResult.campaign,
     simulation,
   )
   const zeroSatisfactionDurationSeconds =
@@ -277,8 +355,101 @@ function advanceOneGameSecond(currentState: GameState): GameState {
       stageRating,
       briefingDismissed: currentState.stageRuntime.briefingDismissed,
       trafficEvents,
+      infrastructureDeployment: deploymentResult.deployment,
     },
   }
+}
+
+function beginInfrastructureDeployment(
+  currentState: GameState,
+  kind: InfrastructureDeployment['kind'],
+  cost: number,
+  durationSeconds: number,
+) {
+  const simulation = currentState.stageRuntime.simulation
+  const resourceAlreadyExists =
+    kind === 'load-balancer'
+      ? hasLoadBalancer(currentState.campaign)
+      : currentState.campaign.infrastructure.resources.some(
+          (resource) => resource.id === additionalAppServerConfig.id,
+        )
+  const resourceIsUnlocked =
+    kind === 'app-server' ||
+    currentState.campaign.unlockedResourceTypes.includes('load-balancer')
+
+  if (
+    currentState.stageRuntime.status !== 'playing' ||
+    currentState.stageRuntime.infrastructureDeployment ||
+    resourceAlreadyExists ||
+    !resourceIsUnlocked ||
+    !canAffordCost(simulation.balance, cost)
+  ) {
+    return currentState
+  }
+
+  const nextSimulation = {
+    ...simulation,
+    balance: deductCost(simulation.balance, cost),
+  }
+
+  return applyImmediateFailure({
+    ...currentState,
+    campaign: syncCampaignWithSimulation(
+      currentState.campaign,
+      nextSimulation,
+    ),
+    stageRuntime: {
+      ...currentState.stageRuntime,
+      simulation: nextSimulation,
+      infrastructureDeployment: {
+        kind,
+        cost,
+        startedAtGameTimeSeconds: simulation.gameTimeSeconds,
+        completesAtGameTimeSeconds:
+          simulation.gameTimeSeconds + durationSeconds,
+      },
+    },
+  })
+}
+
+function advanceInfrastructureDeployment(
+  campaign: CampaignState,
+  deployment: InfrastructureDeployment | null,
+  gameTimeSeconds: number,
+) {
+  if (
+    !deployment ||
+    gameTimeSeconds < deployment.completesAtGameTimeSeconds
+  ) {
+    return { campaign, deployment }
+  }
+
+  return {
+    campaign:
+      deployment.kind === 'load-balancer'
+        ? addLoadBalancerResource(campaign)
+        : addAdditionalAppServerResource(campaign),
+    deployment: null,
+  }
+}
+
+function applyImmediateFailure(currentState: GameState): GameState {
+  const reason = getGameOverReason(
+    getCurrentStage(currentState),
+    currentState.stageRuntime.simulation,
+    currentState.stageRuntime.zeroSatisfactionDurationSeconds,
+  )
+
+  return reason
+    ? {
+        ...currentState,
+        stageRuntime: {
+          ...currentState.stageRuntime,
+          status: 'game-over',
+          gameOverReason: reason,
+        },
+      }
+    : currentState
 }
 
 function getGameOverReason(

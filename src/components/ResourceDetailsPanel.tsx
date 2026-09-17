@@ -1,6 +1,7 @@
 import type { InfrastructureFlowNode } from '../data/infrastructure'
 import {
   appServerResourceConfig,
+  loadBalancerResourceConfig,
   serverTierConfigs,
   serverUpgradeConfig,
 } from '../simulation/config'
@@ -14,13 +15,14 @@ type ResourceDetailsPanelProps = {
   node: InfrastructureFlowNode
   simulation: TrafficSimulationState
   onClose: () => void
-  onStartUpgrade: () => void
+  onStartUpgrade: (resourceId: string) => void
 }
 
 const placeholderTypes = {
   users: 'Traffic Source',
   server: 'App Server',
   database: 'Database',
+  'load-balancer': 'Load Balancer',
 } as const
 
 const formatStatus = (status: string) =>
@@ -33,7 +35,14 @@ export function ResourceDetailsPanel({
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
   const isAppServer = node.data.kind === 'server'
-  const deployment = simulation.serverDeployment
+  const isLoadBalancer = node.data.kind === 'load-balancer'
+  const appServer = simulation.appServers.find(
+    (server) => server.resourceId === node.id,
+  )
+  const deployment =
+    simulation.serverDeployment?.resourceId === node.id
+      ? simulation.serverDeployment
+      : null
   const deploymentProgress = deployment
     ? calculateDeploymentProgress(deployment, simulation.gameTimeSeconds)
     : 0
@@ -49,6 +58,8 @@ export function ResourceDetailsPanel({
     simulation.balance,
     serverUpgradeConfig.upgradeCost,
   )
+  const anotherUpgradeIsDeploying =
+    simulation.serverDeployment !== null && deployment === null
 
   return (
     <aside className="resource-panel nodrag nopan" aria-label="Resource details">
@@ -67,11 +78,11 @@ export function ResourceDetailsPanel({
         </button>
       </div>
 
-      {isAppServer ? (
+      {isAppServer && appServer ? (
         <dl className="resource-panel__details">
           <div>
             <dt>Resource name</dt>
-            <dd>{appServerResourceConfig.name}</dd>
+            <dd>{appServer.resourceName}</dd>
           </div>
           <div>
             <dt>Generic type</dt>
@@ -83,37 +94,64 @@ export function ResourceDetailsPanel({
           </div>
           <div>
             <dt>Current tier</dt>
-            <dd>{simulation.appServer.tierName}</dd>
+            <dd>{appServer.tierName}</dd>
           </div>
           <div>
             <dt>Request capacity</dt>
-            <dd>{simulation.appServer.requestCapacity.toFixed(1)} req/s</dd>
+            <dd>{appServer.requestCapacity.toFixed(1)} req/s</dd>
           </div>
           <div>
             <dt>Current traffic</dt>
-            <dd>{simulation.requestsPerSecond.toFixed(1)} req/s</dd>
+            <dd>{appServer.requestsPerSecond.toFixed(1)} req/s</dd>
           </div>
           <div>
             <dt>CPU usage</dt>
-            <dd>{simulation.appServer.cpuUsage.toFixed(1)}%</dd>
+            <dd>{appServer.cpuUsage.toFixed(1)}%</dd>
           </div>
           <div>
             <dt>Memory usage</dt>
-            <dd>{simulation.appServer.memoryUsage.toFixed(1)}%</dd>
+            <dd>{appServer.memoryUsage.toFixed(1)}%</dd>
           </div>
           <div>
             <dt>Latency</dt>
-            <dd>{simulation.appServer.latencyMs} ms</dd>
+            <dd>{appServer.latencyMs} ms</dd>
           </div>
           <div>
             <dt>Status</dt>
-            <dd data-status={simulation.appServer.status}>
-              {formatStatus(simulation.appServer.status)}
+            <dd data-status={appServer.status}>
+              {formatStatus(appServer.status)}
             </dd>
           </div>
           <div>
             <dt>Cost / {appServerResourceConfig.costPeriodSeconds} sec</dt>
-            <dd>{simulation.appServer.costPerPeriod} credits</dd>
+            <dd>{appServer.costPerPeriod} credits</dd>
+          </div>
+        </dl>
+      ) : isLoadBalancer ? (
+        <dl className="resource-panel__details">
+          <div>
+            <dt>Resource name</dt>
+            <dd>{loadBalancerResourceConfig.name}</dd>
+          </div>
+          <div>
+            <dt>Generic type</dt>
+            <dd>{loadBalancerResourceConfig.type}</dd>
+          </div>
+          <div>
+            <dt>AWS reference</dt>
+            <dd>{loadBalancerResourceConfig.awsReference}</dd>
+          </div>
+          <div>
+            <dt>Distribution</dt>
+            <dd>Even split</dd>
+          </div>
+          <div>
+            <dt>Connected servers</dt>
+            <dd>{simulation.appServers.length}</dd>
+          </div>
+          <div>
+            <dt>Cost / {appServerResourceConfig.costPeriodSeconds} sec</dt>
+            <dd>{loadBalancerResourceConfig.costPerPeriod} credits</dd>
           </div>
         </dl>
       ) : (
@@ -123,7 +161,7 @@ export function ResourceDetailsPanel({
         </div>
       )}
 
-      {isAppServer && (
+      {isAppServer && appServer && (
         <div className="resource-panel__upgrade">
           {deployment ? (
             <>
@@ -143,7 +181,7 @@ export function ResourceDetailsPanel({
               </div>
               <p>{deploymentSecondsRemaining} game seconds remaining</p>
             </>
-          ) : simulation.appServer.tierId ===
+          ) : appServer.tierId ===
             serverUpgradeConfig.targetTierId ? (
             <p className="resource-panel__upgrade-complete">
               Medium Server is active.
@@ -164,12 +202,14 @@ export function ResourceDetailsPanel({
               <button
                 type="button"
                 className="resource-panel__upgrade-button"
-                onClick={onStartUpgrade}
-                disabled={!canAffordUpgrade}
+                onClick={() => onStartUpgrade(node.id)}
+                disabled={!canAffordUpgrade || anotherUpgradeIsDeploying}
               >
-                {canAffordUpgrade
-                  ? 'Upgrade to Medium Server'
-                  : 'Insufficient balance'}
+                {anotherUpgradeIsDeploying
+                  ? 'Another upgrade is deploying'
+                  : canAffordUpgrade
+                    ? 'Upgrade to Medium Server'
+                    : 'Insufficient balance'}
               </button>
             </>
           )}

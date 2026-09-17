@@ -622,6 +622,111 @@
   font-size: 9px !important;
 }
 
+.infrastructure-actions-position {
+  margin: 28px;
+}
+
+.infrastructure-actions {
+  width: min(310px, calc(100vw - 40px));
+  overflow: hidden;
+  border: 1px solid #3d5446;
+  border-radius: 10px;
+  background: #17201ced;
+  box-shadow: 0 14px 38px #00000045;
+}
+
+.infrastructure-actions__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #334139;
+}
+
+.infrastructure-actions__heading span {
+  color: #84a08f;
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.infrastructure-actions__heading strong {
+  color: #d7e4dc;
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.infrastructure-actions__options {
+  display: grid;
+  gap: 1px;
+  background: #334139;
+}
+
+.build-option {
+  padding: 13px 14px;
+  background: #151d19;
+}
+
+.build-option > div,
+.infrastructure-actions__deployment > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.build-option strong,
+.infrastructure-actions__deployment span {
+  color: #d7e1db;
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.build-option span,
+.infrastructure-actions__deployment strong {
+  color: #9ac6a6;
+  font: 9px var(--mono);
+  font-weight: 500;
+}
+
+.build-option p,
+.infrastructure-actions__deployment p {
+  margin-top: 5px;
+  color: #819188;
+  font-size: 9px;
+}
+
+.build-option button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid #4d6b58;
+  border-radius: 6px;
+  color: #c8ead1;
+  background: #263a2e;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.build-option button:disabled {
+  border-color: #38443e;
+  color: #748078;
+  background: #202723;
+  cursor: not-allowed;
+}
+
+.infrastructure-actions__deployment {
+  padding: 14px;
+}
+
+.infrastructure-actions__ready {
+  padding: 15px;
+  color: #a8ceb2;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .resource-panel-position {
   margin: 28px;
   max-height: calc(100% - 56px);
@@ -828,6 +933,10 @@
 
 .infrastructure-node[data-kind='database'] {
   --node-accent: #d6baf0;
+}
+
+.infrastructure-node[data-kind='load-balancer'] {
+  --node-accent: #efc778;
 }
 
 .react-flow__node:hover .infrastructure-node,
@@ -1236,6 +1345,10 @@
   }
 
   .event-timeline-position {
+    margin: 16px;
+  }
+
+  .infrastructure-actions-position {
     margin: 16px;
   }
 

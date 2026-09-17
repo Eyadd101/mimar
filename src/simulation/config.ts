@@ -46,6 +46,23 @@ export const serverUpgradeConfig = {
   deploymentDurationSeconds: 30,
 } as const
 
+export const loadBalancerResourceConfig = {
+  name: 'Load Balancer',
+  type: 'Load Balancer',
+  awsReference: 'ALB',
+  costPerPeriod: 6,
+  deploymentCost: 45,
+  deploymentDurationSeconds: 20,
+} as const
+
+export const additionalAppServerConfig = {
+  id: 'server-b',
+  name: 'App Server B',
+  initialTierId: 'medium' satisfies ServerTierId,
+  deploymentCost: 80,
+  deploymentDurationSeconds: 30,
+} as const
+
 export const economyConfig = {
   initialBalance: 200,
   revenuePerActiveUserPerPeriod: 0.6,

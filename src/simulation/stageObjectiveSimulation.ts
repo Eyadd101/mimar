@@ -155,7 +155,7 @@ function evaluateObjective(
     }
     case 'maintain-latency': {
       const current =
-        simulation.appServer.latencyMs <= objective.maximumLatencyMs
+        simulation.applicationLatencyMs <= objective.maximumLatencyMs
           ? Math.min(currentProgress.current + 1, objective.durationSeconds)
           : 0
       return {

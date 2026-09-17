@@ -7,7 +7,7 @@ import type {
 
 export type InfrastructureNodeData = {
   label: string
-  kind: 'users' | 'server' | 'database'
+  kind: 'users' | 'server' | 'database' | 'load-balancer'
   description: string
   number: string
   appServerMetrics?: AppServerMetrics
@@ -30,6 +30,10 @@ const resourcePresentation: Record<
   database: {
     kind: 'database',
     description: 'Persistent storage',
+  },
+  'load-balancer': {
+    kind: 'load-balancer',
+    description: 'Traffic distribution',
   },
 }
 

@@ -1,13 +1,22 @@
 import {
+  additionalAppServerConfig,
   appServerResourceConfig,
   campaignProgressionConfig,
   economyConfig,
+  loadBalancerResourceConfig,
   type ServerTierId,
 } from './config'
 import type { StageRating } from './starRatingSimulation'
-import type { TrafficSimulationState } from './trafficSimulation'
+import type {
+  TrafficInfrastructure,
+  TrafficSimulationState,
+} from './trafficSimulation'
 
-export type CampaignResourceType = 'users' | 'app-server' | 'database'
+export type CampaignResourceType =
+  | 'users'
+  | 'app-server'
+  | 'database'
+  | 'load-balancer'
 
 export type ResourcePosition = {
   x: number
@@ -22,7 +31,7 @@ type CampaignResourceBase = {
 
 export type CampaignResource =
   | (CampaignResourceBase & {
-      type: 'users' | 'database'
+      type: 'users' | 'database' | 'load-balancer'
     })
   | (CampaignResourceBase & {
       type: 'app-server'
@@ -105,13 +114,100 @@ export function getPrimaryAppServer(campaign: CampaignState) {
   return appServer
 }
 
+export function getAppServers(campaign: CampaignState) {
+  return campaign.infrastructure.resources.filter(
+    (resource) => resource.type === 'app-server',
+  )
+}
+
+export function hasLoadBalancer(campaign: CampaignState) {
+  return campaign.infrastructure.resources.some(
+    (resource) => resource.type === 'load-balancer',
+  )
+}
+
+export function applyResourceUnlocks(
+  campaign: CampaignState,
+  unlocks: readonly CampaignResourceType[],
+): CampaignState {
+  const unlockedResourceTypes = Array.from(
+    new Set([...campaign.unlockedResourceTypes, ...unlocks]),
+  )
+
+  return unlockedResourceTypes.length === campaign.unlockedResourceTypes.length
+    ? campaign
+    : { ...campaign, unlockedResourceTypes }
+}
+
+export function addLoadBalancerResource(
+  campaign: CampaignState,
+): CampaignState {
+  if (hasLoadBalancer(campaign)) {
+    return campaign
+  }
+
+  return rebuildInfrastructure({
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      resources: [
+        ...campaign.infrastructure.resources,
+        {
+          id: 'load-balancer',
+          type: 'load-balancer',
+          name: loadBalancerResourceConfig.name,
+          position: { x: 300, y: 0 },
+        },
+      ],
+    },
+  })
+}
+
+export function addAdditionalAppServerResource(
+  campaign: CampaignState,
+): CampaignState {
+  if (
+    !hasLoadBalancer(campaign) ||
+    campaign.infrastructure.resources.some(
+      (resource) => resource.id === additionalAppServerConfig.id,
+    )
+  ) {
+    return campaign
+  }
+
+  return rebuildInfrastructure({
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      resources: [
+        ...campaign.infrastructure.resources.map((resource) =>
+          resource.type === 'app-server'
+            ? { ...resource, name: 'App Server A' }
+            : resource,
+        ),
+        {
+          id: additionalAppServerConfig.id,
+          type: 'app-server',
+          name: additionalAppServerConfig.name,
+          tierId: additionalAppServerConfig.initialTierId,
+          position: { x: 600, y: 140 },
+        },
+      ],
+    },
+  })
+}
+
 export function syncCampaignWithSimulation(
   campaign: CampaignState,
   simulation: TrafficSimulationState,
 ): CampaignState {
-  const primaryAppServer = getPrimaryAppServer(campaign)
   const balanceChanged = campaign.balance !== simulation.balance
-  const tierChanged = primaryAppServer.tierId !== simulation.appServer.tierId
+  const tierChanged = getAppServers(campaign).some((resource) => {
+    const runtime = simulation.appServers.find(
+      (server) => server.resourceId === resource.id,
+    )
+    return runtime && runtime.tierId !== resource.tierId
+  })
 
   if (!balanceChanged && !tierChanged) {
     return campaign
@@ -124,13 +220,34 @@ export function syncCampaignWithSimulation(
       ? {
           ...campaign.infrastructure,
           resources: campaign.infrastructure.resources.map((resource) =>
-            resource.id === primaryAppServer.id &&
             resource.type === 'app-server'
-              ? { ...resource, tierId: simulation.appServer.tierId }
+              ? {
+                  ...resource,
+                  tierId:
+                    simulation.appServers.find(
+                      (server) => server.resourceId === resource.id,
+                    )?.tierId ?? resource.tierId,
+                }
               : resource,
           ),
         }
       : campaign.infrastructure,
+  }
+}
+
+export function createTrafficInfrastructure(
+  campaign: CampaignState,
+): TrafficInfrastructure {
+  return {
+    appServers: getAppServers(campaign).map((server) => ({
+      id: server.id,
+      name: server.name,
+      tierId: server.tierId,
+    })),
+    distributesTraffic: hasLoadBalancer(campaign),
+    loadBalancerCostPerPeriod: hasLoadBalancer(campaign)
+      ? loadBalancerResourceConfig.costPerPeriod
+      : 0,
   }
 }
 
@@ -171,5 +288,82 @@ export function createNextCampaignState(
       ...campaign.completedStages,
       { stageId: completedStageId, stars },
     ],
+  }
+}
+
+function rebuildInfrastructure(campaign: CampaignState): CampaignState {
+  const hasBalancer = hasLoadBalancer(campaign)
+  const appServers = getAppServers(campaign)
+  const resources = campaign.infrastructure.resources.map((resource) => {
+    if (resource.type === 'users') {
+      return { ...resource, position: { x: 0, y: 0 } }
+    }
+
+    if (resource.type === 'load-balancer') {
+      return { ...resource, position: { x: 300, y: 0 } }
+    }
+
+    if (resource.type === 'app-server') {
+      const serverIndex = appServers.findIndex(
+        (server) => server.id === resource.id,
+      )
+      const y = appServers.length > 1 ? (serverIndex === 0 ? -140 : 140) : 0
+      return {
+        ...resource,
+        position: { x: hasBalancer ? 600 : 340, y },
+      }
+    }
+
+    return {
+      ...resource,
+      position: { x: hasBalancer ? 950 : 680, y: 0 },
+    }
+  })
+  const database = resources.find((resource) => resource.type === 'database')
+  const users = resources.find((resource) => resource.type === 'users')
+  const loadBalancer = resources.find(
+    (resource) => resource.type === 'load-balancer',
+  )
+
+  if (!database || !users) {
+    throw new Error('Campaign infrastructure requires Users and Database.')
+  }
+
+  const connections: CampaignConnection[] = loadBalancer
+    ? [
+        {
+          id: 'users-load-balancer',
+          sourceId: users.id,
+          targetId: loadBalancer.id,
+        },
+        ...appServers.flatMap((server) => [
+          {
+            id: `load-balancer-${server.id}`,
+            sourceId: loadBalancer.id,
+            targetId: server.id,
+          },
+          {
+            id: `${server.id}-database`,
+            sourceId: server.id,
+            targetId: database.id,
+          },
+        ]),
+      ]
+    : [
+        {
+          id: 'users-server',
+          sourceId: users.id,
+          targetId: appServers[0].id,
+        },
+        {
+          id: 'server-database',
+          sourceId: appServers[0].id,
+          targetId: database.id,
+        },
+      ]
+
+  return {
+    ...campaign,
+    infrastructure: { resources, connections },
   }
 }

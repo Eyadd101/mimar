@@ -5,12 +5,13 @@ import {
   Controls,
   Panel,
   ReactFlow,
-  useNodesState,
+  type NodeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
 import { EventTimelinePanel } from './components/EventTimelinePanel'
 import { HintPanel } from './components/HintPanel'
+import { InfrastructureActionsPanel } from './components/InfrastructureActionsPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
@@ -21,6 +22,7 @@ import { TrafficHud } from './components/TrafficHud'
 import {
   createInfrastructureEdges,
   createInfrastructureNodes,
+  type InfrastructureFlowNode,
 } from './data/infrastructure'
 import { useGameSimulation } from './hooks/useGameSimulation'
 import { appServerResourceConfig } from './simulation/config'
@@ -37,18 +39,20 @@ function App() {
   const {
     simulation: traffic,
     campaign,
-    stageStartCampaign,
     gameStatus,
     gameOverReason,
     stage,
     objectiveProgress,
     stageRating,
     trafficEvents,
+    infrastructureDeployment,
     hasNextStage,
     isStageBriefingOpen,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
+    startLoadBalancerDeployment,
+    startAdditionalAppServerDeployment,
     restartStage,
     continueToNextStage,
     beginStage,
@@ -58,23 +62,26 @@ function App() {
     () => createInfrastructureEdges(campaign.infrastructure),
     [campaign.infrastructure],
   )
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    createInfrastructureNodes(campaign.infrastructure),
+  const nodes = useMemo(
+    () => createInfrastructureNodes(campaign.infrastructure),
+    [campaign.infrastructure],
   )
   const displayNodes = useMemo(
     () =>
-      nodes.map((node) =>
-        node.id === 'server'
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                appServerMetrics: traffic.appServer,
-              },
-            }
-          : node,
-      ),
-    [nodes, traffic.appServer],
+      nodes.map((node) => ({
+        ...node,
+        selected: node.id === selectedNodeId,
+        data: {
+          ...node.data,
+          appServerMetrics:
+            node.data.kind === 'server'
+              ? traffic.appServers.find(
+                  (server) => server.resourceId === node.id,
+                )
+              : undefined,
+        },
+      })),
+    [nodes, selectedNodeId, traffic.appServers],
   )
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const displayEdges = useMemo(
@@ -92,16 +99,16 @@ function App() {
   const handleRestartStage = () => {
     setSelectedNodeId(null)
     setHint(null)
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => ({
-        ...node,
-        position:
-          stageStartCampaign.infrastructure.resources.find(
-            (resource) => resource.id === node.id,
-          )?.position ?? node.position,
-      })),
-    )
     restartStage()
+  }
+  const handleNodesChange = (
+    changes: NodeChange<InfrastructureFlowNode>[],
+  ) => {
+    for (const change of changes) {
+      if (change.type === 'position' && change.position) {
+        updateResourcePosition(change.id, change.position)
+      }
+    }
   }
 
   return (
@@ -121,7 +128,7 @@ function App() {
         <TrafficHud
           activeUsers={traffic.activeUsers}
           requestsPerSecond={traffic.requestsPerSecond}
-          latencyMs={traffic.appServer.latencyMs}
+          latencyMs={traffic.applicationLatencyMs}
           customerSatisfaction={traffic.customerSatisfaction}
           satisfactionReason={traffic.satisfactionReason}
           balance={traffic.balance}
@@ -138,11 +145,8 @@ function App() {
         <ReactFlow
           nodes={displayNodes}
           edges={displayEdges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-          onNodeDragStop={(_, node) =>
-            updateResourcePosition(node.id, node.position)
-          }
           onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
@@ -158,9 +162,12 @@ function App() {
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#293532" />
           <Panel position="top-left" className="canvas-heading">
-            <p className="eyebrow">Workspace / 001</p>
-            <h1>Your first infrastructure.</h1>
-            <p>Three nodes. One simple connection path.</p>
+            <p className="eyebrow">Campaign / Stage {stage.sequence}</p>
+            <h1>{stage.name}</h1>
+            <p>
+              {campaign.infrastructure.resources.length} resources ·{' '}
+              {campaign.infrastructure.connections.length} connections
+            </p>
           </Panel>
           <Panel position="top-left" className="stage-objectives-position">
             <StageObjectivePanel stage={stage} progress={objectiveProgress} />
@@ -181,6 +188,20 @@ function App() {
                 events={stage.trafficEvents}
                 runtime={trafficEvents}
                 gameTimeSeconds={traffic.gameTimeSeconds}
+              />
+            </Panel>
+          )}
+          {campaign.unlockedResourceTypes.includes('load-balancer') && (
+            <Panel
+              position="bottom-right"
+              className="infrastructure-actions-position"
+            >
+              <InfrastructureActionsPanel
+                campaign={campaign}
+                simulation={traffic}
+                deployment={infrastructureDeployment}
+                onDeployLoadBalancer={startLoadBalancerDeployment}
+                onDeployAppServer={startAdditionalAppServerDeployment}
               />
             </Panel>
           )}

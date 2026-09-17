@@ -6,6 +6,8 @@ import {
 } from '../simulation/config'
 import {
   advanceGameState,
+  beginAdditionalAppServerDeployment,
+  beginLoadBalancerDeployment,
   beginServerUpgrade,
   continueToNextStage,
   createInitialGameState,
@@ -40,8 +42,18 @@ export function useGameSimulation() {
     return () => window.clearInterval(timerId)
   }, [effectiveGameSpeed])
 
-  const upgradeServer = useCallback(() => {
-    setGameState(beginServerUpgrade)
+  const upgradeServer = useCallback((resourceId: string) => {
+    setGameState((currentState) =>
+      beginServerUpgrade(currentState, resourceId),
+    )
+  }, [])
+
+  const deployLoadBalancer = useCallback(() => {
+    setGameState(beginLoadBalancerDeployment)
+  }, [])
+
+  const deployAdditionalAppServer = useCallback(() => {
+    setGameState(beginAdditionalAppServerDeployment)
   }, [])
 
   const resetStage = useCallback(() => {
@@ -79,11 +91,15 @@ export function useGameSimulation() {
     objectiveProgress: gameState.stageRuntime.objectiveProgress,
     stageRating: gameState.stageRuntime.stageRating,
     trafficEvents: gameState.stageRuntime.trafficEvents,
+    infrastructureDeployment:
+      gameState.stageRuntime.infrastructureDeployment,
     hasNextStage: hasNextCampaignStage(gameState),
     isStageBriefingOpen: !gameState.stageRuntime.briefingDismissed,
     gameSpeed: effectiveGameSpeed,
     setGameSpeed,
     startServerUpgrade: upgradeServer,
+    startLoadBalancerDeployment: deployLoadBalancer,
+    startAdditionalAppServerDeployment: deployAdditionalAppServer,
     restartStage: resetStage,
     continueToNextStage: continueCampaign,
     beginStage,

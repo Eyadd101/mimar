@@ -67,6 +67,8 @@ export type TutorialStep = {
   message: string
 }
 
+export type StageResourceUnlock = 'load-balancer'
+
 export type TrafficEventDefinition = {
   id: string
   type: 'traffic-multiplier'
@@ -99,6 +101,7 @@ export type StageConfig = {
   tutorialSteps: TutorialStep[]
   learningGoals: string[]
   trafficEvents: TrafficEventDefinition[]
+  unlocksResourceTypes: StageResourceUnlock[]
   minimumSurvivalDurationSeconds: number
   primaryObjective: StageObjectiveDefinition
   secondaryObjectives: StageObjectiveDefinition[]
@@ -152,6 +155,7 @@ export const prototypeStageConfig: StageConfig = {
     'Vertical scaling increases one server’s capacity.',
   ],
   trafficEvents: [],
+  unlocksResourceTypes: [],
   minimumSurvivalDurationSeconds: 270,
   primaryObjective: {
     id: 'survive-first-users',
@@ -242,6 +246,7 @@ export const growthPreviewStageConfig: StageConfig = {
       },
     },
   ],
+  unlocksResourceTypes: [],
   primaryObjective: {
     id: 'survive-growth-preview',
     type: 'survive-duration',
@@ -297,6 +302,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
     'Horizontal scaling means sharing traffic across multiple servers.',
   ],
   trafficEvents: [],
+  unlocksResourceTypes: ['load-balancer'],
   minimumSurvivalDurationSeconds: 330,
   primaryObjective: {
     id: 'observe-vertical-limit',
