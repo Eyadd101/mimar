@@ -66,6 +66,7 @@ export const additionalAppServerConfig = {
 export const economyConfig = {
   initialBalance: 200,
   revenuePerActiveUserPerPeriod: 0.6,
+  maximumRevenuePerPeriod: 70,
 } as const
 
 export const latencySimulationConfig = {

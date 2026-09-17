@@ -10,17 +10,19 @@ export type EconomyState = {
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
 
 /**
- * Healthy users generate the configured revenue each economy period.
+ * Active users generate potential revenue up to a campaign-scale ceiling.
  * Satisfaction scales how much of that potential revenue is retained:
- * revenue = activeUsers * revenuePerActiveUserPerPeriod * satisfaction / 100
+ * revenue = min(activeUsers * revenuePerUser, maximumRevenue) * satisfaction / 100
  */
 export function calculateRevenuePerPeriod(
   activeUsers: number,
   customerSatisfaction: number,
 ) {
   return roundToOneDecimal(
-    activeUsers *
-      economyConfig.revenuePerActiveUserPerPeriod *
+    Math.min(
+      activeUsers * economyConfig.revenuePerActiveUserPerPeriod,
+      economyConfig.maximumRevenuePerPeriod,
+    ) *
       (customerSatisfaction / 100),
   )
 }
