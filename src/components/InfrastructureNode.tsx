@@ -3,12 +3,24 @@ import type {
   InfrastructureFlowNode,
   InfrastructureNodeData,
 } from '../data/infrastructure'
+import { useLanguage } from '../i18n/useLanguage'
+import {
+  getEnglishTranslation,
+  type TranslationKey,
+} from '../i18n/translations'
 
-const roleLabels: Record<InfrastructureNodeData['kind'], string> = {
-  users: 'ENTRY POINT',
-  server: 'COMPUTE',
-  database: 'STORAGE',
-  'load-balancer': 'TRAFFIC ROUTING',
+const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  users: 'node.entryPoint',
+  server: 'node.compute',
+  database: 'node.storage',
+  'load-balancer': 'node.trafficRouting',
+}
+
+const resourceLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  users: 'resource.users',
+  server: 'resource.appServer',
+  database: 'resource.database',
+  'load-balancer': 'resource.loadBalancer',
 }
 
 const statusLabels = {
@@ -62,6 +74,13 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
 }
 
 export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) {
+  const { language, t } = useLanguage()
+  const resourceLabelKey = resourceLabelKeys[data.kind]
+  const englishResourceLabel =
+    data.kind === 'server' && data.label !== 'App Server'
+      ? data.label
+      : getEnglishTranslation(resourceLabelKey)
+
   return (
     <div
       className="infrastructure-node"
@@ -82,7 +101,12 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
         </span>
         <span className="node-number">{data.number}</span>
       </div>
-      <h2 className="node-label">{data.label}</h2>
+      <h2 className="node-label">
+        <span>{t(resourceLabelKey)}</span>
+        {language === 'ar' && (
+          <small lang="en" dir="ltr">{englishResourceLabel}</small>
+        )}
+      </h2>
       <p className="node-description">{data.description}</p>
       {data.kind === 'server' && data.appServerMetrics && (
         <div
@@ -112,7 +136,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
         </div>
       )}
       <div className="node-footer">
-        <span>{roleLabels[data.kind]}</span>
+        <span>{t(roleLabelKeys[data.kind])}</span>
         <svg
           className="drag-grip"
           width="16"

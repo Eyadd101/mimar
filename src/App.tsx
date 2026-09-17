@@ -17,6 +17,7 @@ import { EventTimelinePanel } from './components/EventTimelinePanel'
 import { HintPanel } from './components/HintPanel'
 import { InfrastructureActionsPanel } from './components/InfrastructureActionsPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
+import { LanguageSelector } from './components/LanguageSelector'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { ResourcePalette } from './components/ResourcePalette'
@@ -47,6 +48,7 @@ import {
 } from './simulation/connectionValidation'
 import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
+import { useLanguage } from './i18n/useLanguage'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
 const edgeTypes = { requestFlow: RequestFlowEdge }
@@ -58,6 +60,7 @@ type PendingInfrastructureAction =
   | { kind: 'app-server' }
 
 function App() {
+  const { direction, t } = useLanguage()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [pendingAction, setPendingAction] =
@@ -243,7 +246,7 @@ function App() {
   }
 
   return (
-    <main className="game">
+    <main className="game" dir={direction}>
       <header className="game-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
@@ -254,7 +257,7 @@ function App() {
           </span>
           <span className="brand-name">Cloud Game</span>
           <span className="brand-divider" aria-hidden="true" />
-          <span className="header-caption">Infrastructure playground</span>
+          <span className="header-caption">{t('app.caption')}</span>
         </div>
         <TrafficHud
           activeUsers={traffic.activeUsers}
@@ -270,7 +273,10 @@ function App() {
           costPeriodSeconds={appServerResourceConfig.costPeriodSeconds}
           gameTimeSeconds={traffic.gameTimeSeconds}
         />
-        <span className="prototype-badge">Prototype <span>01</span></span>
+        <div className="header-tools">
+          <LanguageSelector />
+          <span className="prototype-badge">Prototype <span>01</span></span>
+        </div>
       </header>
 
       <section className="canvas" aria-label="Infrastructure canvas">

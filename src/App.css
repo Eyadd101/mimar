@@ -553,6 +553,36 @@
   white-space: nowrap;
 }
 
+.header-tools {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 10px;
+}
+
+.language-selector {
+  display: grid;
+  gap: 3px;
+}
+
+.language-selector span {
+  color: #74877c;
+  font: 7px var(--mono);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.language-selector select {
+  min-width: 92px;
+  padding: 5px 22px 5px 8px;
+  border: 1px solid #35463c;
+  border-radius: 5px;
+  color: #c2d0c8;
+  background: #17201c;
+  font: 9px var(--mono);
+  cursor: pointer;
+}
+
 .prototype-badge span {
   margin-left: 8px;
   color: var(--accent);
@@ -641,6 +671,7 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  direction: ltr;
 }
 
 .canvas .react-flow {
@@ -1479,6 +1510,13 @@
   font-size: 19px;
   font-weight: 550;
   letter-spacing: -0.4px;
+}
+
+.node-label small {
+  display: block;
+  margin-top: 3px;
+  color: #8fa197;
+  font: 9px var(--mono);
 }
 
 .node-description {

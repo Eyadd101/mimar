@@ -20,6 +20,7 @@ const {
   simulationClock,
   stageOneOnboardingSimulation,
   trafficSimulation,
+  translations,
 } = simulation
 
 function createMemoryStorage() {
@@ -169,6 +170,17 @@ test('Stage 1 accepts only the educational request path and starts traffic when 
     ),
     ['users->server', 'server->database'],
   )
+})
+
+test('language preference defaults safely and persists supported languages', () => {
+  const storage = createMemoryStorage()
+  assert.equal(translations.readLanguagePreference(storage), 'en')
+
+  assert.equal(translations.writeLanguagePreference('ar', storage), true)
+  assert.equal(translations.readLanguagePreference(storage), 'ar')
+
+  storage.values.set(translations.languagePreferenceKey, 'unsupported')
+  assert.equal(translations.readLanguagePreference(storage), 'en')
 })
 
 test('CPU and memory remain between zero and one hundred', () => {
