@@ -4,13 +4,22 @@ import type {
 } from '../simulation/gameStateSimulation'
 import type { TrafficSimulationState } from '../simulation/trafficSimulation'
 import type { StageRating } from '../simulation/starRatingSimulation'
+import type { CampaignState } from '../simulation/campaignSimulation'
+import { getInfrastructureSummary } from '../simulation/campaignSimulation'
+import type { StageConfig } from '../data/stages'
+import {
+  calculateAverageLatency,
+  type StageStatistics,
+} from '../simulation/stageStatisticsSimulation'
 
 type GameStateOverlayProps = {
   status: GameStatus
   reason: GameOverReason | null
   simulation: TrafficSimulationState
-  stageName: string
+  stage: StageConfig
   stageRating: StageRating | null
+  stageStatistics: StageStatistics
+  campaign: CampaignState
   hasNextStage: boolean
   onRestartStage: () => void
   onContinueToNextStage: () => void
@@ -20,8 +29,10 @@ export function GameStateOverlay({
   status,
   reason,
   simulation,
-  stageName,
+  stage,
   stageRating,
+  stageStatistics,
+  campaign,
   hasNextStage,
   onRestartStage,
   onContinueToNextStage,
@@ -38,7 +49,7 @@ export function GameStateOverlay({
         <p className="game-state-card__eyebrow">
           {stageWon ? 'Stage complete' : 'Game over'}
         </p>
-        <h2>{stageWon ? stageName : reason?.title}</h2>
+        <h2>{stageWon ? stage.name : reason?.title}</h2>
         <p className="game-state-card__message">
           {stageWon
             ? 'The primary objective has been completed.'
@@ -46,22 +57,41 @@ export function GameStateOverlay({
         </p>
 
         <dl className="game-state-card__metrics">
-          <div>
-            <dt>Game time</dt>
-            <dd>{simulation.gameTimeSeconds}s</dd>
-          </div>
-          <div>
-            <dt>Balance</dt>
-            <dd>{simulation.balance} cr</dd>
-          </div>
-          <div>
-            <dt>Satisfaction</dt>
-            <dd>{simulation.customerSatisfaction.toFixed(1)}%</dd>
-          </div>
-          <div>
-            <dt>Latency</dt>
-            <dd>{simulation.applicationLatencyMs} ms</dd>
-          </div>
+          {stageWon ? (
+            <>
+              <ResultMetric label="Peak users" value={stageStatistics.peakActiveUsers} />
+              <ResultMetric
+                label="Average latency"
+                value={`${calculateAverageLatency(stageStatistics)} ms`}
+              />
+              <ResultMetric
+                label="Lowest satisfaction"
+                value={`${stageStatistics.lowestSatisfaction.toFixed(1)}%`}
+              />
+              <ResultMetric
+                label="Infrastructure cost"
+                value={`${stageStatistics.totalInfrastructureCost} cr`}
+              />
+              <ResultMetric
+                label="Remaining balance"
+                value={`${simulation.balance.toFixed(1)} cr`}
+              />
+              <ResultMetric label="Game time" value={`${simulation.gameTimeSeconds}s`} />
+            </>
+          ) : (
+            <>
+              <ResultMetric label="Game time" value={`${simulation.gameTimeSeconds}s`} />
+              <ResultMetric label="Balance" value={`${simulation.balance} cr`} />
+              <ResultMetric
+                label="Satisfaction"
+                value={`${simulation.customerSatisfaction.toFixed(1)}%`}
+              />
+              <ResultMetric
+                label="Latency"
+                value={`${simulation.applicationLatencyMs} ms`}
+              />
+            </>
+          )}
         </dl>
 
         {stageWon && stageRating && (
@@ -86,6 +116,27 @@ export function GameStateOverlay({
           </div>
         )}
 
+        {stageWon && (
+          <div className="stage-recap">
+            <div>
+              <span>Infrastructure</span>
+              <ul>
+                {getInfrastructureSummary(campaign).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <span>What you learned</span>
+              <ul>
+                {stage.learningGoals.map((goal) => (
+                  <li key={goal}>{goal}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {stageWon && hasNextStage && (
           <button type="button" onClick={onContinueToNextStage}>
             Continue to Next Stage
@@ -102,6 +153,21 @@ export function GameStateOverlay({
           </button>
         )}
       </section>
+    </div>
+  )
+}
+
+function ResultMetric({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+}) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   )
 }

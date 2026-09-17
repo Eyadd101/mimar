@@ -43,6 +43,11 @@ import {
   getCompletedTrafficEventIds,
   type StageTrafficEventRuntime,
 } from './trafficEventSimulation'
+import {
+  advanceStageStatistics,
+  createInitialStageStatistics,
+  type StageStatistics,
+} from './stageStatisticsSimulation'
 
 export type GameStatus = 'playing' | 'stage-won' | 'game-over'
 export type GameOverReasonCode = 'bankruptcy' | 'service-failure'
@@ -63,6 +68,7 @@ export type StageRuntimeState = {
   briefingDismissed: boolean
   trafficEvents: StageTrafficEventRuntime
   infrastructureDeployment: InfrastructureDeployment | null
+  statistics: StageStatistics
 }
 
 export type InfrastructureDeployment = {
@@ -274,13 +280,15 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     throw new Error('Campaign stage configuration is missing.')
   }
 
+  const simulation = createInitialTrafficState({
+    infrastructure: createTrafficInfrastructure(campaign),
+    balance: campaign.balance,
+    trafficProfile: stage.trafficProfile,
+  })
+
   return {
     status: 'playing',
-    simulation: createInitialTrafficState({
-      infrastructure: createTrafficInfrastructure(campaign),
-      balance: campaign.balance,
-      trafficProfile: stage.trafficProfile,
-    }),
+    simulation,
     zeroSatisfactionDurationSeconds: 0,
     gameOverReason: null,
     objectiveProgress: createStageObjectiveProgress(stage),
@@ -288,6 +296,7 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     briefingDismissed: stage.tutorialSteps.length === 0,
     trafficEvents: createStageTrafficEvents(stage, campaign.seed),
     infrastructureDeployment: null,
+    statistics: createInitialStageStatistics(simulation),
   }
 }
 
@@ -338,6 +347,10 @@ function advanceOneGameSecond(currentState: GameState): GameState {
   const stageRating = stageWon
     ? calculateStageRating(stage, simulation, objectiveProgress)
     : null
+  const statistics = advanceStageStatistics(
+    currentState.stageRuntime.statistics,
+    simulation,
+  )
 
   return {
     ...currentState,
@@ -356,6 +369,7 @@ function advanceOneGameSecond(currentState: GameState): GameState {
       briefingDismissed: currentState.stageRuntime.briefingDismissed,
       trafficEvents,
       infrastructureDeployment: deploymentResult.deployment,
+      statistics,
     },
   }
 }

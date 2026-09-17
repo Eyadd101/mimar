@@ -291,6 +291,27 @@ export function createNextCampaignState(
   }
 }
 
+export function getInfrastructureSummary(campaign: CampaignState) {
+  return campaign.infrastructure.resources
+    .filter(
+      (resource) =>
+        resource.type === 'app-server' ||
+        resource.type === 'load-balancer' ||
+        resource.type === 'database',
+    )
+    .map((resource) => {
+      if (resource.type === 'app-server') {
+        return `${resource.name} — ${resource.tierId === 'medium' ? 'Medium Server' : 'Small Server'}`
+      }
+
+      if (resource.type === 'load-balancer') {
+        return `${resource.name} — ALB`
+      }
+
+      return resource.name
+    })
+}
+
 function rebuildInfrastructure(campaign: CampaignState): CampaignState {
   const hasBalancer = hasLoadBalancer(campaign)
   const appServers = getAppServers(campaign)

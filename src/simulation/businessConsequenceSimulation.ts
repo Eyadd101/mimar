@@ -21,11 +21,19 @@ export function advanceBusinessConsequences(
   latencyMs: number,
   balance: number,
 ) {
+  const currentConsequenceState: BusinessConsequenceState = {
+    severeOutageDurationSeconds: currentState.severeOutageDurationSeconds,
+    outagePenaltyAppliedForIncident:
+      currentState.outagePenaltyAppliedForIncident,
+    totalFinancialPenalties: currentState.totalFinancialPenalties,
+    businessConsequenceReason: currentState.businessConsequenceReason,
+  }
+
   if (latencyMs < businessConsequenceConfig.severeOutageLatencyMs) {
     return {
       balance,
       consequenceState: {
-        ...currentState,
+        ...currentConsequenceState,
         severeOutageDurationSeconds: 0,
         outagePenaltyAppliedForIncident: false,
         businessConsequenceReason: null,
@@ -44,7 +52,7 @@ export function advanceBusinessConsequences(
     return {
       balance,
       consequenceState: {
-        ...currentState,
+        ...currentConsequenceState,
         severeOutageDurationSeconds,
         businessConsequenceReason: null,
       },

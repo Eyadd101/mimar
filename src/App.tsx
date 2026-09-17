@@ -47,6 +47,7 @@ function App() {
     stageRating,
     trafficEvents,
     infrastructureDeployment,
+    stageStatistics,
     hasNextStage,
     isStageBriefingOpen,
     gameSpeed,
@@ -256,8 +257,10 @@ function App() {
         status={gameStatus}
         reason={gameOverReason}
         simulation={traffic}
-        stageName={stage.name}
+        stage={stage}
         stageRating={stageRating}
+        stageStatistics={stageStatistics}
+        campaign={campaign}
         hasNextStage={hasNextStage}
         onRestartStage={handleRestartStage}
         onContinueToNextStage={() => {

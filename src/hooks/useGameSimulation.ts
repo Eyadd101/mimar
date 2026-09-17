@@ -93,6 +93,7 @@ export function useGameSimulation() {
     trafficEvents: gameState.stageRuntime.trafficEvents,
     infrastructureDeployment:
       gameState.stageRuntime.infrastructureDeployment,
+    stageStatistics: gameState.stageRuntime.statistics,
     hasNextStage: hasNextCampaignStage(gameState),
     isStageBriefingOpen: !gameState.stageRuntime.briefingDismissed,
     gameSpeed: effectiveGameSpeed,
