@@ -7,6 +7,7 @@ import * as gameStateSimulation from '../src/simulation/gameStateSimulation'
 import * as simulationClock from '../src/simulation/simulationClock'
 import * as trafficSimulation from '../src/simulation/trafficSimulation'
 import * as infrastructureData from '../src/data/infrastructure'
+import * as stageOneOnboardingSimulation from '../src/simulation/stageOneOnboardingSimulation'
 
 export {
   appServerSimulation,
@@ -16,6 +17,7 @@ export {
   economySimulation,
   gameStateSimulation,
   infrastructureData,
+  stageOneOnboardingSimulation,
   simulationClock,
   trafficSimulation,
 }

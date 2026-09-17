@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
+import { GuidedBuildPanel } from './components/GuidedBuildPanel'
 import { CampaignStartOverlay } from './components/CampaignStartOverlay'
 import { ActionConfirmationDialog } from './components/ActionConfirmationDialog'
 import { EventTimelinePanel } from './components/EventTimelinePanel'
@@ -39,6 +40,7 @@ import {
   serverUpgradeConfig,
 } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
+import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -94,6 +96,10 @@ function App() {
   )
   const nodes = useMemo(
     () => createInfrastructureNodes(campaign.infrastructure),
+    [campaign.infrastructure],
+  )
+  const stageOneBuildStep = useMemo(
+    () => getStageOneBuildStep(campaign.infrastructure),
     [campaign.infrastructure],
   )
   const displayNodes = useMemo(() => {
@@ -267,7 +273,13 @@ function App() {
               <ResourcePalette
                 resources={campaign.infrastructure.resources}
                 onAddResource={addResource}
+                currentStep={stageOneBuildStep}
               />
+            </Panel>
+          )}
+          {stage.sequence === 1 && !serviceStarted && (
+            <Panel position="bottom-center" className="guided-build-position">
+              <GuidedBuildPanel step={stageOneBuildStep} />
             </Panel>
           )}
           {selectedNode && (

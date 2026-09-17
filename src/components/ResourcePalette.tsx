@@ -3,17 +3,20 @@ import type {
   CampaignResource,
   CampaignResourceType,
 } from '../simulation/campaignSimulation'
+import type { StageOneBuildStep } from '../simulation/stageOneOnboardingSimulation'
 
 type ResourcePaletteProps = {
   resources: readonly CampaignResource[]
   onAddResource: (
     type: Extract<CampaignResourceType, 'users' | 'app-server' | 'database'>,
   ) => void
+  currentStep: StageOneBuildStep
 }
 
 export function ResourcePalette({
   resources,
   onAddResource,
+  currentStep,
 }: ResourcePaletteProps) {
   return (
     <aside className="resource-palette nodrag nopan" aria-label="Resource palette">
@@ -26,6 +29,9 @@ export function ResourcePalette({
           const isPlaced = resources.some(
             (placedResource) => placedResource.type === resource.type,
           )
+          const isCurrentResource =
+            currentStep.resourceToPlace === resource.type
+          const isDisabled = isPlaced || !isCurrentResource
 
           return (
             <article className="resource-palette__card" key={resource.type}>
@@ -36,10 +42,14 @@ export function ResourcePalette({
               <p>{resource.description}</p>
               <button
                 type="button"
-                disabled={isPlaced}
+                disabled={isDisabled}
                 onClick={() => onAddResource(resource.type)}
               >
-                {isPlaced ? 'Added' : 'Add to canvas'}
+                {isPlaced
+                  ? 'Added'
+                  : isCurrentResource
+                    ? 'Add to canvas'
+                    : 'Follow the guide'}
               </button>
             </article>
           )

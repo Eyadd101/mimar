@@ -17,6 +17,7 @@ const {
   gameStateSimulation,
   infrastructureData,
   simulationClock,
+  stageOneOnboardingSimulation,
   trafficSimulation,
 } = simulation
 
@@ -97,6 +98,33 @@ test('Stage 1 palette resources can be placed once without starting traffic', ()
   assert.equal(state.stageRuntime.serviceStarted, false)
   assert.equal(state.stageRuntime.simulation.activeUsers, 0)
   assert.equal(state.stageRuntime.simulation.appServers.length, 1)
+})
+
+test('Stage 1 guided build advances only from player infrastructure changes', () => {
+  let state = gameStateSimulation.createInitialGameState()
+  assert.equal(
+    stageOneOnboardingSimulation.getStageOneBuildStep(
+      state.campaign.infrastructure,
+    ).id,
+    'place-users',
+  )
+
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  assert.equal(
+    stageOneOnboardingSimulation.getStageOneBuildStep(
+      state.campaign.infrastructure,
+    ).id,
+    'place-app-server',
+  )
+
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+  assert.equal(
+    stageOneOnboardingSimulation.getStageOneBuildStep(
+      state.campaign.infrastructure,
+    ).id,
+    'connect-users-app-server',
+  )
+  assert.equal(state.campaign.infrastructure.connections.length, 0)
 })
 
 test('CPU and memory remain between zero and one hundred', () => {

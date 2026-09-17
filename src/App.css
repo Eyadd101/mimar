@@ -685,6 +685,49 @@
   margin: 28px 36px 76px;
 }
 
+.guided-build-position {
+  margin-bottom: 28px;
+}
+
+.guided-build {
+  width: min(420px, calc(100vw - 40px));
+  padding: 15px 17px;
+  border: 1px solid #526858;
+  border-radius: 10px;
+  background: #18251eee;
+  box-shadow: 0 14px 38px #0000004d;
+}
+
+.guided-build__progress {
+  display: flex;
+  justify-content: space-between;
+  color: #8eb49b;
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.guided-build h2 {
+  margin-top: 9px;
+  color: #e3eee7;
+  font-size: 15px;
+  font-weight: 550;
+}
+
+.guided-build p {
+  margin-top: 6px;
+  color: #aab9b0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.guided-build small {
+  display: block;
+  margin-top: 10px;
+  color: #71847a;
+  font: 8px var(--mono);
+}
+
 .resource-palette {
   width: 260px;
   overflow: hidden;
