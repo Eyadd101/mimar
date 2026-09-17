@@ -14,7 +14,7 @@ import {
   dismissStageBriefing,
   getCurrentStage,
   hasNextCampaignStage,
-  moveCampaignResource,
+  moveCampaignResources,
   restartCampaign,
   restartStage,
 } from '../simulation/gameStateSimulation'
@@ -110,10 +110,14 @@ export function useGameSimulation() {
     setGameState(dismissStageBriefing)
   }, [])
 
-  const updateResourcePosition = useCallback(
-    (resourceId: string, position: { x: number; y: number }) => {
+  const updateResourcePositions = useCallback(
+    (updates: readonly { id: string; position: { x: number; y: number } }[]) => {
+      if (updates.length === 0) {
+        return
+      }
+
       setGameState((currentState) =>
-        moveCampaignResource(currentState, resourceId, position),
+        moveCampaignResources(currentState, updates),
       )
     },
     [],
@@ -149,6 +153,6 @@ export function useGameSimulation() {
     continueSavedCampaign,
     continueToNextStage: continueCampaign,
     beginStage,
-    updateResourcePosition,
+    updateResourcePositions,
   }
 }

@@ -251,18 +251,37 @@ export function createTrafficInfrastructure(
   }
 }
 
-export function updateResourcePosition(
+export function updateResourcePositions(
   campaign: CampaignState,
-  resourceId: string,
-  position: ResourcePosition,
+  updates: readonly { id: string; position: ResourcePosition }[],
 ): CampaignState {
+  const positionsById = new Map(
+    updates.map((update) => [update.id, update.position]),
+  )
+  let positionChanged = false
+  const resources = campaign.infrastructure.resources.map((resource) => {
+    const position = positionsById.get(resource.id)
+
+    if (
+      !position ||
+      (position.x === resource.position.x && position.y === resource.position.y)
+    ) {
+      return resource
+    }
+
+    positionChanged = true
+    return { ...resource, position: { ...position } }
+  })
+
+  if (!positionChanged) {
+    return campaign
+  }
+
   return {
     ...campaign,
     infrastructure: {
       ...campaign.infrastructure,
-      resources: campaign.infrastructure.resources.map((resource) =>
-        resource.id === resourceId ? { ...resource, position } : resource,
-      ),
+      resources,
     },
   }
 }

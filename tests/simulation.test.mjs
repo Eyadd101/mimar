@@ -15,6 +15,7 @@ const {
   customerSatisfactionSimulation,
   economySimulation,
   gameStateSimulation,
+  infrastructureData,
   simulationClock,
   trafficSimulation,
 } = simulation
@@ -138,10 +139,9 @@ test('customer satisfaction remains bounded', () => {
 
 test('restart restores the stage-start campaign snapshot', () => {
   const initial = gameStateSimulation.createInitialGameState()
-  let changed = gameStateSimulation.moveCampaignResource(
+  let changed = gameStateSimulation.moveCampaignResources(
     initial,
-    'server',
-    { x: 999, y: 999 },
+    [{ id: 'server', position: { x: 999, y: 999 } }],
   )
   changed = gameStateSimulation.beginServerUpgrade(changed, 'server')
   const restarted = gameStateSimulation.restartStage(changed)
@@ -270,4 +270,152 @@ test('horizontal scaling unlocks only for the launch preparation stage', () => {
     launch.campaign.unlockedResourceTypes.includes('load-balancer'),
     true,
   )
+})
+
+test('repeated node drags preserve infrastructure identity and runtime state', () => {
+  let gameState = gameStateSimulation.dismissStageBriefing(
+    gameStateSimulation.createInitialGameState(),
+  )
+  const originalConnections = gameState.campaign.infrastructure.connections
+  const originalStageRuntime = gameState.stageRuntime
+  const originalResourceIds = gameState.campaign.infrastructure.resources.map(
+    (resource) => resource.id,
+  )
+  const originalServerTier = campaignSimulation.getPrimaryAppServer(
+    gameState.campaign,
+  ).tierId
+  let nodes = infrastructureData.createInfrastructureNodes(
+    gameState.campaign.infrastructure,
+  )
+  const measuredChanges = nodes.map((node) => ({
+    id: node.id,
+    type: 'dimensions',
+    dimensions: { width: 240, height: 180 },
+  }))
+  let changeResult = infrastructureData.applyInfrastructureNodeChanges(
+    measuredChanges,
+    nodes,
+  )
+  nodes = changeResult.nodes
+  let nodeRuntime = changeResult.runtime
+
+  const dragSequence = [
+    { id: 'users', position: { x: 40, y: 30 } },
+    { id: 'server', position: { x: 390, y: -45 } },
+    { id: 'database', position: { x: 730, y: 60 } },
+    { id: 'users', position: { x: 80, y: -20 } },
+    { id: 'server', position: { x: 410, y: 15 } },
+  ]
+
+  for (const drag of dragSequence) {
+    changeResult = infrastructureData.applyInfrastructureNodeChanges(
+      [
+        { id: drag.id, type: 'position', position: drag.position, dragging: true },
+        { id: 'database', type: 'remove' },
+      ],
+      nodes,
+    )
+    nodes = changeResult.nodes
+    nodeRuntime = changeResult.runtime
+    gameState = gameStateSimulation.moveCampaignResources(
+      gameState,
+      changeResult.positionUpdates,
+    )
+    nodes = infrastructureData.carryInfrastructureNodeRuntime(
+      infrastructureData.createInfrastructureNodes(
+        gameState.campaign.infrastructure,
+      ),
+      nodeRuntime,
+    )
+
+    assert.deepEqual(
+      gameState.campaign.infrastructure.resources.map((resource) => resource.id),
+      originalResourceIds,
+    )
+    assert.strictEqual(
+      gameState.campaign.infrastructure.connections,
+      originalConnections,
+    )
+    assert.strictEqual(gameState.stageRuntime, originalStageRuntime)
+    assert.equal(nodes.length, originalResourceIds.length)
+    assert.ok(nodes.every((node) => node.measured?.width === 240))
+    assert.equal(
+      infrastructureData.createInfrastructureEdges(
+        gameState.campaign.infrastructure,
+      ).length,
+      originalConnections.length,
+    )
+  }
+
+  assert.equal(
+    campaignSimulation.getPrimaryAppServer(gameState.campaign).tierId,
+    originalServerTier,
+  )
+  assert.deepEqual(
+    gameState.campaign.infrastructure.resources.find(
+      (resource) => resource.id === 'users',
+    ).position,
+    { x: 80, y: -20 },
+  )
+
+  const advanced = gameStateSimulation.advanceGameState(gameState, 1)
+  assert.equal(advanced.stageRuntime.simulation.gameTimeSeconds, 1)
+  assert.equal(
+    advanced.stageRuntime.objectiveProgress['survive-first-users'].current,
+    1,
+  )
+
+  const storage = createMemoryStorage()
+  campaignSave.saveCampaign(advanced.campaign, storage)
+  const loaded = campaignSave.loadCampaignSave(storage)
+  assert.equal(loaded.status, 'ready')
+  assert.deepEqual(loaded.campaign.infrastructure, advanced.campaign.infrastructure)
+  const continued = gameStateSimulation.createInitialGameState(loaded.campaign)
+  assert.deepEqual(
+    continued.campaign.infrastructure,
+    advanced.campaign.infrastructure,
+  )
+})
+
+test('position batches preserve every stage topology', () => {
+  for (let currentStageIndex = 0; currentStageIndex < 4; currentStageIndex += 1) {
+    let campaign = {
+      ...campaignSimulation.createInitialCampaignState(),
+      currentStageIndex,
+    }
+
+    if (currentStageIndex === 3) {
+      campaign = campaignSimulation.addAdditionalAppServerResource(
+        campaignSimulation.addLoadBalancerResource(campaign),
+      )
+    }
+
+    const state = gameStateSimulation.createInitialGameState(campaign)
+    const nodes = infrastructureData.createInfrastructureNodes(
+      state.campaign.infrastructure,
+    )
+    const result = infrastructureData.applyInfrastructureNodeChanges(
+      nodes.map((node, index) => ({
+        id: node.id,
+        type: 'position',
+        position: { x: node.position.x + index + 1, y: node.position.y + 5 },
+      })),
+      nodes,
+    )
+    const moved = gameStateSimulation.moveCampaignResources(
+      state,
+      result.positionUpdates,
+    )
+
+    assert.equal(moved.campaign.currentStageIndex, currentStageIndex)
+    assert.strictEqual(moved.stageRuntime, state.stageRuntime)
+    assert.deepEqual(
+      moved.campaign.infrastructure.resources.map((resource) => resource.id),
+      state.campaign.infrastructure.resources.map((resource) => resource.id),
+    )
+    assert.deepEqual(
+      moved.campaign.infrastructure.connections,
+      state.campaign.infrastructure.connections,
+    )
+  }
 })

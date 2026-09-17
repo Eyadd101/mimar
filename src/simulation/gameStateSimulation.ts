@@ -12,7 +12,7 @@ import {
   createTrafficInfrastructure,
   hasLoadBalancer,
   syncCampaignWithSimulation,
-  updateResourcePosition,
+  updateResourcePositions,
   type CampaignState,
 } from './campaignSimulation'
 import {
@@ -219,18 +219,19 @@ export function dismissStageBriefing(currentState: GameState): GameState {
   }
 }
 
-export function moveCampaignResource(
+export function moveCampaignResources(
   currentState: GameState,
-  resourceId: string,
-  position: { x: number; y: number },
+  updates: readonly { id: string; position: { x: number; y: number } }[],
 ): GameState {
+  const campaign = updateResourcePositions(currentState.campaign, updates)
+
+  if (campaign === currentState.campaign) {
+    return currentState
+  }
+
   return {
     ...currentState,
-    campaign: updateResourcePosition(
-      currentState.campaign,
-      resourceId,
-      position,
-    ),
+    campaign,
   }
 }
 

@@ -24,7 +24,10 @@ import { TrafficHud } from './components/TrafficHud'
 import {
   createInfrastructureEdges,
   createInfrastructureNodes,
+  applyInfrastructureNodeChanges,
+  carryInfrastructureNodeRuntime,
   type InfrastructureFlowNode,
+  type InfrastructureNodeRuntime,
 } from './data/infrastructure'
 import { getConnectionRequestRate } from './data/requestFlow'
 import { useGameSimulation } from './hooks/useGameSimulation'
@@ -77,8 +80,10 @@ function App() {
     continueSavedCampaign,
     continueToNextStage,
     beginStage,
-    updateResourcePosition,
+    updateResourcePositions,
   } = useGameSimulation()
+  const [flowNodeRuntime, setFlowNodeRuntime] =
+    useState<InfrastructureNodeRuntime>({})
   const campaignEdges = useMemo(
     () => createInfrastructureEdges(campaign.infrastructure),
     [campaign.infrastructure],
@@ -87,23 +92,26 @@ function App() {
     () => createInfrastructureNodes(campaign.infrastructure),
     [campaign.infrastructure],
   )
-  const displayNodes = useMemo(
-    () =>
-      nodes.map((node) => ({
-        ...node,
-        selected: node.id === selectedNodeId,
-        data: {
-          ...node.data,
-          appServerMetrics:
-            node.data.kind === 'server'
-              ? traffic.appServers.find(
-                  (server) => server.resourceId === node.id,
-                )
-              : undefined,
-        },
-      })),
-    [nodes, selectedNodeId, traffic.appServers],
-  )
+  const displayNodes = useMemo(() => {
+    const presentedNodes = nodes.map((node) => ({
+      ...node,
+      selected: node.id === selectedNodeId,
+      data: {
+        ...node.data,
+        appServerMetrics:
+          node.data.kind === 'server'
+            ? traffic.appServers.find(
+                (server) => server.resourceId === node.id,
+              )
+            : undefined,
+      },
+    }))
+
+    return carryInfrastructureNodeRuntime(
+      presentedNodes,
+      flowNodeRuntime,
+    )
+  }, [flowNodeRuntime, nodes, selectedNodeId, traffic.appServers])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const displayEdges = useMemo(
     () =>
@@ -182,11 +190,10 @@ function App() {
   const handleNodesChange = (
     changes: NodeChange<InfrastructureFlowNode>[],
   ) => {
-    for (const change of changes) {
-      if (change.type === 'position' && change.position) {
-        updateResourcePosition(change.id, change.position)
-      }
-    }
+    const result = applyInfrastructureNodeChanges(changes, displayNodes)
+
+    setFlowNodeRuntime(result.runtime)
+    updateResourcePositions(result.positionUpdates)
   }
 
   return (

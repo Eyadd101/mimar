@@ -1,4 +1,10 @@
-import { MarkerType, type Edge, type Node } from '@xyflow/react'
+import {
+  applyNodeChanges,
+  MarkerType,
+  type Edge,
+  type Node,
+  type NodeChange,
+} from '@xyflow/react'
 import type { AppServerMetrics } from '../simulation/appServerSimulation'
 import type {
   CampaignInfrastructureState,
@@ -14,6 +20,16 @@ export type InfrastructureNodeData = {
 }
 
 export type InfrastructureFlowNode = Node<InfrastructureNodeData, 'infrastructure'>
+
+export type InfrastructurePositionUpdate = {
+  id: string
+  position: { x: number; y: number }
+}
+
+export type InfrastructureNodeRuntime = Record<
+  string,
+  Pick<InfrastructureFlowNode, 'measured' | 'dragging'>
+>
 
 const resourcePresentation: Record<
   CampaignResource['type'],
@@ -68,4 +84,58 @@ export function createInfrastructureEdges(
     },
     style: { stroke: '#648d82', strokeWidth: 1.6 },
   }))
+}
+
+/**
+ * React Flow owns transient measurements and drag flags. CampaignState remains
+ * the source of truth for resource identity and persisted positions.
+ */
+export function carryInfrastructureNodeRuntime(
+  nodes: InfrastructureFlowNode[],
+  runtime: InfrastructureNodeRuntime,
+) {
+  return nodes.map((node) => {
+    const runtimeNode = runtime[node.id]
+
+    return runtimeNode
+      ? {
+          ...node,
+          measured: runtimeNode.measured,
+          dragging: runtimeNode.dragging,
+        }
+      : node
+  })
+}
+
+/**
+ * Apply only presentation-safe React Flow changes. Resource additions,
+ * removals, and replacements are campaign actions and cannot originate here.
+ */
+export function applyInfrastructureNodeChanges(
+  changes: NodeChange<InfrastructureFlowNode>[],
+  nodes: InfrastructureFlowNode[],
+) {
+  const supportedChanges = changes.filter(
+    (change) => change.type === 'position' || change.type === 'dimensions',
+  )
+  const nextNodes = applyNodeChanges(supportedChanges, nodes)
+  const changedPositionIds = new Set(
+    supportedChanges
+      .filter((change) => change.type === 'position' && change.position)
+      .map((change) => change.id),
+  )
+  const positionUpdates: InfrastructurePositionUpdate[] = nextNodes
+    .filter((node) => changedPositionIds.has(node.id))
+    .map((node) => ({
+      id: node.id,
+      position: { ...node.position },
+    }))
+  const runtime: InfrastructureNodeRuntime = Object.fromEntries(
+    nextNodes.map((node) => [
+      node.id,
+      { measured: node.measured, dragging: node.dragging },
+    ]),
+  )
+
+  return { nodes: nextNodes, positionUpdates, runtime }
 }
