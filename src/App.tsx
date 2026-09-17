@@ -196,7 +196,14 @@ function App() {
             </Panel>
           )}
           {stage.trafficEvents.length > 0 && (
-            <Panel position="bottom-right" className="event-timeline-position">
+            <Panel
+              position="bottom-right"
+              className={`event-timeline-position${
+                campaign.unlockedResourceTypes.includes('load-balancer')
+                  ? ' event-timeline-position--with-actions'
+                  : ''
+              }`}
+            >
               <EventTimelinePanel
                 events={stage.trafficEvents}
                 runtime={trafficEvents}

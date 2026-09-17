@@ -80,7 +80,7 @@ export const customerSatisfactionConfig = {
   initialSatisfaction: 100,
   badLatencyThresholdMs: 400,
   sustainedBadLatencySeconds: 10,
-  satisfactionDecreasePerSecond: 0.25,
+  satisfactionDecreasePerSecond: 0.35,
 } as const
 
 export const gameStateConfig = {

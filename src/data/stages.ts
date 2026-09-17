@@ -343,10 +343,103 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   },
 }
 
+export const surviveTheLaunchStageConfig: StageConfig = {
+  ...prototypeStageConfig,
+  id: 'survive-the-launch',
+  sequence: 4,
+  name: 'Survive the Launch',
+  storyBriefing:
+    'The startup is launching a major feature. Use the forecast and preparation window to build enough application capacity.',
+  trafficProfile: {
+    initialActiveUsers: 30,
+    activeUserGrowthIntervalSeconds: 20,
+    activeUsersAddedPerInterval: 1,
+    requestsPerUserPerSecond: 0.1,
+  },
+  tutorialSteps: [],
+  learningGoals: [
+    'A Load Balancer distributes incoming requests across servers.',
+    'Horizontal scaling adds servers so no single machine handles all traffic.',
+  ],
+  trafficEvents: [
+    {
+      id: 'feature-launch',
+      type: 'traffic-multiplier',
+      sender: 'Product Team',
+      title: 'Major feature launch',
+      message:
+        'Launch traffic begins soon. Prepare enough capacity before customers arrive.',
+      startsAtSecond: 60,
+      durationSeconds: 300,
+      forecastMinimumMultiplier: 4.5,
+      forecastMaximumMultiplier: 6.5,
+      outcomeProfile: {
+        typicalProbability: 0.75,
+        moderatelyLowerProbability: 0.105,
+        moderatelyHigherProbability: 0.105,
+        tailProbability: 0.04,
+        typicalRange: [5, 6],
+        moderatelyLowerRange: [4.5, 5],
+        moderatelyHigherRange: [6, 7],
+        tailRange: [7, 7.5],
+        tailExplanation:
+          'Launch coverage spread farther than expected after the feature trended online.',
+      },
+    },
+  ],
+  unlocksResourceTypes: ['load-balancer'],
+  minimumSurvivalDurationSeconds: 390,
+  primaryObjective: {
+    id: 'survive-feature-launch',
+    type: 'survive-duration',
+    title: 'Survive the launch',
+    description: 'Remain solvent and operational for 6½ game minutes.',
+    durationSeconds: 390,
+  },
+  secondaryObjectives: [
+    {
+      id: 'handle-feature-launch',
+      type: 'handle-traffic-event',
+      title: 'Handle launch traffic',
+      description: 'Remain operational until the launch traffic ends.',
+      eventId: 'feature-launch',
+    },
+    {
+      id: 'launch-satisfaction',
+      type: 'finish-satisfaction',
+      title: 'Protect customer trust',
+      description: 'Finish with at least 80% satisfaction.',
+      minimumSatisfaction: 80,
+    },
+    {
+      id: 'launch-latency',
+      type: 'maintain-latency',
+      title: 'Responsive launch',
+      description: 'Maintain latency below 400 ms for 120 seconds.',
+      maximumLatencyMs: 400,
+      durationSeconds: 120,
+    },
+  ],
+  winCondition: {
+    type: 'all-required-objectives',
+    requiredObjectiveIds: ['survive-feature-launch'],
+  },
+  starCriteria: {
+    twoStars: {
+      minimumSatisfaction: 80,
+    },
+    threeStars: {
+      minimumSatisfaction: 95,
+      minimumBalance: 120,
+    },
+  },
+}
+
 export const campaignStageConfigs: readonly StageConfig[] = [
   prototypeStageConfig,
   growthPreviewStageConfig,
   verticalScalingLimitStageConfig,
+  surviveTheLaunchStageConfig,
 ]
 
 export function getCampaignStage(stageIndex: number) {

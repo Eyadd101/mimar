@@ -502,6 +502,10 @@
   margin: 28px;
 }
 
+.event-timeline-position--with-actions {
+  margin-bottom: 330px;
+}
+
 .event-timeline {
   width: min(310px, calc(100vw - 40px));
   overflow: hidden;
@@ -1346,6 +1350,10 @@
 
   .event-timeline-position {
     margin: 16px;
+  }
+
+  .event-timeline-position--with-actions {
+    margin-bottom: 320px;
   }
 
   .infrastructure-actions-position {
