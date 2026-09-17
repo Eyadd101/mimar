@@ -67,6 +67,18 @@ export type TutorialStep = {
   message: string
 }
 
+export type TrafficEventDefinition = {
+  id: string
+  type: 'traffic-multiplier'
+  sender: string
+  title: string
+  message: string
+  startsAtSecond: number
+  durationSeconds: number
+  forecastMinimumMultiplier: number
+  forecastMaximumMultiplier: number
+}
+
 export type StageConfig = {
   id: string
   sequence: number
@@ -75,6 +87,7 @@ export type StageConfig = {
   trafficProfile: StageTrafficProfile
   tutorialSteps: TutorialStep[]
   learningGoals: string[]
+  trafficEvents: TrafficEventDefinition[]
   minimumSurvivalDurationSeconds: number
   primaryObjective: StageObjectiveDefinition
   secondaryObjectives: StageObjectiveDefinition[]
@@ -127,6 +140,7 @@ export const prototypeStageConfig: StageConfig = {
     'Requests turn user activity into server load.',
     'Vertical scaling increases one server’s capacity.',
   ],
+  trafficEvents: [],
   minimumSurvivalDurationSeconds: 270,
   primaryObjective: {
     id: 'survive-first-users',
@@ -176,24 +190,50 @@ export const prototypeStageConfig: StageConfig = {
 
 export const growthPreviewStageConfig: StageConfig = {
   ...prototypeStageConfig,
-  id: 'growth-preview',
+  id: 'marketing-campaign',
   sequence: 2,
-  name: 'Growth Preview',
+  name: 'Marketing Campaign',
   storyBriefing:
-    'The startup is growing. Keep the infrastructure you built ready for the next challenge.',
+    'Marketing is launching a major campaign. Read the forecast and prepare the infrastructure before customers arrive.',
   trafficProfile: {
-    ...prototypeStageConfig.trafficProfile,
+    initialActiveUsers: 20,
+    activeUserGrowthIntervalSeconds: 10,
+    activeUsersAddedPerInterval: 1,
+    requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [],
-  learningGoals: [],
+  learningGoals: [
+    'Capacity planning uses forecasts to prepare before demand arrives.',
+    'Forecasts describe a range rather than a guaranteed result.',
+  ],
+  trafficEvents: [
+    {
+      id: 'marketing-launch',
+      type: 'traffic-multiplier',
+      sender: 'Marketing Team',
+      title: 'Major campaign launch',
+      message: "We're launching a major campaign soon.",
+      startsAtSecond: 120,
+      durationSeconds: 90,
+      forecastMinimumMultiplier: 3,
+      forecastMaximumMultiplier: 5,
+    },
+  ],
   primaryObjective: {
     id: 'survive-growth-preview',
     type: 'survive-duration',
     title: 'Keep growing',
-    description: 'Stay operational for 5 game minutes.',
+    description: 'Stay operational through the marketing campaign.',
     durationSeconds: 300,
   },
   secondaryObjectives: [
+    {
+      id: 'handle-marketing-launch',
+      type: 'handle-traffic-event',
+      title: 'Handle the campaign',
+      description: 'Remain operational until the campaign traffic ends.',
+      eventId: 'marketing-launch',
+    },
     {
       id: 'growth-preview-satisfaction',
       type: 'finish-satisfaction',

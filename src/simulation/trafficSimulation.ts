@@ -140,11 +140,16 @@ export function advanceTrafficSimulation(
   currentState: TrafficSimulationState,
   elapsedGameSeconds = 1,
   trafficProfile: StageTrafficProfile = trafficSimulationConfig,
+  trafficMultiplier = 1,
 ): TrafficSimulationState {
   let simulation = currentState
 
   for (let elapsed = 0; elapsed < elapsedGameSeconds; elapsed += 1) {
-    simulation = advanceOneGameSecond(simulation, trafficProfile)
+    simulation = advanceOneGameSecond(
+      simulation,
+      trafficProfile,
+      trafficMultiplier,
+    )
   }
 
   return simulation
@@ -153,15 +158,19 @@ export function advanceTrafficSimulation(
 function advanceOneGameSecond(
   currentState: TrafficSimulationState,
   trafficProfile: StageTrafficProfile,
+  trafficMultiplier: number,
 ): TrafficSimulationState {
   const gameTimeSeconds = currentState.gameTimeSeconds + 1
   const completedGrowthIntervals = Math.floor(
     gameTimeSeconds / trafficProfile.activeUserGrowthIntervalSeconds,
   )
-  const activeUsers =
+  const baselineActiveUsers =
     trafficProfile.initialActiveUsers +
     completedGrowthIntervals *
       trafficProfile.activeUsersAddedPerInterval
+  const activeUsers = Math.round(
+    baselineActiveUsers * trafficMultiplier,
+  )
   const requestsPerSecond = calculateRequestsPerSecond(
     activeUsers,
     trafficProfile.requestsPerUserPerSecond,

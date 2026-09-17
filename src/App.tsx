@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
+import { EventTimelinePanel } from './components/EventTimelinePanel'
 import { HintPanel } from './components/HintPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
@@ -42,6 +43,7 @@ function App() {
     stage,
     objectiveProgress,
     stageRating,
+    trafficEvents,
     hasNextStage,
     isStageBriefingOpen,
     gameSpeed,
@@ -170,6 +172,15 @@ function App() {
                 simulation={traffic}
                 onClose={() => setSelectedNodeId(null)}
                 onStartUpgrade={startServerUpgrade}
+              />
+            </Panel>
+          )}
+          {stage.trafficEvents.length > 0 && (
+            <Panel position="bottom-right" className="event-timeline-position">
+              <EventTimelinePanel
+                events={stage.trafficEvents}
+                runtime={trafficEvents}
+                gameTimeSeconds={traffic.gameTimeSeconds}
               />
             </Panel>
           )}

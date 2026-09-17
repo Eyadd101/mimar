@@ -73,4 +73,5 @@ export const gameStateConfig = {
 export const campaignProgressionConfig = {
   balanceCarryoverRatio: 0.8,
   minimumNextStageBalance: 100,
+  defaultCampaignSeed: 47_291,
 } as const

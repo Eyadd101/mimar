@@ -78,6 +78,7 @@ export function useGameSimulation() {
     stage,
     objectiveProgress: gameState.stageRuntime.objectiveProgress,
     stageRating: gameState.stageRuntime.stageRating,
+    trafficEvents: gameState.stageRuntime.trafficEvents,
     hasNextStage: hasNextCampaignStage(gameState),
     isStageBriefingOpen: !gameState.stageRuntime.briefingDismissed,
     gameSpeed: effectiveGameSpeed,

@@ -498,6 +498,121 @@
   font: 9px var(--mono);
 }
 
+.event-timeline-position {
+  margin: 28px;
+}
+
+.event-timeline {
+  width: min(310px, calc(100vw - 40px));
+  overflow: hidden;
+  border: 1px solid #4b4437;
+  border-radius: 10px;
+  background: #1d1d18ee;
+  box-shadow: 0 14px 38px #00000045;
+}
+
+.event-timeline__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-bottom: 1px solid #403b31;
+  color: #b6a77e;
+  font: 8px var(--mono);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.event-timeline__heading strong {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #efe2b9;
+  background: #4b3f25;
+  font-weight: 500;
+}
+
+.event-timeline__event {
+  padding: 14px;
+}
+
+.event-timeline__event[data-status='active'] {
+  box-shadow: inset 3px 0 #e0ad52;
+}
+
+.event-timeline__event[data-status='completed'] {
+  opacity: 0.7;
+}
+
+.event-timeline__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #9a8f71;
+  font: 8px var(--mono);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.event-timeline__meta strong {
+  color: #e0bd69;
+  font-weight: 500;
+}
+
+.event-timeline__event h3 {
+  margin: 9px 0 5px;
+  color: #e4dfcf;
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.event-timeline__event > p {
+  color: #9e9a8c;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.traffic-forecast {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #474034;
+  border-radius: 7px;
+  background: #171813;
+}
+
+.traffic-forecast span {
+  color: #948a6d;
+  font: 8px var(--mono);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.traffic-forecast strong {
+  color: #efd185;
+  font: 12px var(--mono);
+  font-weight: 500;
+}
+
+.traffic-forecast small {
+  grid-column: 1 / -1;
+  color: #776f5b;
+  font: 7px var(--mono);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.event-timeline__actual {
+  margin-top: 9px;
+  color: #d4bd7e !important;
+  font: 9px var(--mono) !important;
+}
+
 .resource-panel-position {
   margin: 28px;
   max-height: calc(100% - 56px);
@@ -1109,6 +1224,10 @@
   .resource-panel-position {
     margin: 16px;
     max-height: calc(100% - 32px);
+  }
+
+  .event-timeline-position {
+    margin: 16px;
   }
 
   .canvas .react-flow__controls {

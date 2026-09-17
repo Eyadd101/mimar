@@ -27,6 +27,13 @@ import {
   startServerUpgrade,
   type TrafficSimulationState,
 } from './trafficSimulation'
+import {
+  advanceStageTrafficEvents,
+  createStageTrafficEvents,
+  getActiveTrafficMultiplier,
+  getCompletedTrafficEventIds,
+  type StageTrafficEventRuntime,
+} from './trafficEventSimulation'
 
 export type GameStatus = 'playing' | 'stage-won' | 'game-over'
 export type GameOverReasonCode = 'bankruptcy' | 'service-failure'
@@ -45,6 +52,7 @@ export type StageRuntimeState = {
   objectiveProgress: StageObjectiveProgress
   stageRating: StageRating | null
   briefingDismissed: boolean
+  trafficEvents: StageTrafficEventRuntime
 }
 
 export type GameState = {
@@ -207,15 +215,24 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     objectiveProgress: createStageObjectiveProgress(stage),
     stageRating: null,
     briefingDismissed: stage.tutorialSteps.length === 0,
+    trafficEvents: createStageTrafficEvents(stage, campaign.seed),
   }
 }
 
 function advanceOneGameSecond(currentState: GameState): GameState {
   const stage = getCurrentStage(currentState)
+  const nextGameTimeSeconds =
+    currentState.stageRuntime.simulation.gameTimeSeconds + 1
+  const trafficEvents = advanceStageTrafficEvents(
+    stage,
+    currentState.stageRuntime.trafficEvents,
+    nextGameTimeSeconds,
+  )
   const simulation = advanceTrafficSimulation(
     currentState.stageRuntime.simulation,
     1,
     stage.trafficProfile,
+    getActiveTrafficMultiplier(trafficEvents),
   )
   const campaign = syncCampaignWithSimulation(
     currentState.campaign,
@@ -234,6 +251,9 @@ function advanceOneGameSecond(currentState: GameState): GameState {
     stage,
     currentState.stageRuntime.objectiveProgress,
     simulation,
+    {
+      completedEventIds: getCompletedTrafficEventIds(trafficEvents),
+    },
   )
   const stageWon =
     !gameOverReason && isStageComplete(stage, objectiveProgress)
@@ -256,6 +276,7 @@ function advanceOneGameSecond(currentState: GameState): GameState {
       objectiveProgress,
       stageRating,
       briefingDismissed: currentState.stageRuntime.briefingDismissed,
+      trafficEvents,
     },
   }
 }

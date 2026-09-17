@@ -51,6 +51,7 @@ export type CampaignState = {
   infrastructure: CampaignInfrastructureState
   unlockedResourceTypes: CampaignResourceType[]
   completedStages: CampaignStageRecord[]
+  seed: number
 }
 
 export function createInitialCampaignState(): CampaignState {
@@ -86,6 +87,7 @@ export function createInitialCampaignState(): CampaignState {
     },
     unlockedResourceTypes: ['users', 'app-server', 'database'],
     completedStages: [],
+    seed: campaignProgressionConfig.defaultCampaignSeed,
   }
 }
 
