@@ -21,7 +21,9 @@ export function createGameOverFailureChain(
 
   return [
     trafficStep,
-    `Customer satisfaction fell as low as ${statistics.lowestSatisfaction.toFixed(1)}%.`,
+    statistics.lowestSatisfaction < 100
+      ? `Customer satisfaction fell as low as ${statistics.lowestSatisfaction.toFixed(1)}%.`
+      : 'Customer satisfaction remained healthy, but available cash still ran out.',
     `Effective revenue was ${simulation.revenuePerPeriod.toFixed(1)} credits per period.`,
     `Infrastructure cost was ${simulation.infrastructureCostPerPeriod.toFixed(1)} credits per period.`,
     'The company balance reached 0 credits.',

@@ -136,6 +136,11 @@ function isValidCampaign(value: unknown): value is CampaignState {
         typeof resourceType === 'string' &&
         resourceTypes.includes(resourceType as CampaignResourceType),
     )
+  const completedStageIds = Array.isArray(value.completedStages)
+    ? value.completedStages
+        .filter(isRecord)
+        .map((record) => record.stageId)
+    : []
   const completedStagesAreValid =
     Array.isArray(value.completedStages) &&
     value.completedStages.every(
@@ -144,7 +149,14 @@ function isValidCampaign(value: unknown): value is CampaignState {
         typeof record.stageId === 'string' &&
         campaignStageConfigs.some((stage) => stage.id === record.stageId) &&
         (record.stars === 1 || record.stars === 2 || record.stars === 3),
-    )
+    ) &&
+    new Set(completedStageIds).size === completedStageIds.length &&
+    completedStageIds.length <= Number(value.currentStageIndex)
+  const infrastructureIsValid = isValidInfrastructure(value.infrastructure)
+  const loadBalancerUnlockIsValid =
+    !infrastructureContainsResource(value.infrastructure, 'load-balancer') ||
+    (Array.isArray(value.unlockedResourceTypes) &&
+      value.unlockedResourceTypes.includes('load-balancer'))
 
   return (
     stageIndexIsValid &&
@@ -152,7 +164,8 @@ function isValidCampaign(value: unknown): value is CampaignState {
     seedIsValid &&
     unlocksAreValid &&
     completedStagesAreValid &&
-    isValidInfrastructure(value.infrastructure)
+    infrastructureIsValid &&
+    loadBalancerUnlockIsValid
   )
 }
 
@@ -166,31 +179,78 @@ function isValidInfrastructure(value: unknown) {
     return false
   }
 
-  const resourceIds = new Set(
-    value.resources.map((resource) => (resource as CampaignResource).id),
+  const resources = value.resources as CampaignResource[]
+  const resourceIds = new Set(resources.map((resource) => resource.id))
+  const users = resources.filter((resource) => resource.type === 'users')
+  const databases = resources.filter(
+    (resource) => resource.type === 'database',
   )
-  const requiredResourcesExist =
-    value.resources.some(
-      (resource) => (resource as CampaignResource).type === 'users',
-    ) &&
-    value.resources.some(
-      (resource) => (resource as CampaignResource).type === 'database',
-    ) &&
-    value.resources.some(
-      (resource) => (resource as CampaignResource).type === 'app-server',
-    )
+  const appServers = resources.filter(
+    (resource) => resource.type === 'app-server',
+  )
+  const loadBalancers = resources.filter(
+    (resource) => resource.type === 'load-balancer',
+  )
+  const resourceCountsAreValid =
+    users.length === 1 &&
+    databases.length === 1 &&
+    appServers.length >= 1 &&
+    appServers.length <= 2 &&
+    loadBalancers.length <= 1 &&
+    (loadBalancers.length === 1 || appServers.length === 1)
+  const connectionIds = new Set<string>()
+  const connectionPairs = new Set<string>()
+  const connectionsAreWellFormed = value.connections.every((connection) => {
+    if (
+      !isRecord(connection) ||
+      typeof connection.id !== 'string' ||
+      typeof connection.sourceId !== 'string' ||
+      typeof connection.targetId !== 'string' ||
+      !resourceIds.has(connection.sourceId) ||
+      !resourceIds.has(connection.targetId)
+    ) {
+      return false
+    }
+
+    connectionIds.add(connection.id)
+    connectionPairs.add(`${connection.sourceId}->${connection.targetId}`)
+    return true
+  })
+
+  if (!resourceCountsAreValid || !connectionsAreWellFormed) {
+    return false
+  }
+
+  const expectedConnections = loadBalancers[0]
+    ? [
+        `${users[0].id}->${loadBalancers[0].id}`,
+        ...appServers.flatMap((server) => [
+          `${loadBalancers[0].id}->${server.id}`,
+          `${server.id}->${databases[0].id}`,
+        ]),
+      ]
+    : [
+        `${users[0].id}->${appServers[0].id}`,
+        `${appServers[0].id}->${databases[0].id}`,
+      ]
 
   return (
-    requiredResourcesExist &&
     resourceIds.size === value.resources.length &&
-    value.connections.every(
-      (connection) =>
-        isRecord(connection) &&
-        typeof connection.id === 'string' &&
-        typeof connection.sourceId === 'string' &&
-        typeof connection.targetId === 'string' &&
-        resourceIds.has(connection.sourceId) &&
-        resourceIds.has(connection.targetId),
+    connectionIds.size === value.connections.length &&
+    connectionPairs.size === expectedConnections.length &&
+    expectedConnections.every((connection) => connectionPairs.has(connection))
+  )
+}
+
+function infrastructureContainsResource(
+  value: unknown,
+  type: CampaignResourceType,
+) {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.resources) &&
+    value.resources.some(
+      (resource) => isRecord(resource) && resource.type === type,
     )
   )
 }

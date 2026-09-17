@@ -10,6 +10,7 @@ const { module: simulation } = await runnerImport(harnessPath, {
 
 const {
   appServerSimulation,
+  campaignSave,
   campaignSimulation,
   customerSatisfactionSimulation,
   economySimulation,
@@ -17,6 +18,17 @@ const {
   simulationClock,
   trafficSimulation,
 } = simulation
+
+function createMemoryStorage() {
+  const values = new Map()
+
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+    values,
+  }
+}
 
 test('CPU and memory remain between zero and one hundred', () => {
   for (const requestsPerSecond of [-100, 0, 3, 6, 14, 10_000]) {
@@ -210,4 +222,31 @@ test('campaign infrastructure survives a stage transition', () => {
   )
   assert.equal(nextStage.stageRuntime.simulation.gameTimeSeconds, 0)
   assert.equal(nextStage.campaign.completedStages.length, 1)
+})
+
+test('campaign saves round-trip and reject corrupt topology safely', () => {
+  const storage = createMemoryStorage()
+  const campaign = campaignSimulation.createInitialCampaignState(123)
+
+  assert.equal(campaignSave.saveCampaign(campaign, storage), true)
+  const loaded = campaignSave.loadCampaignSave(storage)
+  assert.equal(loaded.status, 'ready')
+  assert.deepEqual(loaded.campaign, campaign)
+
+  const brokenCampaign = {
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      connections: [],
+    },
+  }
+  storage.values.set(
+    campaignSave.campaignSaveKey,
+    JSON.stringify({
+      version: campaignSave.campaignSaveVersion,
+      campaign: brokenCampaign,
+    }),
+  )
+
+  assert.equal(campaignSave.loadCampaignSave(storage).status, 'corrupt')
 })
