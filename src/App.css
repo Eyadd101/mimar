@@ -583,6 +583,18 @@
   cursor: pointer;
 }
 
+.technical-term {
+  display: inline-grid;
+  gap: 1px;
+}
+
+.technical-term small {
+  color: #71867a;
+  font: 7px var(--mono);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .prototype-badge span {
   margin-left: 8px;
   color: var(--accent);

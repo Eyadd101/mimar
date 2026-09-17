@@ -2,23 +2,25 @@ import {
   simulationSpeedOptions,
   type SimulationSpeed,
 } from '../simulation/config'
+import { useLanguage } from '../i18n/useLanguage'
 
 type SimulationSpeedControlsProps = {
   gameSpeed: SimulationSpeed
   onSpeedChange: (speed: SimulationSpeed) => void
 }
 
-const speedLabels: Record<SimulationSpeed, string> = {
-  0: 'Pause',
-  1: '1x',
-  2: '2x',
-  4: '4x',
-}
-
 export function SimulationSpeedControls({
   gameSpeed,
   onSpeedChange,
 }: SimulationSpeedControlsProps) {
+  const { t } = useLanguage()
+  const speedLabels: Record<SimulationSpeed, string> = {
+    0: t('action.pause'),
+    1: '1x',
+    2: '2x',
+    4: '4x',
+  }
+
   return (
     <div className="speed-controls" aria-label="Game speed controls">
       {simulationSpeedOptions.map((speed) => (

@@ -9,19 +9,21 @@ export function HintPanel({
   onRequestHint,
   onDismissHint,
 }: HintPanelProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="hint-control">
       <button type="button" className="hint-button" onClick={onRequestHint}>
-        Hint
+        {t('action.hint')}
       </button>
       {hint && (
         <div className="hint-popover" role="status">
           <div className="hint-popover__header">
-            <span>System hint</span>
+            <span>{t('hint.system')}</span>
             <button
               type="button"
               onClick={onDismissHint}
-              aria-label="Dismiss hint"
+              aria-label={`${t('common.close')} ${t('action.hint')}`}
             >
               ×
             </button>
@@ -32,3 +34,4 @@ export function HintPanel({
     </div>
   )
 }
+import { useLanguage } from '../i18n/useLanguage'

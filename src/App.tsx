@@ -301,7 +301,7 @@ function App() {
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#293532" />
           <Panel position="top-left" className="canvas-heading">
-            <p className="eyebrow">Campaign / Stage {stage.sequence}</p>
+            <p className="eyebrow">Campaign / {t('stage.label')} {stage.sequence}</p>
             <h1>{stage.name}</h1>
             <p>
               {campaign.infrastructure.resources.length} resources ·{' '}

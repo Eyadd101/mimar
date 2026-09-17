@@ -3,6 +3,7 @@ import {
   getObjectiveProgressLabel,
   type StageObjectiveProgress,
 } from '../simulation/stageObjectiveSimulation'
+import { useLanguage } from '../i18n/useLanguage'
 
 type StageObjectivePanelProps = {
   stage: StageConfig
@@ -13,6 +14,7 @@ export function StageObjectivePanel({
   stage,
   progress,
 }: StageObjectivePanelProps) {
+  const { t } = useLanguage()
   const primaryProgress = progress[stage.primaryObjective.id]
   const primaryProgressPercent = primaryProgress
     ? Math.min(Math.round((primaryProgress.current / primaryProgress.target) * 100), 100)
@@ -21,13 +23,13 @@ export function StageObjectivePanel({
   return (
     <aside className="stage-objectives nodrag nopan" aria-label="Stage objectives">
       <div className="stage-objectives__heading">
-        <span>Stage {stage.sequence}</span>
+        <span>{t('stage.label')} {stage.sequence}</span>
         <strong>{stage.name}</strong>
       </div>
       <p className="stage-objectives__briefing">{stage.storyBriefing}</p>
       <div className="stage-objectives__progress">
         <div>
-          <span>Win progress</span>
+          <span>{t('stage.winProgress')}</span>
           <strong>{primaryProgressPercent}%</strong>
         </div>
         <div
@@ -41,14 +43,14 @@ export function StageObjectivePanel({
         </div>
       </div>
       <ObjectiveRow
-        label="Primary"
+        label={t('stage.primary')}
         objective={stage.primaryObjective}
         progress={progress[stage.primaryObjective.id]}
       />
       {stage.secondaryObjectives.map((objective) => (
         <ObjectiveRow
           key={objective.id}
-          label="Optional"
+          label={t('stage.optional')}
           objective={objective}
           progress={progress[objective.id]}
         />

@@ -4,6 +4,7 @@ import type {
   CampaignResourceType,
 } from '../simulation/campaignSimulation'
 import type { StageOneBuildStep } from '../simulation/stageOneOnboardingSimulation'
+import { useLanguage } from '../i18n/useLanguage'
 
 type ResourcePaletteProps = {
   resources: readonly CampaignResource[]
@@ -18,11 +19,13 @@ export function ResourcePalette({
   onAddResource,
   currentStep,
 }: ResourcePaletteProps) {
+  const { t } = useLanguage()
+
   return (
     <aside className="resource-palette nodrag nopan" aria-label="Resource palette">
       <div className="resource-palette__heading">
-        <span>Resource palette</span>
-        <strong>Available resources</strong>
+        <span>{t('palette.title')}</span>
+        <strong>{t('palette.available')}</strong>
       </div>
       <div className="resource-palette__list">
         {stageOneResourcePalette.map((resource) => {
@@ -46,10 +49,10 @@ export function ResourcePalette({
                 onClick={() => onAddResource(resource.type)}
               >
                 {isPlaced
-                  ? 'Added'
+                  ? t('palette.added')
                   : isCurrentResource
-                    ? 'Add to canvas'
-                    : 'Follow the guide'}
+                    ? t('palette.add')
+                    : t('palette.followGuide')}
               </button>
             </article>
           )

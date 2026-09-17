@@ -12,6 +12,8 @@ import {
   type StageStatistics,
 } from '../simulation/stageStatisticsSimulation'
 import { createGameOverFailureChain } from '../simulation/gameOverExplanationSimulation'
+import { useLanguage } from '../i18n/useLanguage'
+import { TechnicalTerm } from './TechnicalTerm'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -40,6 +42,8 @@ export function GameStateOverlay({
   onRestartCampaign,
   onContinueToNextStage,
 }: GameStateOverlayProps) {
+  const { t } = useLanguage()
+
   if (status === 'playing') {
     return null
   }
@@ -53,7 +57,7 @@ export function GameStateOverlay({
     <div className="game-state-overlay" role="dialog" aria-modal="true">
       <section className="game-state-card">
         <p className="game-state-card__eyebrow">
-          {stageWon ? 'Stage complete' : 'Game over'}
+          {stageWon ? t('game.stageComplete') : t('game.gameOver')}
         </p>
         <h2>{stageWon ? stage.name : reason?.title}</h2>
         <p className="game-state-card__message">
@@ -87,13 +91,13 @@ export function GameStateOverlay({
           ) : (
             <>
               <ResultMetric label="Game time" value={`${simulation.gameTimeSeconds}s`} />
-              <ResultMetric label="Balance" value={`${simulation.balance} cr`} />
+              <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
               <ResultMetric
-                label="Satisfaction"
+                translationKey="metric.satisfaction"
                 value={`${simulation.customerSatisfaction.toFixed(1)}%`}
               />
               <ResultMetric
-                label="Latency"
+                translationKey="metric.latency"
                 value={`${simulation.applicationLatencyMs} ms`}
               />
             </>
@@ -156,7 +160,7 @@ export function GameStateOverlay({
 
         {stageWon && hasNextStage && (
           <button type="button" onClick={onContinueToNextStage}>
-            Continue to Next Stage
+            {t('action.continueNextStage')}
           </button>
         )}
         {stageWon && !hasNextStage && (
@@ -181,14 +185,22 @@ export function GameStateOverlay({
 
 function ResultMetric({
   label,
+  translationKey,
   value,
 }: {
-  label: string
+  label?: string
+  translationKey?: Parameters<typeof TechnicalTerm>[0]['translationKey']
   value: string | number
 }) {
   return (
     <div>
-      <dt>{label}</dt>
+      <dt>
+        {translationKey ? (
+          <TechnicalTerm translationKey={translationKey} />
+        ) : (
+          label
+        )}
+      </dt>
       <dd>{value}</dd>
     </div>
   )

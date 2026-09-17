@@ -55,42 +55,42 @@ export function TrafficHud({
     <div className="traffic-hud-shell">
       <dl className="traffic-hud" aria-label="Traffic simulation">
         <div className="traffic-hud__metric">
-          <dt>Active Users</dt>
+          <dt><TechnicalTerm translationKey="metric.activeUsers" /></dt>
           <dd>{activeUsers}</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Requests/sec</dt>
+          <dt><TechnicalTerm translationKey="metric.requestsPerSecond" /></dt>
           <dd>{requestsPerSecond.toFixed(1)}</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Latency</dt>
+          <dt><TechnicalTerm translationKey="metric.latency" /></dt>
           <dd>{latencyMs} ms</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Satisfaction</dt>
+          <dt><TechnicalTerm translationKey="metric.satisfaction" /></dt>
           <dd>{customerSatisfaction.toFixed(1)}%</dd>
         </div>
         <div className="traffic-hud__metric" data-balance-state={balanceState}>
-          <dt>Balance</dt>
+          <dt><TechnicalTerm translationKey="metric.balance" /></dt>
           <dd>{formatCredits(balance)} cr</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Revenue</dt>
+          <dt><TechnicalTerm translationKey="metric.revenue" /></dt>
           <dd>{formatCredits(revenuePerPeriod)} / {costPeriodSeconds}s</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Infra Cost</dt>
+          <dt><TechnicalTerm translationKey="metric.infrastructureCost" /></dt>
           <dd>{infrastructureCost} / {costPeriodSeconds}s</dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Net Cash Flow</dt>
+          <dt><TechnicalTerm translationKey="metric.netCashFlow" /></dt>
           <dd data-cash-flow={netCashFlowPerPeriod < 0 ? 'negative' : 'positive'}>
             {netCashFlowPerPeriod > 0 ? '+' : ''}
             {formatCredits(netCashFlowPerPeriod)} / {costPeriodSeconds}s
           </dd>
         </div>
         <div className="traffic-hud__metric">
-          <dt>Game Time</dt>
+          <dt><TechnicalTerm translationKey="metric.gameTime" /></dt>
           <dd>{formatGameTime(gameTimeSeconds)}</dd>
         </div>
       </dl>
@@ -103,3 +103,4 @@ export function TrafficHud({
   )
 }
 import { gameFeedbackConfig } from '../simulation/config'
+import { TechnicalTerm } from './TechnicalTerm'

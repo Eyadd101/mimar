@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { StageConfig } from '../data/stages'
+import { useLanguage } from '../i18n/useLanguage'
 
 type StageBriefingOverlayProps = {
   stage: StageConfig
@@ -11,6 +12,7 @@ export function StageBriefingOverlay({
   onBeginStage,
 }: StageBriefingOverlayProps) {
   const [stepIndex, setStepIndex] = useState(0)
+  const { t } = useLanguage()
   const step = stage.tutorialSteps[stepIndex]
 
   if (!step) {
@@ -23,7 +25,7 @@ export function StageBriefingOverlay({
     <div className="stage-briefing-overlay" role="dialog" aria-modal="true">
       <section className="stage-briefing-card">
         <p className="stage-briefing-card__eyebrow">
-          Stage {stage.sequence} · {stage.name}
+          {t('stage.label')} {stage.sequence} · {stage.name}
         </p>
         <h2>{step.title}</h2>
         <p>{step.message}</p>
@@ -37,7 +39,7 @@ export function StageBriefingOverlay({
               finalStep ? onBeginStage() : setStepIndex(stepIndex + 1)
             }
           >
-            {finalStep ? 'Begin Stage' : 'Next'}
+            {finalStep ? t('stage.begin') : t('common.next')}
           </button>
         </div>
       </section>

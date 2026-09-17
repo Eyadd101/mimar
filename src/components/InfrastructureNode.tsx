@@ -8,6 +8,7 @@ import {
   getEnglishTranslation,
   type TranslationKey,
 } from '../i18n/translations'
+import { TechnicalTerm } from './TechnicalTerm'
 
 const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
   users: 'node.entryPoint',
@@ -23,11 +24,11 @@ const resourceLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> 
   'load-balancer': 'resource.loadBalancer',
 }
 
-const statusLabels = {
-  normal: 'Normal',
-  elevated: 'Elevated',
-  high: 'High',
-  overloaded: 'Overloaded',
+const statusLabelKeys = {
+  normal: 'status.normal',
+  elevated: 'status.elevated',
+  high: 'status.high',
+  overloaded: 'status.overloaded',
 } as const
 
 function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
@@ -114,7 +115,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
           data-status={data.appServerMetrics.status}
         >
           <div className="server-cpu__summary">
-            <span>CPU</span>
+            <TechnicalTerm translationKey="metric.cpuUsage" />
             <strong>{data.appServerMetrics.cpuUsage.toFixed(1)}%</strong>
           </div>
           <div
@@ -131,7 +132,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
             />
           </div>
           <span className="server-cpu__status">
-            {statusLabels[data.appServerMetrics.status]}
+            {t(statusLabelKeys[data.appServerMetrics.status])}
           </span>
         </div>
       )}

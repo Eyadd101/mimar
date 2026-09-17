@@ -1,4 +1,5 @@
 import type { CampaignSaveResult } from '../simulation/campaignSave'
+import { useLanguage } from '../i18n/useLanguage'
 
 type CampaignStartOverlayProps = {
   saveResult: CampaignSaveResult
@@ -11,31 +12,30 @@ export function CampaignStartOverlay({
   onNewCampaign,
   onContinueCampaign,
 }: CampaignStartOverlayProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="campaign-start-overlay" role="dialog" aria-modal="true">
       <section className="campaign-start-card">
         <p className="campaign-start-card__eyebrow">Cloud Game</p>
-        <h1>Build your startup infrastructure</h1>
-        <p>
-          Observe demand, diagnose failures, and evolve one infrastructure
-          across a connected campaign.
-        </p>
+        <h1>{t('campaign.title')}</h1>
+        <p>{t('campaign.description')}</p>
 
         {saveResult.status === 'corrupt' && (
           <div className="campaign-start-card__save-error" role="alert">
-            <strong>Saved campaign unavailable</strong>
-            <span>{saveResult.message} Start a new campaign to reset it.</span>
+            <strong>{t('campaign.saveUnavailable')}</strong>
+            <span>{saveResult.message} {t('campaign.saveReset')}</span>
           </div>
         )}
 
         <div className="campaign-start-card__actions">
           {saveResult.status === 'ready' && (
             <button type="button" onClick={onContinueCampaign}>
-              Continue Campaign
+              {t('campaign.continue')}
             </button>
           )}
           <button type="button" onClick={onNewCampaign}>
-            New Campaign
+            {t('campaign.new')}
           </button>
         </div>
       </section>

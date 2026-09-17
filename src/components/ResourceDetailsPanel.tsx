@@ -10,6 +10,9 @@ import {
   calculateDeploymentProgress,
   type TrafficSimulationState,
 } from '../simulation/trafficSimulation'
+import { useLanguage } from '../i18n/useLanguage'
+import { TechnicalTerm } from './TechnicalTerm'
+import type { TranslationKey } from '../i18n/translations'
 
 type ResourceDetailsPanelProps = {
   node: InfrastructureFlowNode
@@ -25,8 +28,12 @@ const placeholderTypes = {
   'load-balancer': 'Load Balancer',
 } as const
 
-const formatStatus = (status: string) =>
-  `${status.charAt(0).toUpperCase()}${status.slice(1)}`
+const statusTranslationKeys: Record<string, TranslationKey> = {
+  normal: 'status.normal',
+  elevated: 'status.elevated',
+  high: 'status.high',
+  overloaded: 'status.overloaded',
+}
 
 export function ResourceDetailsPanel({
   node,
@@ -34,6 +41,7 @@ export function ResourceDetailsPanel({
   onClose,
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
+  const { t } = useLanguage()
   const isAppServer = node.data.kind === 'server'
   const isLoadBalancer = node.data.kind === 'load-balancer'
   const appServer = simulation.appServers.find(
@@ -65,14 +73,14 @@ export function ResourceDetailsPanel({
     <aside className="resource-panel nodrag nopan" aria-label="Resource details">
       <div className="resource-panel__header">
         <div>
-          <p className="resource-panel__eyebrow">Resource details</p>
+          <p className="resource-panel__eyebrow">{t('resource.details')}</p>
           <h2>{node.data.label}</h2>
         </div>
         <button
           type="button"
           className="resource-panel__close"
           onClick={onClose}
-          aria-label="Close resource details"
+          aria-label={`${t('common.close')} ${t('resource.details')}`}
         >
           ×
         </button>
@@ -81,83 +89,83 @@ export function ResourceDetailsPanel({
       {isAppServer && appServer ? (
         <dl className="resource-panel__details">
           <div>
-            <dt>Resource name</dt>
+            <dt>{t('resource.name')}</dt>
             <dd>{appServer.resourceName}</dd>
           </div>
           <div>
-            <dt>Generic type</dt>
-            <dd>{appServerResourceConfig.type}</dd>
+            <dt>{t('resource.genericType')}</dt>
+            <dd><TechnicalTerm translationKey="resource.appServer" /></dd>
           </div>
           <div>
-            <dt>AWS reference</dt>
+            <dt>{t('resource.awsReference')}</dt>
             <dd>{appServerResourceConfig.awsReference}</dd>
           </div>
           <div>
-            <dt>Current tier</dt>
+            <dt><TechnicalTerm translationKey="metric.currentTier" /></dt>
             <dd>{appServer.tierName}</dd>
           </div>
           <div>
-            <dt>Request capacity</dt>
+            <dt><TechnicalTerm translationKey="metric.requestCapacity" /></dt>
             <dd>{appServer.requestCapacity.toFixed(1)} req/s</dd>
           </div>
           <div>
-            <dt>Current traffic</dt>
+            <dt><TechnicalTerm translationKey="metric.currentTraffic" /></dt>
             <dd>{appServer.requestsPerSecond.toFixed(1)} req/s</dd>
           </div>
           <div>
-            <dt>CPU usage</dt>
+            <dt><TechnicalTerm translationKey="metric.cpuUsage" /></dt>
             <dd>{appServer.cpuUsage.toFixed(1)}%</dd>
           </div>
           <div>
-            <dt>Memory usage</dt>
+            <dt><TechnicalTerm translationKey="metric.memoryUsage" /></dt>
             <dd>{appServer.memoryUsage.toFixed(1)}%</dd>
           </div>
           <div>
-            <dt>Latency</dt>
+            <dt><TechnicalTerm translationKey="metric.latency" /></dt>
             <dd>{appServer.latencyMs} ms</dd>
           </div>
           <div>
-            <dt>Status</dt>
+            <dt>{t('metric.status')}</dt>
             <dd data-status={appServer.status}>
-              {formatStatus(appServer.status)}
+              {t(statusTranslationKeys[appServer.status])}
             </dd>
           </div>
           <div>
-            <dt>Cost / {appServerResourceConfig.costPeriodSeconds} sec</dt>
+            <dt>{t('resource.costPerPeriod')} · {appServerResourceConfig.costPeriodSeconds}s</dt>
             <dd>{appServer.costPerPeriod} credits</dd>
           </div>
         </dl>
       ) : isLoadBalancer ? (
         <dl className="resource-panel__details">
           <div>
-            <dt>Resource name</dt>
+            <dt>{t('resource.name')}</dt>
             <dd>{loadBalancerResourceConfig.name}</dd>
           </div>
           <div>
-            <dt>Generic type</dt>
-            <dd>{loadBalancerResourceConfig.type}</dd>
+            <dt>{t('resource.genericType')}</dt>
+            <dd><TechnicalTerm translationKey="resource.loadBalancer" /></dd>
           </div>
           <div>
-            <dt>AWS reference</dt>
+            <dt>{t('resource.awsReference')}</dt>
             <dd>{loadBalancerResourceConfig.awsReference}</dd>
           </div>
           <div>
-            <dt>Distribution</dt>
-            <dd>Even split</dd>
+            <dt>{t('resource.distribution')}</dt>
+            <dd>{t('resource.evenSplit')}</dd>
           </div>
           <div>
-            <dt>Connected servers</dt>
+            <dt>{t('resource.connectedServers')}</dt>
             <dd>{simulation.appServers.length}</dd>
           </div>
           <div>
-            <dt>Cost / {appServerResourceConfig.costPeriodSeconds} sec</dt>
+            <dt>{t('resource.costPerPeriod')} · {appServerResourceConfig.costPeriodSeconds}s</dt>
             <dd>{loadBalancerResourceConfig.costPerPeriod} credits</dd>
           </div>
         </dl>
       ) : (
         <div className="resource-panel__placeholder">
           <p>{placeholderTypes[node.data.kind]}</p>
-          <span>More resource details will be added in a later step.</span>
+          <span>{t('resource.moreDetailsLater')}</span>
         </div>
       )}
 
@@ -179,12 +187,12 @@ export function ResourceDetailsPanel({
               >
                 <span style={{ width: `${deploymentPercent}%` }} />
               </div>
-              <p>{deploymentSecondsRemaining} game seconds remaining</p>
+              <p>{deploymentSecondsRemaining} {t('resource.deploymentRemaining')}</p>
             </>
           ) : appServer.tierId ===
             serverUpgradeConfig.targetTierId ? (
             <p className="resource-panel__upgrade-complete">
-              Medium Server is active.
+              {t('resource.mediumActive')}
             </p>
           ) : (
             <>
@@ -198,7 +206,7 @@ export function ResourceDetailsPanel({
                 {serverUpgradeConfig.upgradeCost} credits ·{' '}
                 {serverUpgradeConfig.deploymentDurationSeconds} game seconds
               </p>
-              <p>Available balance: {simulation.balance} credits</p>
+              <p>{t('resource.availableBalance')}: {simulation.balance} credits</p>
               <button
                 type="button"
                 className="resource-panel__upgrade-button"
@@ -206,10 +214,10 @@ export function ResourceDetailsPanel({
                 disabled={!canAffordUpgrade || anotherUpgradeIsDeploying}
               >
                 {anotherUpgradeIsDeploying
-                  ? 'Another upgrade is deploying'
+                  ? t('resource.anotherUpgrade')
                   : canAffordUpgrade
-                    ? 'Upgrade to Medium Server'
-                    : 'Insufficient balance'}
+                    ? t('resource.upgradeMedium')
+                    : t('resource.insufficientBalance')}
               </button>
             </>
           )}
