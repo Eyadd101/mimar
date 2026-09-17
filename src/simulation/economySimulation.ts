@@ -29,6 +29,7 @@ export function createInitialEconomyState(
   activeUsers: number,
   customerSatisfaction: number,
   infrastructureCostPerPeriod: number,
+  initialBalance: number = economyConfig.initialBalance,
 ): EconomyState {
   const revenuePerPeriod = calculateRevenuePerPeriod(
     activeUsers,
@@ -36,7 +37,7 @@ export function createInitialEconomyState(
   )
 
   return {
-    balance: economyConfig.initialBalance,
+    balance: initialBalance,
     revenuePerPeriod,
     infrastructureCostPerPeriod,
     netCashFlowPerPeriod: roundToOneDecimal(

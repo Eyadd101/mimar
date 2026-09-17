@@ -131,3 +131,42 @@ export const prototypeStageConfig: StageConfig = {
     },
   ],
 }
+
+export const growthPreviewStageConfig: StageConfig = {
+  ...prototypeStageConfig,
+  id: 'growth-preview',
+  sequence: 2,
+  name: 'Growth Preview',
+  storyBriefing:
+    'The startup is growing. Keep the infrastructure you built ready for the next challenge.',
+  primaryObjective: {
+    id: 'survive-growth-preview',
+    type: 'survive-duration',
+    title: 'Keep growing',
+    description: 'Stay operational for 5 game minutes.',
+    durationSeconds: 300,
+  },
+  secondaryObjectives: [
+    {
+      id: 'growth-preview-satisfaction',
+      type: 'finish-satisfaction',
+      title: 'Protect customer trust',
+      description: 'Finish with at least 75% satisfaction.',
+      minimumSatisfaction: 75,
+    },
+  ],
+  minimumSurvivalDurationSeconds: 300,
+  winCondition: {
+    type: 'all-required-objectives',
+    requiredObjectiveIds: ['survive-growth-preview'],
+  },
+}
+
+export const campaignStageConfigs: readonly StageConfig[] = [
+  prototypeStageConfig,
+  growthPreviewStageConfig,
+]
+
+export function getCampaignStage(stageIndex: number) {
+  return campaignStageConfigs[stageIndex]
+}

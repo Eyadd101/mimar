@@ -69,3 +69,8 @@ export const customerSatisfactionConfig = {
 export const gameStateConfig = {
   zeroSatisfactionGracePeriodSeconds: 15,
 } as const
+
+export const campaignProgressionConfig = {
+  balanceCarryoverRatio: 0.8,
+  minimumNextStageBalance: 100,
+} as const

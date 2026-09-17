@@ -1,4 +1,16 @@
-import { prototypeStageConfig, type StageConfig } from '../data/stages'
+import {
+  campaignStageConfigs,
+  getCampaignStage,
+  type StageConfig,
+} from '../data/stages'
+import {
+  createInitialCampaignState,
+  createNextCampaignState,
+  getPrimaryAppServer,
+  syncCampaignWithSimulation,
+  updateResourcePosition,
+  type CampaignState,
+} from './campaignSimulation'
 import {
   advanceStageObjectives,
   createStageObjectiveProgress,
@@ -25,15 +37,19 @@ export type GameOverReason = {
   message: string
 }
 
-export type GameState = {
+export type StageRuntimeState = {
   status: GameStatus
   simulation: TrafficSimulationState
-  stageStartSnapshot: TrafficSimulationState
   zeroSatisfactionDurationSeconds: number
   gameOverReason: GameOverReason | null
-  stage: StageConfig
   objectiveProgress: StageObjectiveProgress
   stageRating: StageRating | null
+}
+
+export type GameState = {
+  campaign: CampaignState
+  stageRuntime: StageRuntimeState
+  stageStartSnapshot: CampaignState
 }
 
 const bankruptcyReason: GameOverReason = {
@@ -49,60 +65,165 @@ const serviceFailureReason: GameOverReason = {
 }
 
 export function createInitialGameState(
-  stageStartSnapshot = createInitialTrafficState(),
-  stage = prototypeStageConfig,
+  campaign = createInitialCampaignState(),
 ): GameState {
   return {
-    status: 'playing',
-    simulation: stageStartSnapshot,
-    stageStartSnapshot,
-    zeroSatisfactionDurationSeconds: 0,
-    gameOverReason: null,
-    stage,
-    objectiveProgress: createStageObjectiveProgress(stage),
-    stageRating: null,
+    campaign,
+    stageRuntime: createStageRuntime(campaign),
+    stageStartSnapshot: campaign,
   }
+}
+
+export function getCurrentStage(gameState: GameState) {
+  const stage = getCampaignStage(gameState.campaign.currentStageIndex)
+
+  if (!stage) {
+    throw new Error('Campaign stage configuration is missing.')
+  }
+
+  return stage
+}
+
+export function hasNextCampaignStage(gameState: GameState) {
+  return (
+    gameState.campaign.currentStageIndex + 1 < campaignStageConfigs.length
+  )
 }
 
 export function advanceGameState(
   currentState: GameState,
   elapsedGameSeconds = 1,
 ): GameState {
-  if (currentState.status !== 'playing') {
+  if (currentState.stageRuntime.status !== 'playing') {
     return currentState
   }
 
   let gameState = currentState
 
   for (let elapsed = 0; elapsed < elapsedGameSeconds; elapsed += 1) {
-    const simulation = advanceTrafficSimulation(gameState.simulation, 1)
-    const zeroSatisfactionDurationSeconds =
-      simulation.customerSatisfaction === 0
-        ? gameState.zeroSatisfactionDurationSeconds + 1
-        : 0
-    const gameOverReason = getGameOverReason(
-      gameState.stage,
-      simulation,
-      zeroSatisfactionDurationSeconds,
-    )
-    const objectiveProgress = advanceStageObjectives(
-      gameState.stage,
-      gameState.objectiveProgress,
-      simulation,
-    )
-    const stageWon =
-      !gameOverReason &&
-      isStageComplete(gameState.stage, objectiveProgress)
-    const stageRating = stageWon
-      ? calculateStageRating(
-          gameState.stage,
-          simulation,
-          objectiveProgress,
-        )
-      : null
+    gameState = advanceOneGameSecond(gameState)
 
-    gameState = {
-      ...gameState,
+    if (gameState.stageRuntime.status !== 'playing') {
+      break
+    }
+  }
+
+  return gameState
+}
+
+export function beginServerUpgrade(currentState: GameState): GameState {
+  if (currentState.stageRuntime.status !== 'playing') {
+    return currentState
+  }
+
+  const simulation = startServerUpgrade(
+    currentState.stageRuntime.simulation,
+  )
+
+  if (simulation === currentState.stageRuntime.simulation) {
+    return currentState
+  }
+
+  return {
+    ...currentState,
+    campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
+    stageRuntime: { ...currentState.stageRuntime, simulation },
+  }
+}
+
+export function moveCampaignResource(
+  currentState: GameState,
+  resourceId: string,
+  position: { x: number; y: number },
+): GameState {
+  return {
+    ...currentState,
+    campaign: updateResourcePosition(
+      currentState.campaign,
+      resourceId,
+      position,
+    ),
+  }
+}
+
+export function restartStage(currentState: GameState): GameState {
+  return createInitialGameState(currentState.stageStartSnapshot)
+}
+
+export function continueToNextStage(currentState: GameState): GameState {
+  if (
+    currentState.stageRuntime.status !== 'stage-won' ||
+    !currentState.stageRuntime.stageRating ||
+    !hasNextCampaignStage(currentState)
+  ) {
+    return currentState
+  }
+
+  const stage = getCurrentStage(currentState)
+  const campaign = createNextCampaignState(
+    currentState.campaign,
+    stage.id,
+    currentState.stageRuntime.stageRating,
+  )
+
+  return createInitialGameState(campaign)
+}
+
+function createStageRuntime(campaign: CampaignState): StageRuntimeState {
+  const stage = getCampaignStage(campaign.currentStageIndex)
+  if (!stage) {
+    throw new Error('Campaign stage configuration is missing.')
+  }
+
+  const appServer = getPrimaryAppServer(campaign)
+
+  return {
+    status: 'playing',
+    simulation: createInitialTrafficState({
+      tierId: appServer.tierId,
+      balance: campaign.balance,
+    }),
+    zeroSatisfactionDurationSeconds: 0,
+    gameOverReason: null,
+    objectiveProgress: createStageObjectiveProgress(stage),
+    stageRating: null,
+  }
+}
+
+function advanceOneGameSecond(currentState: GameState): GameState {
+  const stage = getCurrentStage(currentState)
+  const simulation = advanceTrafficSimulation(
+    currentState.stageRuntime.simulation,
+    1,
+  )
+  const campaign = syncCampaignWithSimulation(
+    currentState.campaign,
+    simulation,
+  )
+  const zeroSatisfactionDurationSeconds =
+    simulation.customerSatisfaction === 0
+      ? currentState.stageRuntime.zeroSatisfactionDurationSeconds + 1
+      : 0
+  const gameOverReason = getGameOverReason(
+    stage,
+    simulation,
+    zeroSatisfactionDurationSeconds,
+  )
+  const objectiveProgress = advanceStageObjectives(
+    stage,
+    currentState.stageRuntime.objectiveProgress,
+    simulation,
+  )
+  const stageWon =
+    !gameOverReason && isStageComplete(stage, objectiveProgress)
+  const stageRating = stageWon
+    ? calculateStageRating(stage, simulation, objectiveProgress)
+    : null
+
+  return {
+    ...currentState,
+    campaign,
+    stageRuntime: {
       simulation,
       zeroSatisfactionDurationSeconds,
       status: gameOverReason
@@ -113,33 +234,8 @@ export function advanceGameState(
       gameOverReason,
       objectiveProgress,
       stageRating,
-    }
-
-    if (gameOverReason || stageWon) {
-      break
-    }
+    },
   }
-
-  return gameState
-}
-
-export function beginServerUpgrade(currentState: GameState): GameState {
-  if (currentState.status !== 'playing') {
-    return currentState
-  }
-
-  const simulation = startServerUpgrade(currentState.simulation)
-
-  return simulation === currentState.simulation
-    ? currentState
-    : { ...currentState, simulation }
-}
-
-export function restartStage(currentState: GameState): GameState {
-  return createInitialGameState(
-    currentState.stageStartSnapshot,
-    currentState.stage,
-  )
 }
 
 function getGameOverReason(

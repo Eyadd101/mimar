@@ -16,7 +16,10 @@ import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { StageObjectivePanel } from './components/StageObjectivePanel'
 import { TrafficHud } from './components/TrafficHud'
-import { initialEdges, initialNodes } from './data/infrastructure'
+import {
+  createInfrastructureEdges,
+  createInfrastructureNodes,
+} from './data/infrastructure'
 import { useGameSimulation } from './hooks/useGameSimulation'
 import { appServerResourceConfig } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
@@ -27,21 +30,32 @@ const edgeTypes = { requestFlow: RequestFlowEdge }
 const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 
 function App() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const {
     simulation: traffic,
+    campaign,
+    stageStartCampaign,
     gameStatus,
     gameOverReason,
     stage,
     objectiveProgress,
     stageRating,
+    hasNextStage,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
     restartStage,
+    continueToNextStage,
+    updateResourcePosition,
   } = useGameSimulation()
+  const campaignEdges = useMemo(
+    () => createInfrastructureEdges(campaign.infrastructure),
+    [campaign.infrastructure],
+  )
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    createInfrastructureNodes(campaign.infrastructure),
+  )
   const displayNodes = useMemo(
     () =>
       nodes.map((node) =>
@@ -60,7 +74,7 @@ function App() {
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const displayEdges = useMemo(
     () =>
-      initialEdges.map((edge) => ({
+      campaignEdges.map((edge) => ({
         ...edge,
         type: 'requestFlow',
         data: {
@@ -68,11 +82,20 @@ function App() {
           isPaused: gameSpeed === 0,
         },
       })),
-    [gameSpeed, traffic.requestsPerSecond],
+    [campaignEdges, gameSpeed, traffic.requestsPerSecond],
   )
   const handleRestartStage = () => {
     setSelectedNodeId(null)
     setHint(null)
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => ({
+        ...node,
+        position:
+          stageStartCampaign.infrastructure.resources.find(
+            (resource) => resource.id === node.id,
+          )?.position ?? node.position,
+      })),
+    )
     restartStage()
   }
 
@@ -112,6 +135,9 @@ function App() {
           edges={displayEdges}
           onNodesChange={onNodesChange}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          onNodeDragStop={(_, node) =>
+            updateResourcePosition(node.id, node.position)
+          }
           onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
@@ -160,7 +186,10 @@ function App() {
             onRequestHint={() => setHint(getContextualHint(traffic))}
             onDismissHint={() => setHint(null)}
           />
-          <p className="graph-count">3 nodes <span>/</span> 2 connections</p>
+          <p className="graph-count">
+            {campaign.infrastructure.resources.length} nodes <span>/</span>{' '}
+            {campaign.infrastructure.connections.length} connections
+          </p>
         </div>
       </footer>
       <GameStateOverlay
@@ -169,7 +198,13 @@ function App() {
         simulation={traffic}
         stageName={stage.name}
         stageRating={stageRating}
+        hasNextStage={hasNextStage}
         onRestartStage={handleRestartStage}
+        onContinueToNextStage={() => {
+          setSelectedNodeId(null)
+          setHint(null)
+          continueToNextStage()
+        }}
       />
     </main>
   )

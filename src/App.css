@@ -92,6 +92,16 @@
   background: #553029;
 }
 
+.game-state-card__campaign-end {
+  padding: 11px 14px;
+  border: 1px solid #46534c;
+  border-radius: 7px;
+  color: #aab7b0;
+  background: #1b2420;
+  font-size: 11px;
+  text-align: center;
+}
+
 .stage-rating {
   margin-bottom: 24px;
 }

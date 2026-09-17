@@ -11,7 +11,9 @@ type GameStateOverlayProps = {
   simulation: TrafficSimulationState
   stageName: string
   stageRating: StageRating | null
+  hasNextStage: boolean
   onRestartStage: () => void
+  onContinueToNextStage: () => void
 }
 
 export function GameStateOverlay({
@@ -20,7 +22,9 @@ export function GameStateOverlay({
   simulation,
   stageName,
   stageRating,
+  hasNextStage,
   onRestartStage,
+  onContinueToNextStage,
 }: GameStateOverlayProps) {
   if (status === 'playing') {
     return null
@@ -82,6 +86,16 @@ export function GameStateOverlay({
           </div>
         )}
 
+        {stageWon && hasNextStage && (
+          <button type="button" onClick={onContinueToNextStage}>
+            Continue to Next Stage
+          </button>
+        )}
+        {stageWon && !hasNextStage && (
+          <p className="game-state-card__campaign-end">
+            All currently available stages are complete.
+          </p>
+        )}
         {!stageWon && (
           <button type="button" onClick={onRestartStage}>
             Restart Stage

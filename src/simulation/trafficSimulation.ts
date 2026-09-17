@@ -37,6 +37,11 @@ export type ServerDeployment = {
   cost: number
 }
 
+type InitialTrafficStateOptions = {
+  tierId?: ServerTierId
+  balance?: number
+}
+
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
 
 /**
@@ -49,10 +54,12 @@ export function calculateRequestsPerSecond(activeUsers: number) {
   )
 }
 
-export function createInitialTrafficState(): TrafficSimulationState {
+export function createInitialTrafficState(
+  options: InitialTrafficStateOptions = {},
+): TrafficSimulationState {
   const activeUsers = trafficSimulationConfig.initialActiveUsers
   const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
-  const tierId = appServerResourceConfig.initialTierId
+  const tierId = options.tierId ?? appServerResourceConfig.initialTierId
   const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
   const satisfaction = createInitialCustomerSatisfactionState()
 
@@ -67,6 +74,7 @@ export function createInitialTrafficState(): TrafficSimulationState {
       activeUsers,
       satisfaction.customerSatisfaction,
       appServer.costPerPeriod,
+      options.balance,
     ),
   }
 }

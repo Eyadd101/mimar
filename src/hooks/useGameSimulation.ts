@@ -7,7 +7,11 @@ import {
 import {
   advanceGameState,
   beginServerUpgrade,
+  continueToNextStage,
   createInitialGameState,
+  getCurrentStage,
+  hasNextCampaignStage,
+  moveCampaignResource,
   restartStage,
 } from '../simulation/gameStateSimulation'
 
@@ -16,7 +20,7 @@ export function useGameSimulation() {
   const [gameSpeed, setGameSpeed] =
     useState<SimulationSpeed>(defaultSimulationSpeed)
   const effectiveGameSpeed =
-    gameState.status === 'playing' ? gameSpeed : 0
+    gameState.stageRuntime.status === 'playing' ? gameSpeed : 0
 
   useEffect(() => {
     if (effectiveGameSpeed === 0) {
@@ -41,16 +45,37 @@ export function useGameSimulation() {
     setGameSpeed(defaultSimulationSpeed)
   }, [])
 
+  const continueCampaign = useCallback(() => {
+    setGameState(continueToNextStage)
+    setGameSpeed(defaultSimulationSpeed)
+  }, [])
+
+  const updateResourcePosition = useCallback(
+    (resourceId: string, position: { x: number; y: number }) => {
+      setGameState((currentState) =>
+        moveCampaignResource(currentState, resourceId, position),
+      )
+    },
+    [],
+  )
+
+  const stage = getCurrentStage(gameState)
+
   return {
-    simulation: gameState.simulation,
-    gameStatus: gameState.status,
-    gameOverReason: gameState.gameOverReason,
-    stage: gameState.stage,
-    objectiveProgress: gameState.objectiveProgress,
-    stageRating: gameState.stageRating,
+    simulation: gameState.stageRuntime.simulation,
+    campaign: gameState.campaign,
+    stageStartCampaign: gameState.stageStartSnapshot,
+    gameStatus: gameState.stageRuntime.status,
+    gameOverReason: gameState.stageRuntime.gameOverReason,
+    stage,
+    objectiveProgress: gameState.stageRuntime.objectiveProgress,
+    stageRating: gameState.stageRuntime.stageRating,
+    hasNextStage: hasNextCampaignStage(gameState),
     gameSpeed: effectiveGameSpeed,
     setGameSpeed,
     startServerUpgrade: upgradeServer,
     restartStage: resetStage,
+    continueToNextStage: continueCampaign,
+    updateResourcePosition,
   }
 }
