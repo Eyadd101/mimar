@@ -9,6 +9,46 @@ export const requestFlowVisualConfig = {
   animationTravelPx: 40,
 } as const
 
+type RequestFlowResource = {
+  id: string
+  type: 'users' | 'app-server' | 'database' | 'load-balancer'
+}
+
+type RequestFlowServerRuntime = {
+  resourceId: string
+  requestsPerSecond: number
+}
+
+export function getConnectionRequestRate(
+  sourceId: string,
+  targetId: string,
+  resources: readonly RequestFlowResource[],
+  appServers: readonly RequestFlowServerRuntime[],
+  totalRequestsPerSecond: number,
+) {
+  const source = resources.find((resource) => resource.id === sourceId)
+
+  if (source?.type === 'users') {
+    return totalRequestsPerSecond
+  }
+
+  if (source?.type === 'load-balancer') {
+    return (
+      appServers.find((server) => server.resourceId === targetId)
+        ?.requestsPerSecond ?? 0
+    )
+  }
+
+  if (source?.type === 'app-server') {
+    return (
+      appServers.find((server) => server.resourceId === sourceId)
+        ?.requestsPerSecond ?? 0
+    )
+  }
+
+  return 0
+}
+
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(Math.max(value, minimum), maximum)
 

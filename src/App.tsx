@@ -24,6 +24,7 @@ import {
   createInfrastructureNodes,
   type InfrastructureFlowNode,
 } from './data/infrastructure'
+import { getConnectionRequestRate } from './data/requestFlow'
 import { useGameSimulation } from './hooks/useGameSimulation'
 import { appServerResourceConfig } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
@@ -90,11 +91,23 @@ function App() {
         ...edge,
         type: 'requestFlow',
         data: {
-          requestsPerSecond: traffic.requestsPerSecond,
+          requestsPerSecond: getConnectionRequestRate(
+            edge.source,
+            edge.target,
+            campaign.infrastructure.resources,
+            traffic.appServers,
+            traffic.requestsPerSecond,
+          ),
           isPaused: gameSpeed === 0,
         },
       })),
-    [campaignEdges, gameSpeed, traffic.requestsPerSecond],
+    [
+      campaign.infrastructure.resources,
+      campaignEdges,
+      gameSpeed,
+      traffic.appServers,
+      traffic.requestsPerSecond,
+    ],
   )
   const handleRestartStage = () => {
     setSelectedNodeId(null)
