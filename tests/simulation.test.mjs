@@ -20,6 +20,7 @@ const {
   metricEducation,
   simulationClock,
   stageOneOnboardingSimulation,
+  stageLearningSimulation,
   trafficSimulation,
   translations,
 } = simulation
@@ -171,6 +172,38 @@ test('Stage 1 accepts only the educational request path and starts traffic when 
     ),
     ['users->server', 'server->database'],
   )
+})
+
+test('First Users learning objectives follow build and simulation progress', () => {
+  let state = gameStateSimulation.createInitialGameState()
+  const evaluate = () =>
+    stageLearningSimulation.evaluateStageLearningSteps(
+      gameStateSimulation.getCurrentStage(state),
+      {
+        infrastructure: state.campaign.infrastructure,
+        serviceStarted: state.stageRuntime.serviceStarted,
+        gameTimeSeconds: state.stageRuntime.simulation.gameTimeSeconds,
+        status: state.stageRuntime.status,
+      },
+    )
+
+  assert.equal(evaluate().filter((step) => step.completed).length, 0)
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  assert.equal(evaluate()[0].completed, true)
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+  state = gameStateSimulation.connectStageOneResources(state, 'users', 'server')
+  state = gameStateSimulation.placeStageOneResource(state, 'database')
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'server',
+    'database',
+  )
+  assert.equal(evaluate().slice(0, 6).every((step) => step.completed), true)
+
+  state = gameStateSimulation.dismissStageBriefing(state)
+  state = gameStateSimulation.advanceGameState(state, 30)
+  assert.equal(evaluate()[6].completed, true)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 30)
 })
 
 test('language preference defaults safely and persists supported languages', () => {

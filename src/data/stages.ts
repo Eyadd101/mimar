@@ -1,4 +1,6 @@
 import { gameStateConfig } from '../simulation/config'
+import type { CampaignResourceType } from '../simulation/campaignSimulation'
+import type { ServerTierId } from '../simulation/config'
 
 export type StageObjectiveDefinition =
   | {
@@ -65,7 +67,52 @@ export type StageTrafficProfile = {
 export type TutorialStep = {
   title: string
   message: string
+  arabicTitle?: string
+  arabicMessage?: string
 }
+
+export type StageLearningStepDefinition =
+  | {
+      id: string
+      type: 'place-resource'
+      resourceType: CampaignResourceType
+      title: string
+      arabicTitle: string
+    }
+  | {
+      id: string
+      type: 'connect-resources'
+      sourceType: CampaignResourceType
+      targetType: CampaignResourceType
+      title: string
+      arabicTitle: string
+    }
+  | {
+      id: string
+      type: 'start-service'
+      title: string
+      arabicTitle: string
+    }
+  | {
+      id: string
+      type: 'observe-growth'
+      durationSeconds: number
+      title: string
+      arabicTitle: string
+    }
+  | {
+      id: string
+      type: 'reach-server-tier'
+      tierId: ServerTierId
+      title: string
+      arabicTitle: string
+    }
+  | {
+      id: string
+      type: 'complete-stage'
+      title: string
+      arabicTitle: string
+    }
 
 export type StageResourceUnlock = 'load-balancer'
 
@@ -99,6 +146,7 @@ export type StageConfig = {
   storyBriefing: string
   trafficProfile: StageTrafficProfile
   tutorialSteps: TutorialStep[]
+  learningSteps: StageLearningStepDefinition[]
   learningGoals: string[]
   trafficEvents: TrafficEventDefinition[]
   unlocksResourceTypes: StageResourceUnlock[]
@@ -135,19 +183,77 @@ export const prototypeStageConfig: StageConfig = {
   },
   tutorialSteps: [
     {
-      title: 'Watch the demand',
+      title: 'Build your first service',
       message:
-        'Active users create requests. Watch Requests/sec as the customer base grows.',
+        'The canvas starts empty. Place and connect each resource to create the request path, then observe what happens as users arrive.',
+      arabicTitle: 'ابنِ خدمتك الأولى',
+      arabicMessage:
+        'تبدأ اللوحة فارغة. ضع كل مورد وصِل بينها لإنشاء مسار الطلب، ثم راقب ما يحدث عند وصول المستخدمين.',
+    },
+  ],
+  learningSteps: [
+    {
+      id: 'place-users',
+      type: 'place-resource',
+      resourceType: 'users',
+      title: 'Place Users',
+      arabicTitle: 'ضع المستخدمين',
     },
     {
-      title: 'Read the server',
-      message:
-        'CPU shows how much request capacity the App Server is using. Latency shows how long customers wait.',
+      id: 'place-app-server',
+      type: 'place-resource',
+      resourceType: 'app-server',
+      title: 'Place App Server',
+      arabicTitle: 'ضع خادم التطبيق',
     },
     {
-      title: 'Make the call',
-      message:
-        'Open the App Server when pressure rises. You decide whether the current tier is still enough.',
+      id: 'connect-users-server',
+      type: 'connect-resources',
+      sourceType: 'users',
+      targetType: 'app-server',
+      title: 'Connect Users → App Server',
+      arabicTitle: 'صِل المستخدمين ← خادم التطبيق',
+    },
+    {
+      id: 'place-database',
+      type: 'place-resource',
+      resourceType: 'database',
+      title: 'Place Database',
+      arabicTitle: 'ضع قاعدة البيانات',
+    },
+    {
+      id: 'connect-server-database',
+      type: 'connect-resources',
+      sourceType: 'app-server',
+      targetType: 'database',
+      title: 'Connect App Server → Database',
+      arabicTitle: 'صِل خادم التطبيق ← قاعدة البيانات',
+    },
+    {
+      id: 'start-service',
+      type: 'start-service',
+      title: 'Start the service',
+      arabicTitle: 'ابدأ الخدمة',
+    },
+    {
+      id: 'observe-growth',
+      type: 'observe-growth',
+      durationSeconds: 30,
+      title: 'Observe user growth',
+      arabicTitle: 'راقب نمو المستخدمين',
+    },
+    {
+      id: 'respond-load',
+      type: 'reach-server-tier',
+      tierId: 'medium',
+      title: 'Respond to server load',
+      arabicTitle: 'استجب لحمل الخادم',
+    },
+    {
+      id: 'complete-stage',
+      type: 'complete-stage',
+      title: 'Complete the stage',
+      arabicTitle: 'أكمل المرحلة',
     },
   ],
   learningGoals: [
@@ -217,6 +323,7 @@ export const growthPreviewStageConfig: StageConfig = {
     requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [],
+  learningSteps: [],
   learningGoals: [
     'Capacity planning uses forecasts to prepare before demand arrives.',
     'Forecasts describe a range rather than a guaranteed result.',
@@ -297,6 +404,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
         'Vertical scaling made one server stronger. Watch what happens when growth catches up with the largest available tier.',
     },
   ],
+  learningSteps: [],
   learningGoals: [
     'Vertical scaling eventually reaches a practical ceiling.',
     'Horizontal scaling means sharing traffic across multiple servers.',
@@ -357,6 +465,7 @@ export const surviveTheLaunchStageConfig: StageConfig = {
     requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [],
+  learningSteps: [],
   learningGoals: [
     'A Load Balancer distributes incoming requests across servers.',
     'Horizontal scaling adds servers so no single machine handles all traffic.',

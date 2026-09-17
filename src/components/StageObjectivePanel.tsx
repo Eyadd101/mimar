@@ -4,17 +4,22 @@ import {
   type StageObjectiveProgress,
 } from '../simulation/stageObjectiveSimulation'
 import { useLanguage } from '../i18n/useLanguage'
+import type { StageLearningStepProgress } from '../simulation/stageLearningSimulation'
 
 type StageObjectivePanelProps = {
   stage: StageConfig
   progress: StageObjectiveProgress
+  learningProgress: StageLearningStepProgress[]
+  serviceStarted: boolean
 }
 
 export function StageObjectivePanel({
   stage,
   progress,
+  learningProgress,
+  serviceStarted,
 }: StageObjectivePanelProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const primaryProgress = progress[stage.primaryObjective.id]
   const primaryProgressPercent = primaryProgress
     ? Math.min(Math.round((primaryProgress.current / primaryProgress.target) * 100), 100)
@@ -27,6 +32,32 @@ export function StageObjectivePanel({
         <strong>{stage.name}</strong>
       </div>
       <p className="stage-objectives__briefing">{stage.storyBriefing}</p>
+      {stage.learningSteps.length > 0 && (
+        <div className="stage-learning">
+          <div className="stage-learning__heading">
+            <span>{t('stage.learningPath')}</span>
+            <strong>
+              {learningProgress.filter((step) => step.completed).length} /{' '}
+              {stage.learningSteps.length}
+            </strong>
+          </div>
+          <ol data-service-started={serviceStarted}>
+            {stage.learningSteps.map((step, index) => {
+              const stepProgress = learningProgress.find(
+                (item) => item.id === step.id,
+              )
+              return (
+                <li key={step.id} data-complete={stepProgress?.completed}>
+                  <span aria-hidden="true">
+                    {stepProgress?.completed ? '✓' : index + 1}
+                  </span>
+                  <p>{language === 'ar' ? step.arabicTitle : step.title}</p>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+      )}
       <div className="stage-objectives__progress">
         <div>
           <span>{t('stage.winProgress')}</span>

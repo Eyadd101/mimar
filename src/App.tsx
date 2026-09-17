@@ -43,6 +43,7 @@ import {
 } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
 import { getMostLoadedAppServer } from './simulation/trafficSimulation'
+import { evaluateStageLearningSteps } from './simulation/stageLearningSimulation'
 import {
   validateStageOneConnection,
   type ConnectionExplanation,
@@ -145,6 +146,22 @@ function App() {
   ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const mostLoadedAppServer = getMostLoadedAppServer(traffic)
+  const learningProgress = useMemo(
+    () =>
+      evaluateStageLearningSteps(stage, {
+        infrastructure: campaign.infrastructure,
+        serviceStarted,
+        gameTimeSeconds: traffic.gameTimeSeconds,
+        status: gameStatus,
+      }),
+    [
+      campaign.infrastructure,
+      gameStatus,
+      serviceStarted,
+      stage,
+      traffic.gameTimeSeconds,
+    ],
+  )
   const displayEdges = useMemo(
     () =>
       campaignEdges.map((edge) => ({
@@ -318,7 +335,12 @@ function App() {
             </p>
           </Panel>
           <Panel position="top-left" className="stage-objectives-position">
-            <StageObjectivePanel stage={stage} progress={objectiveProgress} />
+            <StageObjectivePanel
+              stage={stage}
+              progress={objectiveProgress}
+              learningProgress={learningProgress}
+              serviceStarted={serviceStarted}
+            />
           </Panel>
           {stage.sequence === 1 && !serviceStarted && (
             <Panel position="bottom-left" className="resource-palette-position">

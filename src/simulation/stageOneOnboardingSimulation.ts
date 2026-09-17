@@ -17,6 +17,8 @@ export type StageOneBuildStep = {
   totalSteps: number
   title: string
   explanation: string
+  arabicTitle: string
+  arabicExplanation: string
   resourceToPlace?: Extract<
     CampaignResourceType,
     'users' | 'app-server' | 'database'
@@ -39,6 +41,9 @@ export function getStageOneBuildStep(
       title: 'Place Users',
       explanation:
         'Users represent people using the product and generating requests.',
+      arabicTitle: 'ضع المستخدمين',
+      arabicExplanation:
+        'يمثل المستخدمون الأشخاص الذين يستخدمون المنتج ويولّدون الطلبات.',
       resourceToPlace: 'users',
     }
   }
@@ -54,6 +59,9 @@ export function getStageOneBuildStep(
       title: 'Place App Server',
       explanation:
         'The App Server receives and processes application requests.',
+      arabicTitle: 'ضع خادم التطبيق',
+      arabicExplanation:
+        'يستقبل خادم التطبيق طلبات التطبيق ويعالجها.',
       resourceToPlace: 'app-server',
     }
   }
@@ -71,6 +79,9 @@ export function getStageOneBuildStep(
       title: 'Connect Users → App Server',
       explanation:
         'Drag from a connection point on Users to a connection point on the App Server.',
+      arabicTitle: 'صِل المستخدمين بخادم التطبيق',
+      arabicExplanation:
+        'اسحب من نقطة اتصال المستخدمين إلى نقطة اتصال خادم التطبيق.',
     }
   }
 
@@ -84,6 +95,8 @@ export function getStageOneBuildStep(
       totalSteps,
       title: 'Place Database',
       explanation: 'The Database stores persistent application data.',
+      arabicTitle: 'ضع قاعدة البيانات',
+      arabicExplanation: 'تخزن قاعدة البيانات بيانات التطبيق الدائمة.',
       resourceToPlace: 'database',
     }
   }
@@ -101,6 +114,9 @@ export function getStageOneBuildStep(
       title: 'Connect App Server → Database',
       explanation:
         'Connect the application to the data it needs to store and retrieve.',
+      arabicTitle: 'صِل خادم التطبيق بقاعدة البيانات',
+      arabicExplanation:
+        'صِل التطبيق بالبيانات التي يحتاج إلى تخزينها واسترجاعها.',
     }
   }
 
@@ -111,6 +127,9 @@ export function getStageOneBuildStep(
     title: 'Infrastructure ready',
     explanation:
       'The request path is complete. The service can now begin handling traffic.',
+    arabicTitle: 'البنية التحتية جاهزة',
+    arabicExplanation:
+      'اكتمل مسار الطلب. يمكن للخدمة الآن بدء معالجة حركة البيانات.',
   }
 }
 
