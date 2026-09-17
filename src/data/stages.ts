@@ -77,6 +77,17 @@ export type TrafficEventDefinition = {
   durationSeconds: number
   forecastMinimumMultiplier: number
   forecastMaximumMultiplier: number
+  outcomeProfile: {
+    typicalProbability: number
+    moderatelyLowerProbability: number
+    moderatelyHigherProbability: number
+    tailProbability: number
+    typicalRange: readonly [number, number]
+    moderatelyLowerRange: readonly [number, number]
+    moderatelyHigherRange: readonly [number, number]
+    tailRange: readonly [number, number]
+    tailExplanation: string
+  }
 }
 
 export type StageConfig = {
@@ -217,6 +228,18 @@ export const growthPreviewStageConfig: StageConfig = {
       durationSeconds: 90,
       forecastMinimumMultiplier: 3,
       forecastMaximumMultiplier: 5,
+      outcomeProfile: {
+        typicalProbability: 0.75,
+        moderatelyLowerProbability: 0.105,
+        moderatelyHigherProbability: 0.105,
+        tailProbability: 0.04,
+        typicalRange: [3.5, 5],
+        moderatelyLowerRange: [3, 3.5],
+        moderatelyHigherRange: [5, 6.5],
+        tailRange: [6.5, 7.9],
+        tailExplanation:
+          'Your campaign went viral after a large creator shared the product.',
+      },
     },
   ],
   primaryObjective: {

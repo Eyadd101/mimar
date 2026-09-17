@@ -54,7 +54,9 @@ export type CampaignState = {
   seed: number
 }
 
-export function createInitialCampaignState(): CampaignState {
+export function createInitialCampaignState(
+  seed = campaignProgressionConfig.defaultCampaignSeed,
+): CampaignState {
   return {
     currentStageIndex: 0,
     balance: economyConfig.initialBalance,
@@ -87,7 +89,7 @@ export function createInitialCampaignState(): CampaignState {
     },
     unlockedResourceTypes: ['users', 'app-server', 'database'],
     completedStages: [],
-    seed: campaignProgressionConfig.defaultCampaignSeed,
+    seed,
   }
 }
 

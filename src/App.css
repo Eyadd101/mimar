@@ -613,6 +613,15 @@
   font: 9px var(--mono) !important;
 }
 
+.event-timeline__story {
+  margin-top: 8px;
+  padding: 8px 9px;
+  border-left: 2px solid #d9a955;
+  color: #c7b98e !important;
+  background: #292317;
+  font-size: 9px !important;
+}
+
 .resource-panel-position {
   margin: 28px;
   max-height: calc(100% - 56px);

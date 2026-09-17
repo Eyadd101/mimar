@@ -56,9 +56,16 @@ export function EventTimelinePanel({
               <small>Estimate — actual traffic may differ</small>
             </div>
             {eventRuntime && eventRuntime.status !== 'upcoming' && (
-              <p className="event-timeline__actual">
-                Actual traffic: {eventRuntime.actualMultiplier.toFixed(1)}x
-              </p>
+              <>
+                <p className="event-timeline__actual">
+                  Actual traffic: {eventRuntime.actualMultiplier.toFixed(1)}x
+                </p>
+                {eventRuntime.storyExplanation && (
+                  <p className="event-timeline__story">
+                    {eventRuntime.storyExplanation}
+                  </p>
+                )}
+              </>
             )}
           </article>
         )
