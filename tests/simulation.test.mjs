@@ -81,6 +81,24 @@ test('a new Stage 1 campaign starts empty with its simulation stopped', () => {
   assert.equal(advanced.stageRuntime.simulation.gameTimeSeconds, 0)
 })
 
+test('Stage 1 palette resources can be placed once without starting traffic', () => {
+  let state = gameStateSimulation.createInitialGameState()
+
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+  state = gameStateSimulation.placeStageOneResource(state, 'database')
+  const duplicate = gameStateSimulation.placeStageOneResource(state, 'users')
+
+  assert.deepEqual(
+    state.campaign.infrastructure.resources.map((resource) => resource.type),
+    ['users', 'app-server', 'database'],
+  )
+  assert.strictEqual(duplicate, state)
+  assert.equal(state.stageRuntime.serviceStarted, false)
+  assert.equal(state.stageRuntime.simulation.activeUsers, 0)
+  assert.equal(state.stageRuntime.simulation.appServers.length, 1)
+})
+
 test('CPU and memory remain between zero and one hundred', () => {
   for (const requestsPerSecond of [-100, 0, 3, 6, 14, 10_000]) {
     for (const tier of ['small', 'medium']) {

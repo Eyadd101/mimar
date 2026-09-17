@@ -721,14 +721,19 @@
 }
 
 .resource-palette__card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  gap: 8px;
   padding: 10px;
   border: 1px solid #34443b;
   border-radius: 7px;
   background: #19231e;
+}
+
+.resource-palette__card > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .resource-palette__card strong {
@@ -738,9 +743,37 @@
 }
 
 .resource-palette__card span {
-  color: #72867a;
-  font: 8px var(--mono);
-  text-transform: uppercase;
+  color: #a8b8af;
+  font-size: 11px;
+}
+
+.resource-palette__card p {
+  color: #819188;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.resource-palette__card button {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #486052;
+  border-radius: 5px;
+  color: #bfe1c8;
+  background: #243329;
+  font: 9px var(--mono);
+  cursor: pointer;
+}
+
+.resource-palette__card button:hover {
+  border-color: #688672;
+  background: #2d4234;
+}
+
+.resource-palette__card button:disabled {
+  border-color: #343e38;
+  color: #68766e;
+  background: #1c231f;
+  cursor: default;
 }
 
 .stage-objectives {

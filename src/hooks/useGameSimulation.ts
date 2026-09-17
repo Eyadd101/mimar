@@ -15,6 +15,7 @@ import {
   getCurrentStage,
   hasNextCampaignStage,
   moveCampaignResources,
+  placeStageOneResource,
   restartCampaign,
   restartStage,
 } from '../simulation/gameStateSimulation'
@@ -124,6 +125,15 @@ export function useGameSimulation() {
     [],
   )
 
+  const addResource = useCallback(
+    (resourceType: 'users' | 'app-server' | 'database') => {
+      setGameState((currentState) =>
+        placeStageOneResource(currentState, resourceType),
+      )
+    },
+    [],
+  )
+
   const stage = getCurrentStage(gameState)
 
   return {
@@ -157,5 +167,6 @@ export function useGameSimulation() {
     continueToNextStage: continueCampaign,
     beginStage,
     updateResourcePositions,
+    addResource,
   }
 }

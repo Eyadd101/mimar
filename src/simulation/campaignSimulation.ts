@@ -1,10 +1,12 @@
 import {
   additionalAppServerConfig,
+  appServerResourceConfig,
   campaignProgressionConfig,
   economyConfig,
   loadBalancerResourceConfig,
   type ServerTierId,
 } from './config'
+import { stageOneResourcePalette } from '../data/resourcePalette'
 import type { StageRating } from './starRatingSimulation'
 import type {
   TrafficInfrastructure,
@@ -105,6 +107,54 @@ export function hasOperationalServicePath(campaign: CampaignState) {
         connection.targetId === database.id,
     )
   )
+}
+
+export function addStageOneResource(
+  campaign: CampaignState,
+  resourceType: Extract<
+    CampaignResourceType,
+    'users' | 'app-server' | 'database'
+  >,
+) {
+  const definition = stageOneResourcePalette.find(
+    (resource) => resource.type === resourceType,
+  )
+  const resourceAlreadyExists = campaign.infrastructure.resources.some(
+    (resource) => resource.type === resourceType,
+  )
+
+  if (
+    campaign.currentStageIndex !== 0 ||
+    !definition ||
+    resourceAlreadyExists ||
+    !campaign.unlockedResourceTypes.includes(resourceType)
+  ) {
+    return campaign
+  }
+
+  const resource: CampaignResource =
+    resourceType === 'app-server'
+      ? {
+          id: definition.id,
+          type: resourceType,
+          name: definition.englishName,
+          tierId: appServerResourceConfig.initialTierId,
+          position: { ...definition.position },
+        }
+      : {
+          id: definition.id,
+          type: resourceType,
+          name: definition.englishName,
+          position: { ...definition.position },
+        }
+
+  return {
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      resources: [...campaign.infrastructure.resources, resource],
+    },
+  }
 }
 
 export function getPrimaryAppServer(campaign: CampaignState) {

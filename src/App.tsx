@@ -84,6 +84,7 @@ function App() {
     continueToNextStage,
     beginStage,
     updateResourcePositions,
+    addResource,
   } = useGameSimulation()
   const [flowNodeRuntime, setFlowNodeRuntime] =
     useState<InfrastructureNodeRuntime>({})
@@ -263,7 +264,10 @@ function App() {
           </Panel>
           {stage.sequence === 1 && !serviceStarted && (
             <Panel position="bottom-left" className="resource-palette-position">
-              <ResourcePalette />
+              <ResourcePalette
+                resources={campaign.infrastructure.resources}
+                onAddResource={addResource}
+              />
             </Panel>
           )}
           {selectedNode && (
