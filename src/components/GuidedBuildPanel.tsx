@@ -9,7 +9,11 @@ export function GuidedBuildPanel({ step }: GuidedBuildPanelProps) {
   const { language, t } = useLanguage()
 
   return (
-    <aside className="guided-build nodrag nopan" aria-live="polite">
+    <aside
+      className="guided-build nodrag nopan"
+      aria-live="polite"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
       <div className="guided-build__progress">
         <span>{t('stage.guidedBuild')}</span>
         <strong>

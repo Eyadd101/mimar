@@ -773,13 +773,19 @@
 
 .metric-explanation__values {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   margin: 15px 0 0;
   overflow: hidden;
   border: 1px solid #39483f;
   border-radius: 7px;
   background: #39483f;
+}
+
+.metric-explanation__formula {
+  margin-top: 15px;
+  color: #8fa69a !important;
+  font: 9px var(--mono) !important;
 }
 
 .metric-explanation__values > div {

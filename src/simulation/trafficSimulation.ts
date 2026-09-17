@@ -114,6 +114,10 @@ export function createInitialTrafficState(
     requestsPerSecond,
     infrastructure,
   )
+  const activeInfrastructureCost =
+    options.serviceActive === false
+      ? 0
+      : application.infrastructureCostPerPeriod
   const satisfaction = createInitialCustomerSatisfactionState()
   const consequences = createInitialBusinessConsequenceState()
 
@@ -128,7 +132,7 @@ export function createInitialTrafficState(
     ...createInitialEconomyState(
       activeUsers,
       satisfaction.customerSatisfaction,
-      application.infrastructureCostPerPeriod,
+      activeInfrastructureCost,
       options.balance,
     ),
   }

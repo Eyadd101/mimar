@@ -24,7 +24,12 @@ export function MetricExplanationPanel({
   const currentReason = getMetricCurrentReason(metricId, snapshot, language)
 
   return (
-    <aside className="metric-explanation" role="dialog" aria-live="polite">
+    <aside
+      className="metric-explanation"
+      role="dialog"
+      aria-label={`${translations.en[definition.labelKey]} explanation`}
+      aria-live="polite"
+    >
       <button
         type="button"
         className="metric-explanation__close"
@@ -60,20 +65,29 @@ export function MetricExplanationPanel({
         <p>{currentReason}</p>
       </section>
       {metricId === 'balance' && (
-        <dl className="metric-explanation__values">
-          <div>
-            <dt><TechnicalTerm translationKey="metric.revenue" /></dt>
-            <dd>+{snapshot.revenuePerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
-          </div>
-          <div>
-            <dt><TechnicalTerm translationKey="metric.infrastructureCost" /></dt>
-            <dd>−{snapshot.infrastructureCostPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
-          </div>
-          <div>
-            <dt><TechnicalTerm translationKey="metric.netCashFlow" /></dt>
-            <dd>{snapshot.netCashFlowPerPeriod > 0 ? '+' : ''}{snapshot.netCashFlowPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
-          </div>
-        </dl>
+        <>
+          <p className="metric-explanation__formula">
+            {t('education.balanceFormula')}
+          </p>
+          <dl className="metric-explanation__values">
+            <div>
+              <dt><TechnicalTerm translationKey="metric.revenue" /></dt>
+              <dd>+{snapshot.revenuePerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+            </div>
+            <div>
+              <dt><TechnicalTerm translationKey="metric.infrastructureCost" /></dt>
+              <dd>−{snapshot.infrastructureCostPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+            </div>
+            <div>
+              <dt><TechnicalTerm translationKey="metric.incidentCosts" /></dt>
+              <dd>−{snapshot.incidentCosts.toFixed(1)} total</dd>
+            </div>
+            <div>
+              <dt><TechnicalTerm translationKey="metric.netCashFlow" /></dt>
+              <dd>{snapshot.netCashFlowPerPeriod > 0 ? '+' : ''}{snapshot.netCashFlowPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+            </div>
+          </dl>
+        </>
       )}
     </aside>
   )

@@ -17,6 +17,7 @@ import type { TranslationKey } from '../i18n/translations'
 type ResourceDetailsPanelProps = {
   node: InfrastructureFlowNode
   simulation: TrafficSimulationState
+  serviceStarted: boolean
   onClose: () => void
   onStartUpgrade: (resourceId: string) => void
 }
@@ -38,10 +39,11 @@ const statusTranslationKeys: Record<string, TranslationKey> = {
 export function ResourceDetailsPanel({
   node,
   simulation,
+  serviceStarted,
   onClose,
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const isAppServer = node.data.kind === 'server'
   const isLoadBalancer = node.data.kind === 'load-balancer'
   const appServer = simulation.appServers.find(
@@ -70,7 +72,11 @@ export function ResourceDetailsPanel({
     simulation.serverDeployment !== null && deployment === null
 
   return (
-    <aside className="resource-panel nodrag nopan" aria-label="Resource details">
+    <aside
+      className="resource-panel nodrag nopan"
+      aria-label="Resource details"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
       <div className="resource-panel__header">
         <div>
           <p className="resource-panel__eyebrow">{t('resource.details')}</p>
@@ -211,9 +217,15 @@ export function ResourceDetailsPanel({
                 type="button"
                 className="resource-panel__upgrade-button"
                 onClick={() => onStartUpgrade(node.id)}
-                disabled={!canAffordUpgrade || anotherUpgradeIsDeploying}
+                disabled={
+                  !serviceStarted ||
+                  !canAffordUpgrade ||
+                  anotherUpgradeIsDeploying
+                }
               >
-                {anotherUpgradeIsDeploying
+                {!serviceStarted
+                  ? t('resource.completePathFirst')
+                  : anotherUpgradeIsDeploying
                   ? t('resource.anotherUpgrade')
                   : canAffordUpgrade
                     ? t('resource.upgradeMedium')

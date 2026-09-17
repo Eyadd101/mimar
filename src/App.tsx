@@ -190,12 +190,16 @@ function App() {
     setSelectedNodeId(null)
     setHint(null)
     setPendingAction(null)
+    setConnectionFeedback(null)
+    setFlowNodeRuntime({})
     restartStage()
   }
   const handleRestartCampaign = () => {
     setSelectedNodeId(null)
     setHint(null)
     setPendingAction(null)
+    setConnectionFeedback(null)
+    setFlowNodeRuntime({})
     restartCampaign()
   }
   const confirmPendingAction = () => {
@@ -293,6 +297,7 @@ function App() {
           revenuePerPeriod={traffic.revenuePerPeriod}
           infrastructureCost={traffic.infrastructureCostPerPeriod}
           netCashFlowPerPeriod={traffic.netCashFlowPerPeriod}
+          incidentCosts={traffic.totalFinancialPenalties}
           costPeriodSeconds={appServerResourceConfig.costPeriodSeconds}
           gameTimeSeconds={traffic.gameTimeSeconds}
           serviceStarted={serviceStarted}
@@ -334,14 +339,16 @@ function App() {
               {campaign.infrastructure.connections.length} connections
             </p>
           </Panel>
-          <Panel position="top-left" className="stage-objectives-position">
-            <StageObjectivePanel
-              stage={stage}
-              progress={objectiveProgress}
-              learningProgress={learningProgress}
-              serviceStarted={serviceStarted}
-            />
-          </Panel>
+          {(stage.sequence !== 1 || serviceStarted) && (
+            <Panel position="top-left" className="stage-objectives-position">
+              <StageObjectivePanel
+                stage={stage}
+                progress={objectiveProgress}
+                learningProgress={learningProgress}
+                serviceStarted={serviceStarted}
+              />
+            </Panel>
+          )}
           {stage.sequence === 1 && !serviceStarted && (
             <Panel position="bottom-left" className="resource-palette-position">
               <ResourcePalette
@@ -380,6 +387,7 @@ function App() {
               <ResourceDetailsPanel
                 node={selectedNode}
                 simulation={traffic}
+                serviceStarted={serviceStarted}
                 onClose={() => setSelectedNodeId(null)}
                 onStartUpgrade={(resourceId) =>
                   setPendingAction({ kind: 'server-upgrade', resourceId })
@@ -462,6 +470,8 @@ function App() {
           setSelectedNodeId(null)
           setHint(null)
           setPendingAction(null)
+          setConnectionFeedback(null)
+          setFlowNodeRuntime({})
           continueToNextStage()
         }}
       />
@@ -482,8 +492,16 @@ function App() {
       {!campaignStarted && (
         <CampaignStartOverlay
           saveResult={campaignSaveResult}
-          onNewCampaign={startNewCampaign}
-          onContinueCampaign={continueSavedCampaign}
+          onNewCampaign={() => {
+            setConnectionFeedback(null)
+            setFlowNodeRuntime({})
+            startNewCampaign()
+          }}
+          onContinueCampaign={() => {
+            setConnectionFeedback(null)
+            setFlowNodeRuntime({})
+            continueSavedCampaign()
+          }}
         />
       )}
     </main>

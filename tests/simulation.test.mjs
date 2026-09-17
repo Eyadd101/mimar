@@ -102,6 +102,11 @@ test('Stage 1 palette resources can be placed once without starting traffic', ()
   assert.equal(state.stageRuntime.serviceStarted, false)
   assert.equal(state.stageRuntime.simulation.activeUsers, 0)
   assert.equal(state.stageRuntime.simulation.appServers.length, 1)
+  assert.equal(state.stageRuntime.simulation.infrastructureCostPerPeriod, 0)
+  assert.equal(state.stageRuntime.simulation.netCashFlowPerPeriod, 0)
+
+  const upgradeAttempt = gameStateSimulation.beginServerUpgrade(state, 'server')
+  assert.strictEqual(upgradeAttempt, state)
 })
 
 test('Stage 1 guided build advances only from player infrastructure changes', () => {
@@ -174,6 +179,27 @@ test('Stage 1 accepts only the educational request path and starts traffic when 
   )
 })
 
+test('every reversed or bypassed Stage 1 connection returns an explanation', () => {
+  const infrastructure = createBuiltCampaign().infrastructure
+  const invalidPairs = [
+    ['users', 'database'],
+    ['database', 'users'],
+    ['database', 'server'],
+    ['server', 'users'],
+  ]
+
+  for (const [sourceId, targetId] of invalidPairs) {
+    const result = connectionValidation.validateStageOneConnection(
+      { ...infrastructure, connections: [] },
+      sourceId,
+      targetId,
+    )
+    assert.equal(result.valid, false)
+    assert.ok(result.explanation.english.length > 20)
+    assert.ok(result.explanation.arabic.length > 20)
+  }
+})
+
 test('First Users learning objectives follow build and simulation progress', () => {
   let state = gameStateSimulation.createInitialGameState()
   const evaluate = () =>
@@ -231,6 +257,7 @@ test('metric education explains live values in both languages', () => {
     revenuePerPeriod: 12,
     infrastructureCostPerPeriod: 24,
     netCashFlowPerPeriod: -12,
+    incidentCosts: 0,
     gameTimeSeconds: 10,
     costPeriodSeconds: 30,
     serviceStarted: true,
@@ -436,9 +463,21 @@ test('zero balance and sustained zero satisfaction trigger game over', () => {
 })
 
 test('campaign infrastructure survives a stage transition', () => {
-  let state = gameStateSimulation.dismissStageBriefing(
-    createReadyGameState(),
+  let state = gameStateSimulation.createInitialGameState()
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'users',
+    'server',
   )
+  state = gameStateSimulation.placeStageOneResource(state, 'database')
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'server',
+    'database',
+  )
+  state = gameStateSimulation.dismissStageBriefing(state)
   state = gameStateSimulation.beginServerUpgrade(state, 'server')
   state = gameStateSimulation.advanceGameState(state, 270)
   assert.equal(state.stageRuntime.status, 'stage-won')
@@ -480,6 +519,50 @@ test('campaign saves round-trip and reject corrupt topology safely', () => {
   )
 
   assert.equal(campaignSave.loadCampaignSave(storage).status, 'corrupt')
+})
+
+test('save and continue preserve partial and completed Stage 1 infrastructure', () => {
+  const storage = createMemoryStorage()
+  let state = gameStateSimulation.createInitialGameState()
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+
+  assert.equal(campaignSave.saveCampaign(state.campaign, storage), true)
+  const partialSave = campaignSave.loadCampaignSave(storage)
+  assert.equal(partialSave.status, 'ready')
+  const partialResume = gameStateSimulation.createInitialGameState(
+    partialSave.campaign,
+  )
+  assert.equal(partialResume.stageRuntime.serviceStarted, false)
+  assert.deepEqual(
+    partialResume.campaign.infrastructure.resources.map(
+      (resource) => resource.id,
+    ),
+    ['users', 'server'],
+  )
+
+  state = gameStateSimulation.connectStageOneResources(
+    partialResume,
+    'users',
+    'server',
+  )
+  state = gameStateSimulation.placeStageOneResource(state, 'database')
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'server',
+    'database',
+  )
+  campaignSave.saveCampaign(state.campaign, storage)
+  const completeSave = campaignSave.loadCampaignSave(storage)
+  assert.equal(completeSave.status, 'ready')
+  const completeResume = gameStateSimulation.createInitialGameState(
+    completeSave.campaign,
+  )
+  assert.equal(completeResume.stageRuntime.serviceStarted, true)
+  assert.deepEqual(
+    completeResume.campaign.infrastructure,
+    state.campaign.infrastructure,
+  )
 })
 
 test('horizontal scaling unlocks only for the launch preparation stage', () => {

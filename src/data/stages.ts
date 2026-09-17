@@ -212,7 +212,7 @@ export const prototypeStageConfig: StageConfig = {
       sourceType: 'users',
       targetType: 'app-server',
       title: 'Connect Users → App Server',
-      arabicTitle: 'صِل المستخدمين ← خادم التطبيق',
+      arabicTitle: 'صِل المستخدمين بخادم التطبيق',
     },
     {
       id: 'place-database',
@@ -227,7 +227,7 @@ export const prototypeStageConfig: StageConfig = {
       sourceType: 'app-server',
       targetType: 'database',
       title: 'Connect App Server → Database',
-      arabicTitle: 'صِل خادم التطبيق ← قاعدة البيانات',
+      arabicTitle: 'صِل خادم التطبيق بقاعدة البيانات',
     },
     {
       id: 'start-service',

@@ -26,7 +26,11 @@ export function StageObjectivePanel({
     : 0
 
   return (
-    <aside className="stage-objectives nodrag nopan" aria-label="Stage objectives">
+    <aside
+      className="stage-objectives nodrag nopan"
+      aria-label="Stage objectives"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
       <div className="stage-objectives__heading">
         <span>{t('stage.label')} {stage.sequence}</span>
         <strong>{stage.name}</strong>

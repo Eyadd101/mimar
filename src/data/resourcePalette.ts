@@ -16,7 +16,7 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
     englishName: 'Users',
     arabicName: 'المستخدمون',
     description: 'People sending requests to your application.',
-    position: { x: 80, y: 250 },
+    position: { x: 330, y: 250 },
   },
   {
     type: 'app-server',
@@ -24,7 +24,7 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
     englishName: 'App Server',
     arabicName: 'خادم التطبيق',
     description: 'Runs the application logic and processes requests.',
-    position: { x: 420, y: 250 },
+    position: { x: 670, y: 250 },
   },
   {
     type: 'database',
@@ -32,6 +32,6 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
     englishName: 'Database',
     arabicName: 'قاعدة البيانات',
     description: 'Stores persistent application data.',
-    position: { x: 760, y: 250 },
+    position: { x: 1010, y: 250 },
   },
 ]

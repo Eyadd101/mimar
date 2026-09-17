@@ -24,6 +24,7 @@ type TrafficHudProps = {
   revenuePerPeriod: number
   infrastructureCost: number
   netCashFlowPerPeriod: number
+  incidentCosts: number
   costPeriodSeconds: number
   gameTimeSeconds: number
   serviceStarted: boolean

@@ -39,6 +39,7 @@ export type MetricEducationSnapshot = {
   revenuePerPeriod: number
   infrastructureCostPerPeriod: number
   netCashFlowPerPeriod: number
+  incidentCosts: number
   gameTimeSeconds: number
   costPeriodSeconds: number
   serviceStarted: boolean

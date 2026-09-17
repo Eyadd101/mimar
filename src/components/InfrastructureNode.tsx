@@ -87,6 +87,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
       className="infrastructure-node"
       data-kind={data.kind}
       data-status={data.appServerMetrics?.status}
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       {(data.canConnect || data.kind !== 'users') && (
         <Handle

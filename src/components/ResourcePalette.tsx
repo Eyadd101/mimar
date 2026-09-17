@@ -19,10 +19,14 @@ export function ResourcePalette({
   onAddResource,
   currentStep,
 }: ResourcePaletteProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   return (
-    <aside className="resource-palette nodrag nopan" aria-label="Resource palette">
+    <aside
+      className="resource-palette nodrag nopan"
+      aria-label="Resource palette"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
       <div className="resource-palette__heading">
         <span>{t('palette.title')}</span>
         <strong>{t('palette.available')}</strong>

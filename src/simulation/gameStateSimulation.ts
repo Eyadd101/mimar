@@ -165,7 +165,10 @@ export function beginServerUpgrade(
   currentState: GameState,
   resourceId: string,
 ): GameState {
-  if (currentState.stageRuntime.status !== 'playing') {
+  if (
+    currentState.stageRuntime.status !== 'playing' ||
+    !currentState.stageRuntime.serviceStarted
+  ) {
     return currentState
   }
 
