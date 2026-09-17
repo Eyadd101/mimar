@@ -144,6 +144,7 @@ function App() {
           latencyMs={traffic.applicationLatencyMs}
           customerSatisfaction={traffic.customerSatisfaction}
           satisfactionReason={traffic.satisfactionReason}
+          businessConsequenceReason={traffic.businessConsequenceReason}
           balance={traffic.balance}
           revenuePerPeriod={traffic.revenuePerPeriod}
           infrastructureCost={traffic.infrastructureCostPerPeriod}
@@ -230,7 +231,11 @@ function App() {
       </section>
 
       <footer className="game-footer">
-        <p><span className="hint-dot" aria-hidden="true" />Drag nodes to rearrange<span className="secondary-hint"> · Scroll to zoom · Drag canvas to pan</span></p>
+        <p className="business-loop">
+          <span className="hint-dot" aria-hidden="true" />
+          Performance <span>→</span> Satisfaction <span>→</span> Revenue{' '}
+          <span>→</span> Balance
+        </p>
         <SimulationSpeedControls
           gameSpeed={gameSpeed}
           onSpeedChange={setGameSpeed}

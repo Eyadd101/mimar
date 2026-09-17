@@ -1142,6 +1142,15 @@
   vertical-align: middle;
 }
 
+.business-loop {
+  white-space: nowrap;
+}
+
+.business-loop > span:not(.hint-dot) {
+  margin-inline: 5px;
+  color: #52645a;
+}
+
 .graph-count {
   font: 10px var(--mono);
   white-space: nowrap;

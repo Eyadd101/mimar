@@ -83,6 +83,12 @@ export const customerSatisfactionConfig = {
   satisfactionDecreasePerSecond: 0.35,
 } as const
 
+export const businessConsequenceConfig = {
+  severeOutageLatencyMs: 1_000,
+  sustainedOutageSeconds: 20,
+  severeOutagePenalty: 25,
+} as const
+
 export const gameStateConfig = {
   zeroSatisfactionGracePeriodSeconds: 15,
 } as const

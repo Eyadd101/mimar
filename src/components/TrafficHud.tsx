@@ -4,6 +4,7 @@ type TrafficHudProps = {
   latencyMs: number
   customerSatisfaction: number
   satisfactionReason: string | null
+  businessConsequenceReason: string | null
   balance: number
   revenuePerPeriod: number
   infrastructureCost: number
@@ -29,6 +30,7 @@ export function TrafficHud({
   latencyMs,
   customerSatisfaction,
   satisfactionReason,
+  businessConsequenceReason,
   balance,
   revenuePerPeriod,
   infrastructureCost,
@@ -79,9 +81,9 @@ export function TrafficHud({
           <dd>{formatGameTime(gameTimeSeconds)}</dd>
         </div>
       </dl>
-      {satisfactionReason && (
+      {(businessConsequenceReason || satisfactionReason) && (
         <p className="traffic-hud__notice" role="status">
-          {satisfactionReason}
+          {businessConsequenceReason ?? satisfactionReason}
         </p>
       )}
     </div>

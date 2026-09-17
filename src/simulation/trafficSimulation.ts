@@ -21,6 +21,11 @@ import {
   deductCost,
   type EconomyState,
 } from './economySimulation'
+import {
+  advanceBusinessConsequences,
+  createInitialBusinessConsequenceState,
+  type BusinessConsequenceState,
+} from './businessConsequenceSimulation'
 
 export type TrafficAppServerResource = {
   id: string
@@ -41,6 +46,7 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 }
 
 export type TrafficSimulationState = CustomerSatisfactionState &
+  BusinessConsequenceState &
   EconomyState & {
   activeUsers: number
   requestsPerSecond: number
@@ -106,6 +112,7 @@ export function createInitialTrafficState(
     infrastructure,
   )
   const satisfaction = createInitialCustomerSatisfactionState()
+  const consequences = createInitialBusinessConsequenceState()
 
   return {
     activeUsers,
@@ -114,6 +121,7 @@ export function createInitialTrafficState(
     ...application,
     serverDeployment: null,
     ...satisfaction,
+    ...consequences,
     ...createInitialEconomyState(
       activeUsers,
       satisfaction.customerSatisfaction,
@@ -279,6 +287,11 @@ function advanceOneGameSecond(
     application.infrastructureCostPerPeriod,
     economyPeriodIsDue,
   )
+  const consequences = advanceBusinessConsequences(
+    currentState,
+    application.applicationLatencyMs,
+    economy.balance,
+  )
 
   return {
     activeUsers,
@@ -290,6 +303,8 @@ function advanceOneGameSecond(
       : currentState.serverDeployment,
     ...satisfaction,
     ...economy,
+    balance: consequences.balance,
+    ...consequences.consequenceState,
   }
 }
 
