@@ -272,9 +272,75 @@ export const growthPreviewStageConfig: StageConfig = {
   },
 }
 
+export const verticalScalingLimitStageConfig: StageConfig = {
+  ...prototypeStageConfig,
+  id: 'vertical-scaling-limit',
+  sequence: 3,
+  name: 'Vertical Scaling Limit',
+  storyBriefing:
+    'The company is growing faster. The Medium Server is the largest vertical tier available, and one machine still handles every request.',
+  trafficProfile: {
+    initialActiveUsers: 40,
+    activeUserGrowthIntervalSeconds: 5,
+    activeUsersAddedPerInterval: 2,
+    requestsPerUserPerSecond: 0.1,
+  },
+  tutorialSteps: [
+    {
+      title: 'A new kind of limit',
+      message:
+        'Vertical scaling made one server stronger. Watch what happens when growth catches up with the largest available tier.',
+    },
+  ],
+  learningGoals: [
+    'Vertical scaling eventually reaches a practical ceiling.',
+    'Horizontal scaling means sharing traffic across multiple servers.',
+  ],
+  trafficEvents: [],
+  minimumSurvivalDurationSeconds: 330,
+  primaryObjective: {
+    id: 'observe-vertical-limit',
+    type: 'survive-duration',
+    title: 'Reach the scaling ceiling',
+    description: 'Keep the company operating for 5½ game minutes.',
+    durationSeconds: 330,
+  },
+  secondaryObjectives: [
+    {
+      id: 'vertical-limit-satisfaction',
+      type: 'finish-satisfaction',
+      title: 'Protect customer trust',
+      description: 'Finish with at least 70% satisfaction.',
+      minimumSatisfaction: 70,
+    },
+    {
+      id: 'vertical-limit-latency',
+      type: 'maintain-latency',
+      title: 'Keep response time controlled',
+      description: 'Maintain latency below 600 ms for 60 seconds.',
+      maximumLatencyMs: 600,
+      durationSeconds: 60,
+    },
+  ],
+  winCondition: {
+    type: 'all-required-objectives',
+    requiredObjectiveIds: ['observe-vertical-limit'],
+  },
+  starCriteria: {
+    twoStars: {
+      minimumSatisfaction: 75,
+    },
+    threeStars: {
+      minimumSatisfaction: 90,
+      minimumBalance: 100,
+    },
+  },
+}
+
 export const campaignStageConfigs: readonly StageConfig[] = [
   prototypeStageConfig,
   growthPreviewStageConfig,
+  verticalScalingLimitStageConfig,
 ]
 
 export function getCampaignStage(stageIndex: number) {

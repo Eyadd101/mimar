@@ -197,7 +197,7 @@ function App() {
         <div className="game-footer__actions">
           <HintPanel
             hint={hint}
-            onRequestHint={() => setHint(getContextualHint(traffic))}
+            onRequestHint={() => setHint(getContextualHint(traffic, stage))}
             onDismissHint={() => setHint(null)}
           />
           <p className="graph-count">
