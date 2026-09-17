@@ -18,6 +18,74 @@
   backdrop-filter: blur(8px);
 }
 
+.stage-briefing-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #080d0bc7;
+  backdrop-filter: blur(7px);
+}
+
+.stage-briefing-card {
+  width: min(440px, 100%);
+  padding: 30px;
+  border: 1px solid #466050;
+  border-radius: 14px;
+  background: #18231ddd;
+  box-shadow: 0 28px 80px #00000075;
+}
+
+.stage-briefing-card__eyebrow {
+  margin-bottom: 12px;
+  color: #9bc4a6;
+  font: 9px var(--mono);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.stage-briefing-card h2 {
+  color: #ecf3ef;
+  font-size: 27px;
+  font-weight: 550;
+}
+
+.stage-briefing-card > p:not(.stage-briefing-card__eyebrow) {
+  margin-top: 12px;
+  color: #a9b7af;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.stage-briefing-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 26px;
+}
+
+.stage-briefing-card__footer span {
+  color: #788a80;
+  font: 9px var(--mono);
+}
+
+.stage-briefing-card__footer button {
+  min-width: 120px;
+  padding: 10px 15px;
+  border: 1px solid #567663;
+  border-radius: 7px;
+  color: #d2ecda;
+  background: #294032;
+  cursor: pointer;
+}
+
+.stage-briefing-card__footer button:hover {
+  border-color: #739b80;
+  background: #314c3b;
+}
+
 .game-state-card {
   width: min(460px, 100%);
   padding: 32px;

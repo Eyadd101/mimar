@@ -44,6 +44,7 @@ export type StageRuntimeState = {
   gameOverReason: GameOverReason | null
   objectiveProgress: StageObjectiveProgress
   stageRating: StageRating | null
+  briefingDismissed: boolean
 }
 
 export type GameState = {
@@ -94,7 +95,10 @@ export function advanceGameState(
   currentState: GameState,
   elapsedGameSeconds = 1,
 ): GameState {
-  if (currentState.stageRuntime.status !== 'playing') {
+  if (
+    currentState.stageRuntime.status !== 'playing' ||
+    !currentState.stageRuntime.briefingDismissed
+  ) {
     return currentState
   }
 
@@ -128,6 +132,20 @@ export function beginServerUpgrade(currentState: GameState): GameState {
     ...currentState,
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
+  }
+}
+
+export function dismissStageBriefing(currentState: GameState): GameState {
+  if (currentState.stageRuntime.briefingDismissed) {
+    return currentState
+  }
+
+  return {
+    ...currentState,
+    stageRuntime: {
+      ...currentState.stageRuntime,
+      briefingDismissed: true,
+    },
   }
 }
 
@@ -182,11 +200,13 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     simulation: createInitialTrafficState({
       tierId: appServer.tierId,
       balance: campaign.balance,
+      trafficProfile: stage.trafficProfile,
     }),
     zeroSatisfactionDurationSeconds: 0,
     gameOverReason: null,
     objectiveProgress: createStageObjectiveProgress(stage),
     stageRating: null,
+    briefingDismissed: stage.tutorialSteps.length === 0,
   }
 }
 
@@ -195,6 +215,7 @@ function advanceOneGameSecond(currentState: GameState): GameState {
   const simulation = advanceTrafficSimulation(
     currentState.stageRuntime.simulation,
     1,
+    stage.trafficProfile,
   )
   const campaign = syncCampaignWithSimulation(
     currentState.campaign,
@@ -234,6 +255,7 @@ function advanceOneGameSecond(currentState: GameState): GameState {
       gameOverReason,
       objectiveProgress,
       stageRating,
+      briefingDismissed: currentState.stageRuntime.briefingDismissed,
     },
   }
 }

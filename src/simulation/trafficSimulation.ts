@@ -20,6 +20,7 @@ import {
   deductCost,
   type EconomyState,
 } from './economySimulation'
+import type { StageTrafficProfile } from '../data/stages'
 
 export type TrafficSimulationState = CustomerSatisfactionState &
   EconomyState & {
@@ -40,6 +41,7 @@ export type ServerDeployment = {
 type InitialTrafficStateOptions = {
   tierId?: ServerTierId
   balance?: number
+  trafficProfile?: StageTrafficProfile
 }
 
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
@@ -48,17 +50,26 @@ const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
  * Each active user generates an average of 0.1 requests per second.
  * requestsPerSecond = activeUsers * requestsPerUserPerSecond
  */
-export function calculateRequestsPerSecond(activeUsers: number) {
+export function calculateRequestsPerSecond(
+  activeUsers: number,
+  requestsPerUserPerSecond: number =
+    trafficSimulationConfig.requestsPerUserPerSecond,
+) {
   return roundToOneDecimal(
-    activeUsers * trafficSimulationConfig.requestsPerUserPerSecond,
+    activeUsers * requestsPerUserPerSecond,
   )
 }
 
 export function createInitialTrafficState(
   options: InitialTrafficStateOptions = {},
 ): TrafficSimulationState {
-  const activeUsers = trafficSimulationConfig.initialActiveUsers
-  const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
+  const trafficProfile =
+    options.trafficProfile ?? trafficSimulationConfig
+  const activeUsers = trafficProfile.initialActiveUsers
+  const requestsPerSecond = calculateRequestsPerSecond(
+    activeUsers,
+    trafficProfile.requestsPerUserPerSecond,
+  )
   const tierId = options.tierId ?? appServerResourceConfig.initialTierId
   const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
   const satisfaction = createInitialCustomerSatisfactionState()
@@ -128,11 +139,12 @@ export function calculateDeploymentProgress(
 export function advanceTrafficSimulation(
   currentState: TrafficSimulationState,
   elapsedGameSeconds = 1,
+  trafficProfile: StageTrafficProfile = trafficSimulationConfig,
 ): TrafficSimulationState {
   let simulation = currentState
 
   for (let elapsed = 0; elapsed < elapsedGameSeconds; elapsed += 1) {
-    simulation = advanceOneGameSecond(simulation)
+    simulation = advanceOneGameSecond(simulation, trafficProfile)
   }
 
   return simulation
@@ -140,16 +152,20 @@ export function advanceTrafficSimulation(
 
 function advanceOneGameSecond(
   currentState: TrafficSimulationState,
+  trafficProfile: StageTrafficProfile,
 ): TrafficSimulationState {
   const gameTimeSeconds = currentState.gameTimeSeconds + 1
   const completedGrowthIntervals = Math.floor(
-    gameTimeSeconds / trafficSimulationConfig.activeUserGrowthIntervalSeconds,
+    gameTimeSeconds / trafficProfile.activeUserGrowthIntervalSeconds,
   )
   const activeUsers =
-    trafficSimulationConfig.initialActiveUsers +
+    trafficProfile.initialActiveUsers +
     completedGrowthIntervals *
-      trafficSimulationConfig.activeUsersAddedPerInterval
-  const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
+      trafficProfile.activeUsersAddedPerInterval
+  const requestsPerSecond = calculateRequestsPerSecond(
+    activeUsers,
+    trafficProfile.requestsPerUserPerSecond,
+  )
   const deploymentCompleted =
     currentState.serverDeployment !== null &&
     gameTimeSeconds >= currentState.serverDeployment.completesAtGameTimeSeconds

@@ -15,6 +15,7 @@ import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { StageObjectivePanel } from './components/StageObjectivePanel'
+import { StageBriefingOverlay } from './components/StageBriefingOverlay'
 import { TrafficHud } from './components/TrafficHud'
 import {
   createInfrastructureEdges,
@@ -42,11 +43,13 @@ function App() {
     objectiveProgress,
     stageRating,
     hasNextStage,
+    isStageBriefingOpen,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
     restartStage,
     continueToNextStage,
+    beginStage,
     updateResourcePosition,
   } = useGameSimulation()
   const campaignEdges = useMemo(
@@ -206,6 +209,13 @@ function App() {
           continueToNextStage()
         }}
       />
+      {isStageBriefingOpen && (
+        <StageBriefingOverlay
+          key={stage.id}
+          stage={stage}
+          onBeginStage={beginStage}
+        />
+      )}
     </main>
   )
 }

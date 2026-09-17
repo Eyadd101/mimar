@@ -55,11 +55,26 @@ export type StageFailureCondition =
       gracePeriodSeconds: number
     }
 
+export type StageTrafficProfile = {
+  initialActiveUsers: number
+  activeUserGrowthIntervalSeconds: number
+  activeUsersAddedPerInterval: number
+  requestsPerUserPerSecond: number
+}
+
+export type TutorialStep = {
+  title: string
+  message: string
+}
+
 export type StageConfig = {
   id: string
   sequence: number
   name: string
   storyBriefing: string
+  trafficProfile: StageTrafficProfile
+  tutorialSteps: TutorialStep[]
+  learningGoals: string[]
   minimumSurvivalDurationSeconds: number
   primaryObjective: StageObjectiveDefinition
   secondaryObjectives: StageObjectiveDefinition[]
@@ -80,26 +95,53 @@ export type StageConfig = {
 }
 
 export const prototypeStageConfig: StageConfig = {
-  id: 'prototype-run',
+  id: 'first-users',
   sequence: 1,
-  name: 'Startup Launch',
+  name: 'First Users',
   storyBriefing:
-    'Keep the startup online while its first wave of customers arrives.',
-  minimumSurvivalDurationSeconds: 240,
+    'The SaaS startup has launched. Only a small number of customers are using it—for now.',
+  trafficProfile: {
+    initialActiveUsers: 20,
+    activeUserGrowthIntervalSeconds: 5,
+    activeUsersAddedPerInterval: 1,
+    requestsPerUserPerSecond: 0.1,
+  },
+  tutorialSteps: [
+    {
+      title: 'Watch the demand',
+      message:
+        'Active users create requests. Watch Requests/sec as the customer base grows.',
+    },
+    {
+      title: 'Read the server',
+      message:
+        'CPU shows how much request capacity the App Server is using. Latency shows how long customers wait.',
+    },
+    {
+      title: 'Make the call',
+      message:
+        'Open the App Server when pressure rises. You decide whether the current tier is still enough.',
+    },
+  ],
+  learningGoals: [
+    'Requests turn user activity into server load.',
+    'Vertical scaling increases one server’s capacity.',
+  ],
+  minimumSurvivalDurationSeconds: 270,
   primaryObjective: {
-    id: 'survive-launch',
+    id: 'survive-first-users',
     type: 'survive-duration',
-    title: 'Keep the service running',
-    description: 'Stay operational for 4 game minutes.',
-    durationSeconds: 240,
+    title: 'Survive the growth period',
+    description: 'Stay solvent and operational for 4½ game minutes.',
+    durationSeconds: 270,
   },
   secondaryObjectives: [
     {
       id: 'healthy-customers',
       type: 'finish-satisfaction',
       title: 'Healthy customers',
-      description: 'Finish with at least 70% satisfaction.',
-      minimumSatisfaction: 70,
+      description: 'Finish with at least 75% satisfaction.',
+      minimumSatisfaction: 75,
     },
     {
       id: 'cash-reserve',
@@ -111,7 +153,7 @@ export const prototypeStageConfig: StageConfig = {
   ],
   winCondition: {
     type: 'all-required-objectives',
-    requiredObjectiveIds: ['survive-launch'],
+    requiredObjectiveIds: ['survive-first-users'],
   },
   starCriteria: {
     twoStars: {
@@ -139,6 +181,11 @@ export const growthPreviewStageConfig: StageConfig = {
   name: 'Growth Preview',
   storyBriefing:
     'The startup is growing. Keep the infrastructure you built ready for the next challenge.',
+  trafficProfile: {
+    ...prototypeStageConfig.trafficProfile,
+  },
+  tutorialSteps: [],
+  learningGoals: [],
   primaryObjective: {
     id: 'survive-growth-preview',
     type: 'survive-duration',

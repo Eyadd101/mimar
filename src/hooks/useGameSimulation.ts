@@ -9,6 +9,7 @@ import {
   beginServerUpgrade,
   continueToNextStage,
   createInitialGameState,
+  dismissStageBriefing,
   getCurrentStage,
   hasNextCampaignStage,
   moveCampaignResource,
@@ -20,7 +21,10 @@ export function useGameSimulation() {
   const [gameSpeed, setGameSpeed] =
     useState<SimulationSpeed>(defaultSimulationSpeed)
   const effectiveGameSpeed =
-    gameState.stageRuntime.status === 'playing' ? gameSpeed : 0
+    gameState.stageRuntime.status === 'playing' &&
+    gameState.stageRuntime.briefingDismissed
+      ? gameSpeed
+      : 0
 
   useEffect(() => {
     if (effectiveGameSpeed === 0) {
@@ -50,6 +54,10 @@ export function useGameSimulation() {
     setGameSpeed(defaultSimulationSpeed)
   }, [])
 
+  const beginStage = useCallback(() => {
+    setGameState(dismissStageBriefing)
+  }, [])
+
   const updateResourcePosition = useCallback(
     (resourceId: string, position: { x: number; y: number }) => {
       setGameState((currentState) =>
@@ -71,11 +79,13 @@ export function useGameSimulation() {
     objectiveProgress: gameState.stageRuntime.objectiveProgress,
     stageRating: gameState.stageRuntime.stageRating,
     hasNextStage: hasNextCampaignStage(gameState),
+    isStageBriefingOpen: !gameState.stageRuntime.briefingDismissed,
     gameSpeed: effectiveGameSpeed,
     setGameSpeed,
     startServerUpgrade: upgradeServer,
     restartStage: resetStage,
     continueToNextStage: continueCampaign,
+    beginStage,
     updateResourcePosition,
   }
 }
