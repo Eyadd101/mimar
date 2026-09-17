@@ -23,6 +23,7 @@ import {
   loadCampaignSave,
   saveCampaign,
 } from '../simulation/campaignSave'
+import { calculateTickGameSeconds } from '../simulation/simulationClock'
 
 export function useGameSimulation() {
   const [campaignSaveResult, setCampaignSaveResult] = useState(loadCampaignSave)
@@ -30,12 +31,12 @@ export function useGameSimulation() {
   const [gameState, setGameState] = useState(createInitialGameState)
   const [gameSpeed, setGameSpeed] =
     useState<SimulationSpeed>(defaultSimulationSpeed)
-  const effectiveGameSpeed =
+  const effectiveGameSpeed = calculateTickGameSeconds(
+    gameSpeed,
     campaignStarted &&
-    gameState.stageRuntime.status === 'playing' &&
-    gameState.stageRuntime.briefingDismissed
-      ? gameSpeed
-      : 0
+      gameState.stageRuntime.status === 'playing' &&
+      gameState.stageRuntime.briefingDismissed,
+  )
 
   useEffect(() => {
     if (effectiveGameSpeed === 0) {
