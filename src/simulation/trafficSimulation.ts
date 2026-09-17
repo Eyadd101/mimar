@@ -14,10 +14,10 @@ import {
   type CustomerSatisfactionState,
 } from './customerSatisfactionSimulation'
 import {
+  advanceEconomy,
   canAffordCost,
   createInitialEconomyState,
   deductCost,
-  deductInfrastructureCost,
   type EconomyState,
 } from './economySimulation'
 
@@ -53,15 +53,21 @@ export function createInitialTrafficState(): TrafficSimulationState {
   const activeUsers = trafficSimulationConfig.initialActiveUsers
   const requestsPerSecond = calculateRequestsPerSecond(activeUsers)
   const tierId = appServerResourceConfig.initialTierId
+  const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
+  const satisfaction = createInitialCustomerSatisfactionState()
 
   return {
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds: 0,
-    appServer: calculateAppServerMetrics(requestsPerSecond, tierId),
+    appServer,
     serverDeployment: null,
-    ...createInitialCustomerSatisfactionState(),
-    ...createInitialEconomyState(),
+    ...satisfaction,
+    ...createInitialEconomyState(
+      activeUsers,
+      satisfaction.customerSatisfaction,
+      appServer.costPerPeriod,
+    ),
   }
 }
 
@@ -146,27 +152,28 @@ function advanceOneGameSecond(
     ? null
     : currentState.serverDeployment
   const appServer = calculateAppServerMetrics(requestsPerSecond, tierId)
-  const infrastructureCostIsDue =
+  const economyPeriodIsDue =
     gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
-  const balance = infrastructureCostIsDue
-    ? deductInfrastructureCost(
-        currentState.balance,
-        appServer.costPerPeriod,
-      )
-    : currentState.balance
   const satisfaction = advanceCustomerSatisfaction(
     currentState,
     appServer.latencyMs,
     1,
+  )
+  const economy = advanceEconomy(
+    currentState,
+    activeUsers,
+    satisfaction.customerSatisfaction,
+    appServer.costPerPeriod,
+    economyPeriodIsDue,
   )
 
   return {
     activeUsers,
     requestsPerSecond,
     gameTimeSeconds,
-    balance,
     appServer,
     serverDeployment,
     ...satisfaction,
+    ...economy,
   }
 }

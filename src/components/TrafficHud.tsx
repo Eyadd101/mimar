@@ -5,9 +5,15 @@ type TrafficHudProps = {
   customerSatisfaction: number
   satisfactionReason: string | null
   balance: number
+  revenuePerPeriod: number
   infrastructureCost: number
+  netCashFlowPerPeriod: number
   costPeriodSeconds: number
   gameTimeSeconds: number
+}
+
+function formatCredits(value: number) {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
 }
 
 function formatGameTime(totalSeconds: number) {
@@ -24,7 +30,9 @@ export function TrafficHud({
   customerSatisfaction,
   satisfactionReason,
   balance,
+  revenuePerPeriod,
   infrastructureCost,
+  netCashFlowPerPeriod,
   costPeriodSeconds,
   gameTimeSeconds,
 }: TrafficHudProps) {
@@ -49,11 +57,22 @@ export function TrafficHud({
         </div>
         <div className="traffic-hud__metric">
           <dt>Balance</dt>
-          <dd>{balance} cr</dd>
+          <dd>{formatCredits(balance)} cr</dd>
+        </div>
+        <div className="traffic-hud__metric">
+          <dt>Revenue</dt>
+          <dd>{formatCredits(revenuePerPeriod)} / {costPeriodSeconds}s</dd>
         </div>
         <div className="traffic-hud__metric">
           <dt>Infra Cost</dt>
           <dd>{infrastructureCost} / {costPeriodSeconds}s</dd>
+        </div>
+        <div className="traffic-hud__metric">
+          <dt>Net Cash Flow</dt>
+          <dd data-cash-flow={netCashFlowPerPeriod < 0 ? 'negative' : 'positive'}>
+            {netCashFlowPerPeriod > 0 ? '+' : ''}
+            {formatCredits(netCashFlowPerPeriod)} / {costPeriodSeconds}s
+          </dd>
         </div>
         <div className="traffic-hud__metric">
           <dt>Game Time</dt>

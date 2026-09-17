@@ -93,7 +93,9 @@ function App() {
           customerSatisfaction={traffic.customerSatisfaction}
           satisfactionReason={traffic.satisfactionReason}
           balance={traffic.balance}
-          infrastructureCost={traffic.appServer.costPerPeriod}
+          revenuePerPeriod={traffic.revenuePerPeriod}
+          infrastructureCost={traffic.infrastructureCostPerPeriod}
+          netCashFlowPerPeriod={traffic.netCashFlowPerPeriod}
           costPeriodSeconds={appServerResourceConfig.costPeriodSeconds}
           gameTimeSeconds={traffic.gameTimeSeconds}
         />

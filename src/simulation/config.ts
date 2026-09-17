@@ -21,12 +21,12 @@ export const serverTierConfigs = {
   small: {
     name: 'Small Server',
     requestCapacity: 6,
-    costPerPeriod: 8,
+    costPerPeriod: 10,
   },
   medium: {
     name: 'Medium Server',
     requestCapacity: 14,
-    costPerPeriod: 18,
+    costPerPeriod: 24,
   },
 } as const
 
@@ -37,17 +37,18 @@ export const appServerResourceConfig = {
   type: 'App Server',
   awsReference: 'EC2',
   initialTierId: 'small' satisfies ServerTierId,
-  costPeriodSeconds: 60,
+  costPeriodSeconds: 30,
 } as const
 
 export const serverUpgradeConfig = {
   targetTierId: 'medium' satisfies ServerTierId,
-  upgradeCost: 180,
+  upgradeCost: 120,
   deploymentDurationSeconds: 30,
 } as const
 
 export const economyConfig = {
-  initialBalance: 500,
+  initialBalance: 200,
+  revenuePerActiveUserPerPeriod: 0.6,
 } as const
 
 export const latencySimulationConfig = {

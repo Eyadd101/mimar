@@ -176,7 +176,7 @@
 
 .traffic-hud {
   display: grid;
-  grid-template-columns: repeat(7, minmax(72px, 1fr));
+  grid-template-columns: repeat(9, minmax(72px, 1fr));
   margin: 0;
   overflow: hidden;
   border: 1px solid #35463c;
@@ -209,6 +209,14 @@
   color: #d9e8df;
   font: 13px var(--mono);
   font-variant-numeric: tabular-nums;
+}
+
+.traffic-hud dd[data-cash-flow='positive'] {
+  color: #9bd6aa;
+}
+
+.traffic-hud dd[data-cash-flow='negative'] {
+  color: #e98c7a;
 }
 
 .traffic-hud__notice {
@@ -818,7 +826,7 @@
   }
 
   .traffic-hud {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(9, minmax(0, 1fr));
     width: 100%;
   }
 
@@ -854,7 +862,7 @@
   }
 
   .traffic-hud {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
   }
 
