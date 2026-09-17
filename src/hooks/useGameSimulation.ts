@@ -18,12 +18,20 @@ import {
   restartCampaign,
   restartStage,
 } from '../simulation/gameStateSimulation'
+import {
+  clearCampaignSave,
+  loadCampaignSave,
+  saveCampaign,
+} from '../simulation/campaignSave'
 
 export function useGameSimulation() {
+  const [campaignSaveResult, setCampaignSaveResult] = useState(loadCampaignSave)
+  const [campaignStarted, setCampaignStarted] = useState(false)
   const [gameState, setGameState] = useState(createInitialGameState)
   const [gameSpeed, setGameSpeed] =
     useState<SimulationSpeed>(defaultSimulationSpeed)
   const effectiveGameSpeed =
+    campaignStarted &&
     gameState.stageRuntime.status === 'playing' &&
     gameState.stageRuntime.briefingDismissed
       ? gameSpeed
@@ -42,6 +50,31 @@ export function useGameSimulation() {
 
     return () => window.clearInterval(timerId)
   }, [effectiveGameSpeed])
+
+  useEffect(() => {
+    if (campaignStarted) {
+      saveCampaign(gameState.campaign)
+    }
+  }, [campaignStarted, gameState.campaign])
+
+  const startNewCampaign = useCallback(() => {
+    clearCampaignSave()
+    const initialGameState = restartCampaign()
+    setGameState(initialGameState)
+    setCampaignSaveResult({ status: 'ready', campaign: initialGameState.campaign })
+    setCampaignStarted(true)
+    setGameSpeed(defaultSimulationSpeed)
+  }, [])
+
+  const continueSavedCampaign = useCallback(() => {
+    if (campaignSaveResult.status !== 'ready') {
+      return
+    }
+
+    setGameState(createInitialGameState(campaignSaveResult.campaign))
+    setCampaignStarted(true)
+    setGameSpeed(defaultSimulationSpeed)
+  }, [campaignSaveResult])
 
   const upgradeServer = useCallback((resourceId: string) => {
     setGameState((currentState) =>
@@ -89,6 +122,8 @@ export function useGameSimulation() {
 
   return {
     simulation: gameState.stageRuntime.simulation,
+    campaignStarted,
+    campaignSaveResult,
     campaign: gameState.campaign,
     stageStartCampaign: gameState.stageStartSnapshot,
     gameStatus: gameState.stageRuntime.status,
@@ -109,6 +144,8 @@ export function useGameSimulation() {
     startAdditionalAppServerDeployment: deployAdditionalAppServer,
     restartStage: resetStage,
     restartCampaign: resetCampaign,
+    startNewCampaign,
+    continueSavedCampaign,
     continueToNextStage: continueCampaign,
     beginStage,
     updateResourcePosition,

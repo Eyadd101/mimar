@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
+import { CampaignStartOverlay } from './components/CampaignStartOverlay'
 import { EventTimelinePanel } from './components/EventTimelinePanel'
 import { HintPanel } from './components/HintPanel'
 import { InfrastructureActionsPanel } from './components/InfrastructureActionsPanel'
@@ -39,6 +40,8 @@ function App() {
   const [hint, setHint] = useState<string | null>(null)
   const {
     simulation: traffic,
+    campaignStarted,
+    campaignSaveResult,
     campaign,
     gameStatus,
     gameOverReason,
@@ -57,6 +60,8 @@ function App() {
     startAdditionalAppServerDeployment,
     restartStage,
     restartCampaign,
+    startNewCampaign,
+    continueSavedCampaign,
     continueToNextStage,
     beginStage,
     updateResourcePosition,
@@ -281,6 +286,13 @@ function App() {
           key={stage.id}
           stage={stage}
           onBeginStage={beginStage}
+        />
+      )}
+      {!campaignStarted && (
+        <CampaignStartOverlay
+          saveResult={campaignSaveResult}
+          onNewCampaign={startNewCampaign}
+          onContinueCampaign={continueSavedCampaign}
         />
       )}
     </main>
