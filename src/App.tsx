@@ -8,6 +8,7 @@ import {
   useNodesState,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { GameStateOverlay } from './components/GameStateOverlay'
 import { HintPanel } from './components/HintPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
@@ -30,9 +31,12 @@ function App() {
   const [hint, setHint] = useState<string | null>(null)
   const {
     simulation: traffic,
+    gameStatus,
+    gameOverReason,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
+    restartStage,
   } = useGameSimulation()
   const displayNodes = useMemo(
     () =>
@@ -62,6 +66,11 @@ function App() {
       })),
     [gameSpeed, traffic.requestsPerSecond],
   )
+  const handleRestartStage = () => {
+    setSelectedNodeId(null)
+    setHint(null)
+    restartStage()
+  }
 
   return (
     <main className="game">
@@ -145,6 +154,12 @@ function App() {
           <p className="graph-count">3 nodes <span>/</span> 2 connections</p>
         </div>
       </footer>
+      <GameStateOverlay
+        status={gameStatus}
+        reason={gameOverReason}
+        simulation={traffic}
+        onRestartStage={handleRestartStage}
+      />
     </main>
   )
 }

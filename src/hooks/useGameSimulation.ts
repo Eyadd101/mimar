@@ -5,38 +5,49 @@ import {
   type SimulationSpeed,
 } from '../simulation/config'
 import {
-  advanceTrafficSimulation,
-  createInitialTrafficState,
-  startServerUpgrade,
-} from '../simulation/trafficSimulation'
+  advanceGameState,
+  beginServerUpgrade,
+  createInitialGameState,
+  restartStage,
+} from '../simulation/gameStateSimulation'
 
 export function useGameSimulation() {
-  const [simulation, setSimulation] = useState(createInitialTrafficState)
+  const [gameState, setGameState] = useState(createInitialGameState)
   const [gameSpeed, setGameSpeed] =
     useState<SimulationSpeed>(defaultSimulationSpeed)
+  const effectiveGameSpeed =
+    gameState.status === 'playing' ? gameSpeed : 0
 
   useEffect(() => {
-    if (gameSpeed === 0) {
+    if (effectiveGameSpeed === 0) {
       return undefined
     }
 
     const timerId = window.setInterval(() => {
-      setSimulation((currentState) =>
-        advanceTrafficSimulation(currentState, gameSpeed),
+      setGameState((currentState) =>
+        advanceGameState(currentState, effectiveGameSpeed),
       )
     }, trafficSimulationConfig.tickIntervalMs)
 
     return () => window.clearInterval(timerId)
-  }, [gameSpeed])
+  }, [effectiveGameSpeed])
 
-  const beginServerUpgrade = useCallback(() => {
-    setSimulation(startServerUpgrade)
+  const upgradeServer = useCallback(() => {
+    setGameState(beginServerUpgrade)
+  }, [])
+
+  const resetStage = useCallback(() => {
+    setGameState(restartStage)
+    setGameSpeed(defaultSimulationSpeed)
   }, [])
 
   return {
-    simulation,
-    gameSpeed,
+    simulation: gameState.simulation,
+    gameStatus: gameState.status,
+    gameOverReason: gameState.gameOverReason,
+    gameSpeed: effectiveGameSpeed,
     setGameSpeed,
-    startServerUpgrade: beginServerUpgrade,
+    startServerUpgrade: upgradeServer,
+    restartStage: resetStage,
   }
 }

@@ -64,3 +64,7 @@ export const customerSatisfactionConfig = {
   sustainedBadLatencySeconds: 10,
   satisfactionDecreasePerSecond: 0.25,
 } as const
+
+export const gameStateConfig = {
+  zeroSatisfactionGracePeriodSeconds: 15,
+} as const

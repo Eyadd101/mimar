@@ -1,9 +1,95 @@
 .game {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100dvh;
   min-height: 360px;
+}
+
+.game-state-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #080d0bd9;
+  backdrop-filter: blur(8px);
+}
+
+.game-state-card {
+  width: min(460px, 100%);
+  padding: 32px;
+  border: 1px solid #68453f;
+  border-radius: 14px;
+  background: #1b201dee;
+  box-shadow: 0 28px 80px #00000080;
+}
+
+.game-state-card__eyebrow {
+  margin-bottom: 10px;
+  color: #e98c7a;
+  font: 9px var(--mono);
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.game-state-card h2 {
+  color: #f2e7e3;
+  font-size: 30px;
+  font-weight: 550;
+}
+
+.game-state-card__message {
+  margin-top: 10px;
+  color: #bca9a2;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.game-state-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 24px 0;
+  overflow: hidden;
+  border: 1px solid #3b403d;
+  border-radius: 8px;
+  background: #3b403d;
+}
+
+.game-state-card__metrics > div {
+  padding: 12px;
+  background: #151b18;
+}
+
+.game-state-card__metrics dt {
+  color: #839087;
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.game-state-card__metrics dd {
+  margin: 5px 0 0;
+  color: #e6eeea;
+  font: 13px var(--mono);
+}
+
+.game-state-card > button {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #7a5148;
+  border-radius: 7px;
+  color: #f1d6cf;
+  background: #432822;
+  cursor: pointer;
+}
+
+.game-state-card > button:hover {
+  border-color: #a56b5e;
+  background: #553029;
 }
 
 .game-header,
