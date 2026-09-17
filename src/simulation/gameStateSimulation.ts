@@ -255,6 +255,10 @@ export function restartStage(currentState: GameState): GameState {
   return createInitialGameState(currentState.stageStartSnapshot)
 }
 
+export function restartCampaign(): GameState {
+  return createInitialGameState()
+}
+
 export function continueToNextStage(currentState: GameState): GameState {
   if (
     currentState.stageRuntime.status !== 'stage-won' ||

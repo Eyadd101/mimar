@@ -145,7 +145,8 @@
   font: 13px var(--mono);
 }
 
-.game-state-card > button {
+.game-state-card > button,
+.game-state-card__actions button {
   width: 100%;
   padding: 11px 14px;
   border: 1px solid #7a5148;
@@ -155,9 +156,64 @@
   cursor: pointer;
 }
 
-.game-state-card > button:hover {
+.game-state-card > button:hover,
+.game-state-card__actions button:hover {
   border-color: #a56b5e;
   background: #553029;
+}
+
+.game-state-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.game-state-card__actions button:last-child {
+  border-color: #48544e;
+  color: #bdc8c2;
+  background: #202925;
+}
+
+.failure-chain {
+  margin-bottom: 24px;
+  padding: 14px;
+  border: 1px solid #574039;
+  border-radius: 8px;
+  background: #1e1715;
+}
+
+.failure-chain > span {
+  color: #d79787;
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.failure-chain ol {
+  display: grid;
+  gap: 15px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.failure-chain li {
+  position: relative;
+  padding-left: 20px;
+  color: #c6b5af;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.failure-chain li::before {
+  position: absolute;
+  left: 0;
+  color: #d37665;
+  content: '↓';
+}
+
+.failure-chain li:first-child::before {
+  content: '•';
 }
 
 .game-state-card__campaign-end {

@@ -11,6 +11,7 @@ import {
   calculateAverageLatency,
   type StageStatistics,
 } from '../simulation/stageStatisticsSimulation'
+import { createGameOverFailureChain } from '../simulation/gameOverExplanationSimulation'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -22,6 +23,7 @@ type GameStateOverlayProps = {
   campaign: CampaignState
   hasNextStage: boolean
   onRestartStage: () => void
+  onRestartCampaign: () => void
   onContinueToNextStage: () => void
 }
 
@@ -35,6 +37,7 @@ export function GameStateOverlay({
   campaign,
   hasNextStage,
   onRestartStage,
+  onRestartCampaign,
   onContinueToNextStage,
 }: GameStateOverlayProps) {
   if (status === 'playing') {
@@ -42,6 +45,9 @@ export function GameStateOverlay({
   }
 
   const stageWon = status === 'stage-won'
+  const failureChain = reason
+    ? createGameOverFailureChain(reason, simulation, stageStatistics)
+    : []
 
   return (
     <div className="game-state-overlay" role="dialog" aria-modal="true">
@@ -137,6 +143,17 @@ export function GameStateOverlay({
           </div>
         )}
 
+        {!stageWon && (
+          <div className="failure-chain" aria-label="Why the stage failed">
+            <span>What happened</span>
+            <ol>
+              {failureChain.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         {stageWon && hasNextStage && (
           <button type="button" onClick={onContinueToNextStage}>
             Continue to Next Stage
@@ -148,9 +165,14 @@ export function GameStateOverlay({
           </p>
         )}
         {!stageWon && (
-          <button type="button" onClick={onRestartStage}>
-            Restart Stage
-          </button>
+          <div className="game-state-card__actions">
+            <button type="button" onClick={onRestartStage}>
+              Retry Stage
+            </button>
+            <button type="button" onClick={onRestartCampaign}>
+              Return to Campaign Start
+            </button>
+          </div>
         )}
       </section>
     </div>

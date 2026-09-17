@@ -56,6 +56,7 @@ function App() {
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
+    restartCampaign,
     continueToNextStage,
     beginStage,
     updateResourcePosition,
@@ -114,6 +115,11 @@ function App() {
     setSelectedNodeId(null)
     setHint(null)
     restartStage()
+  }
+  const handleRestartCampaign = () => {
+    setSelectedNodeId(null)
+    setHint(null)
+    restartCampaign()
   }
   const handleNodesChange = (
     changes: NodeChange<InfrastructureFlowNode>[],
@@ -263,6 +269,7 @@ function App() {
         campaign={campaign}
         hasNextStage={hasNextStage}
         onRestartStage={handleRestartStage}
+        onRestartCampaign={handleRestartCampaign}
         onContinueToNextStage={() => {
           setSelectedNodeId(null)
           setHint(null)

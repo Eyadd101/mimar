@@ -15,6 +15,7 @@ import {
   getCurrentStage,
   hasNextCampaignStage,
   moveCampaignResource,
+  restartCampaign,
   restartStage,
 } from '../simulation/gameStateSimulation'
 
@@ -61,6 +62,11 @@ export function useGameSimulation() {
     setGameSpeed(defaultSimulationSpeed)
   }, [])
 
+  const resetCampaign = useCallback(() => {
+    setGameState(restartCampaign())
+    setGameSpeed(defaultSimulationSpeed)
+  }, [])
+
   const continueCampaign = useCallback(() => {
     setGameState(continueToNextStage)
     setGameSpeed(defaultSimulationSpeed)
@@ -102,6 +108,7 @@ export function useGameSimulation() {
     startLoadBalancerDeployment: deployLoadBalancer,
     startAdditionalAppServerDeployment: deployAdditionalAppServer,
     restartStage: resetStage,
+    restartCampaign: resetCampaign,
     continueToNextStage: continueCampaign,
     beginStage,
     updateResourcePosition,
