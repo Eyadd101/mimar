@@ -647,6 +647,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.traffic-hud__cause {
+  display: block;
+  max-width: 120px;
+  margin: 3px auto 0;
+  overflow: hidden;
+  color: #dba66f;
+  font: 7px var(--mono);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traffic-hud__cause[data-trend='down'] {
+  color: #e18a78;
+}
+
 .traffic-hud__metric[data-metric-state='positive'] strong {
   color: #9bd6aa;
 }

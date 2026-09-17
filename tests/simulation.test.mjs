@@ -217,6 +217,14 @@ test('metric education explains live values in both languages', () => {
     metricEducation.metricEducationDefinitions.latency.labelKey,
     'metric.latency',
   )
+  assert.deepEqual(
+    metricEducation.getLiveMetricCause('balance', snapshot, 'en'),
+    { trend: 'down', text: 'Cost exceeds revenue' },
+  )
+  assert.equal(
+    metricEducation.getLiveMetricCause('cpu-usage', snapshot, 'en'),
+    null,
+  )
 })
 
 test('CPU and memory remain between zero and one hundred', () => {

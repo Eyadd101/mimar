@@ -311,3 +311,63 @@ export function getCpuTrend(cpuUsage: number) {
   }
   return 'normal'
 }
+
+export type LiveMetricCause = {
+  trend: 'up' | 'down'
+  text: string
+}
+
+export function getLiveMetricCause(
+  metricId: MetricId,
+  snapshot: MetricEducationSnapshot,
+  language: Language,
+): LiveMetricCause | null {
+  if (!snapshot.serviceStarted) {
+    return null
+  }
+
+  const text = (en: string, ar: string) => (language === 'ar' ? ar : en)
+
+  switch (metricId) {
+    case 'cpu-usage': {
+      const cpuTrend = getCpuTrend(snapshot.cpuUsage)
+      if (snapshot.isServiceOverloaded) {
+        return {
+          trend: 'up',
+          text: text('Server overloaded', 'الخادم تحت حمل زائد'),
+        }
+      }
+      if (cpuTrend === 'high' || cpuTrend === 'elevated') {
+        return {
+          trend: 'up',
+          text: text('Traffic near capacity', 'الحركة تقترب من السعة'),
+        }
+      }
+      return null
+    }
+    case 'latency':
+      return snapshot.latencyMs > customerSatisfactionConfig.badLatencyThresholdMs
+        ? {
+            trend: 'up',
+            text: text('High server load', 'حمل الخادم مرتفع'),
+          }
+        : null
+    case 'satisfaction':
+      return snapshot.badLatencyDurationSeconds >=
+        customerSatisfactionConfig.sustainedBadLatencySeconds
+        ? {
+            trend: 'down',
+            text: text('Latency stayed high', 'استمر زمن الاستجابة مرتفعًا'),
+          }
+        : null
+    case 'balance':
+      return snapshot.netCashFlowPerPeriod < 0
+        ? {
+            trend: 'down',
+            text: text('Cost exceeds revenue', 'التكلفة تتجاوز الإيرادات'),
+          }
+        : null
+    default:
+      return null
+  }
+}

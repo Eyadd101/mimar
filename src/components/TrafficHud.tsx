@@ -3,6 +3,8 @@ import type {
   MetricEducationSnapshot,
   MetricId,
 } from '../data/metricEducation'
+import { getLiveMetricCause } from '../data/metricEducation'
+import { useLanguage } from '../i18n/useLanguage'
 import { gameFeedbackConfig } from '../simulation/config'
 import { MetricExplanationPanel } from './MetricExplanationPanel'
 import { TechnicalTerm } from './TechnicalTerm'
@@ -42,6 +44,7 @@ function formatGameTime(totalSeconds: number) {
 
 export function TrafficHud(props: TrafficHudProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricId | null>(null)
+  const { language } = useLanguage()
   const {
     activeUsers,
     requestsPerSecond,
@@ -128,27 +131,36 @@ export function TrafficHud(props: TrafficHudProps) {
   return (
     <div className="traffic-hud-shell">
       <div className="traffic-hud" aria-label="Traffic simulation">
-        {metrics.map((metric) => (
-          <button
-            key={metric.id}
-            type="button"
-            className="traffic-hud__metric"
-            data-metric-id={metric.id}
-            data-metric-state={metric.state}
-            data-selected={selectedMetric === metric.id}
-            aria-expanded={selectedMetric === metric.id}
-            onClick={() =>
-              setSelectedMetric((current) =>
-                current === metric.id ? null : metric.id,
-              )
-            }
-          >
-            <span className="traffic-hud__label">
-              <TechnicalTerm translationKey={metric.labelKey} />
-            </span>
-            <strong>{metric.value}</strong>
-          </button>
-        ))}
+        {metrics.map((metric) => {
+          const cause = getLiveMetricCause(metric.id, snapshot, language)
+
+          return (
+            <button
+              key={metric.id}
+              type="button"
+              className="traffic-hud__metric"
+              data-metric-id={metric.id}
+              data-metric-state={metric.state}
+              data-selected={selectedMetric === metric.id}
+              aria-expanded={selectedMetric === metric.id}
+              onClick={() =>
+                setSelectedMetric((current) =>
+                  current === metric.id ? null : metric.id,
+                )
+              }
+            >
+              <span className="traffic-hud__label">
+                <TechnicalTerm translationKey={metric.labelKey} />
+              </span>
+              <strong>{metric.value}</strong>
+              {cause && (
+                <span className="traffic-hud__cause" data-trend={cause.trend}>
+                  {cause.trend === 'up' ? '↑' : '↓'} {cause.text}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
       {selectedMetric && (
         <MetricExplanationPanel
