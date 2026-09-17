@@ -1,4 +1,10 @@
-import { gameStateConfig } from './config'
+import { prototypeStageConfig, type StageConfig } from '../data/stages'
+import {
+  advanceStageObjectives,
+  createStageObjectiveProgress,
+  isStageComplete,
+  type StageObjectiveProgress,
+} from './stageObjectiveSimulation'
 import {
   advanceTrafficSimulation,
   createInitialTrafficState,
@@ -21,6 +27,8 @@ export type GameState = {
   stageStartSnapshot: TrafficSimulationState
   zeroSatisfactionDurationSeconds: number
   gameOverReason: GameOverReason | null
+  stage: StageConfig
+  objectiveProgress: StageObjectiveProgress
 }
 
 const bankruptcyReason: GameOverReason = {
@@ -37,6 +45,7 @@ const serviceFailureReason: GameOverReason = {
 
 export function createInitialGameState(
   stageStartSnapshot = createInitialTrafficState(),
+  stage = prototypeStageConfig,
 ): GameState {
   return {
     status: 'playing',
@@ -44,6 +53,8 @@ export function createInitialGameState(
     stageStartSnapshot,
     zeroSatisfactionDurationSeconds: 0,
     gameOverReason: null,
+    stage,
+    objectiveProgress: createStageObjectiveProgress(stage),
   }
 }
 
@@ -64,19 +75,33 @@ export function advanceGameState(
         ? gameState.zeroSatisfactionDurationSeconds + 1
         : 0
     const gameOverReason = getGameOverReason(
+      gameState.stage,
       simulation,
       zeroSatisfactionDurationSeconds,
     )
+    const objectiveProgress = advanceStageObjectives(
+      gameState.stage,
+      gameState.objectiveProgress,
+      simulation,
+    )
+    const stageWon =
+      !gameOverReason &&
+      isStageComplete(gameState.stage, objectiveProgress)
 
     gameState = {
       ...gameState,
       simulation,
       zeroSatisfactionDurationSeconds,
-      status: gameOverReason ? 'game-over' : 'playing',
+      status: gameOverReason
+        ? 'game-over'
+        : stageWon
+          ? 'stage-won'
+          : 'playing',
       gameOverReason,
+      objectiveProgress,
     }
 
-    if (gameOverReason) {
+    if (gameOverReason || stageWon) {
       break
     }
   }
@@ -97,7 +122,10 @@ export function beginServerUpgrade(currentState: GameState): GameState {
 }
 
 export function restartStage(currentState: GameState): GameState {
-  return createInitialGameState(currentState.stageStartSnapshot)
+  return createInitialGameState(
+    currentState.stageStartSnapshot,
+    currentState.stage,
+  )
 }
 
 export function markStageWon(currentState: GameState): GameState {
@@ -107,16 +135,23 @@ export function markStageWon(currentState: GameState): GameState {
 }
 
 function getGameOverReason(
+  stage: StageConfig,
   simulation: TrafficSimulationState,
   zeroSatisfactionDurationSeconds: number,
 ) {
-  if (simulation.balance === 0) {
+  const bankruptcyEnabled = stage.failureConditions.some(
+    (condition) => condition.type === 'balance-zero',
+  )
+  if (bankruptcyEnabled && simulation.balance === 0) {
     return bankruptcyReason
   }
 
+  const satisfactionFailure = stage.failureConditions.find(
+    (condition) => condition.type === 'satisfaction-zero-grace',
+  )
   if (
-    zeroSatisfactionDurationSeconds >=
-    gameStateConfig.zeroSatisfactionGracePeriodSeconds
+    satisfactionFailure?.type === 'satisfaction-zero-grace' &&
+    zeroSatisfactionDurationSeconds >= satisfactionFailure.gracePeriodSeconds
   ) {
     return serviceFailureReason
   }

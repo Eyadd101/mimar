@@ -45,6 +45,8 @@ export function useGameSimulation() {
     simulation: gameState.simulation,
     gameStatus: gameState.status,
     gameOverReason: gameState.gameOverReason,
+    stage: gameState.stage,
+    objectiveProgress: gameState.objectiveProgress,
     gameSpeed: effectiveGameSpeed,
     setGameSpeed,
     startServerUpgrade: upgradeServer,

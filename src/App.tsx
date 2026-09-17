@@ -14,6 +14,7 @@ import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { SimulationSpeedControls } from './components/SimulationSpeedControls'
+import { StageObjectivePanel } from './components/StageObjectivePanel'
 import { TrafficHud } from './components/TrafficHud'
 import { initialEdges, initialNodes } from './data/infrastructure'
 import { useGameSimulation } from './hooks/useGameSimulation'
@@ -33,6 +34,8 @@ function App() {
     simulation: traffic,
     gameStatus,
     gameOverReason,
+    stage,
+    objectiveProgress,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
@@ -126,6 +129,9 @@ function App() {
             <p className="eyebrow">Workspace / 001</p>
             <h1>Your first infrastructure.</h1>
             <p>Three nodes. One simple connection path.</p>
+          </Panel>
+          <Panel position="top-left" className="stage-objectives-position">
+            <StageObjectivePanel stage={stage} progress={objectiveProgress} />
           </Panel>
           {selectedNode && (
             <Panel position="top-right" className="resource-panel-position">
