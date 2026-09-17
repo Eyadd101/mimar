@@ -13,6 +13,11 @@ export function StageObjectivePanel({
   stage,
   progress,
 }: StageObjectivePanelProps) {
+  const primaryProgress = progress[stage.primaryObjective.id]
+  const primaryProgressPercent = primaryProgress
+    ? Math.min(Math.round((primaryProgress.current / primaryProgress.target) * 100), 100)
+    : 0
+
   return (
     <aside className="stage-objectives nodrag nopan" aria-label="Stage objectives">
       <div className="stage-objectives__heading">
@@ -20,6 +25,21 @@ export function StageObjectivePanel({
         <strong>{stage.name}</strong>
       </div>
       <p className="stage-objectives__briefing">{stage.storyBriefing}</p>
+      <div className="stage-objectives__progress">
+        <div>
+          <span>Win progress</span>
+          <strong>{primaryProgressPercent}%</strong>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Primary objective progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={primaryProgressPercent}
+        >
+          <span style={{ width: `${primaryProgressPercent}%` }} />
+        </div>
+      </div>
       <ObjectiveRow
         label="Primary"
         objective={stage.primaryObjective}

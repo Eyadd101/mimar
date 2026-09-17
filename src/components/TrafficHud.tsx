@@ -38,6 +38,19 @@ export function TrafficHud({
   costPeriodSeconds,
   gameTimeSeconds,
 }: TrafficHudProps) {
+  const balanceState =
+    balance <= gameFeedbackConfig.criticalBalanceWarningCredits
+      ? 'critical'
+      : balance <= gameFeedbackConfig.lowBalanceWarningCredits
+        ? 'low'
+        : 'healthy'
+  const balanceWarning =
+    balanceState === 'critical'
+      ? `Bankruptcy danger: only ${formatCredits(balance)} credits remain.`
+      : balanceState === 'low'
+        ? `Runway warning: balance has fallen to ${formatCredits(balance)} credits.`
+        : null
+
   return (
     <div className="traffic-hud-shell">
       <dl className="traffic-hud" aria-label="Traffic simulation">
@@ -57,7 +70,7 @@ export function TrafficHud({
           <dt>Satisfaction</dt>
           <dd>{customerSatisfaction.toFixed(1)}%</dd>
         </div>
-        <div className="traffic-hud__metric">
+        <div className="traffic-hud__metric" data-balance-state={balanceState}>
           <dt>Balance</dt>
           <dd>{formatCredits(balance)} cr</dd>
         </div>
@@ -81,11 +94,12 @@ export function TrafficHud({
           <dd>{formatGameTime(gameTimeSeconds)}</dd>
         </div>
       </dl>
-      {(businessConsequenceReason || satisfactionReason) && (
+      {(businessConsequenceReason || satisfactionReason || balanceWarning) && (
         <p className="traffic-hud__notice" role="status">
-          {businessConsequenceReason ?? satisfactionReason}
+          {businessConsequenceReason ?? satisfactionReason ?? balanceWarning}
         </p>
       )}
     </div>
   )
 }
+import { gameFeedbackConfig } from '../simulation/config'

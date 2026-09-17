@@ -10,6 +10,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
 import { CampaignStartOverlay } from './components/CampaignStartOverlay'
+import { ActionConfirmationDialog } from './components/ActionConfirmationDialog'
 import { EventTimelinePanel } from './components/EventTimelinePanel'
 import { HintPanel } from './components/HintPanel'
 import { InfrastructureActionsPanel } from './components/InfrastructureActionsPanel'
@@ -27,7 +28,12 @@ import {
 } from './data/infrastructure'
 import { getConnectionRequestRate } from './data/requestFlow'
 import { useGameSimulation } from './hooks/useGameSimulation'
-import { appServerResourceConfig } from './simulation/config'
+import {
+  additionalAppServerConfig,
+  appServerResourceConfig,
+  loadBalancerResourceConfig,
+  serverUpgradeConfig,
+} from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
 import './App.css'
 
@@ -35,9 +41,16 @@ const nodeTypes = { infrastructure: InfrastructureNode }
 const edgeTypes = { requestFlow: RequestFlowEdge }
 const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
 
+type PendingInfrastructureAction =
+  | { kind: 'server-upgrade'; resourceId: string }
+  | { kind: 'load-balancer' }
+  | { kind: 'app-server' }
+
 function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] =
+    useState<PendingInfrastructureAction | null>(null)
   const {
     simulation: traffic,
     campaignStarted,
@@ -119,13 +132,53 @@ function App() {
   const handleRestartStage = () => {
     setSelectedNodeId(null)
     setHint(null)
+    setPendingAction(null)
     restartStage()
   }
   const handleRestartCampaign = () => {
     setSelectedNodeId(null)
     setHint(null)
+    setPendingAction(null)
     restartCampaign()
   }
+  const confirmPendingAction = () => {
+    if (pendingAction?.kind === 'server-upgrade') {
+      startServerUpgrade(pendingAction.resourceId)
+    } else if (pendingAction?.kind === 'load-balancer') {
+      startLoadBalancerDeployment()
+    } else if (pendingAction?.kind === 'app-server') {
+      startAdditionalAppServerDeployment()
+    }
+
+    setPendingAction(null)
+  }
+  const pendingActionDetails = pendingAction
+    ? pendingAction.kind === 'server-upgrade'
+      ? {
+          title: 'Upgrade to Medium Server',
+          description: 'Increase the selected server request capacity.',
+          cost: serverUpgradeConfig.upgradeCost,
+          durationSeconds: serverUpgradeConfig.deploymentDurationSeconds,
+          confirmLabel: 'Start Upgrade',
+        }
+      : pendingAction.kind === 'load-balancer'
+        ? {
+            title: 'Deploy Load Balancer',
+            description: 'Add traffic distribution to the infrastructure.',
+            cost: loadBalancerResourceConfig.deploymentCost,
+            durationSeconds:
+              loadBalancerResourceConfig.deploymentDurationSeconds,
+            confirmLabel: 'Start Deployment',
+          }
+        : {
+            title: `Deploy ${additionalAppServerConfig.name}`,
+            description: 'Add application capacity behind the Load Balancer.',
+            cost: additionalAppServerConfig.deploymentCost,
+            durationSeconds:
+              additionalAppServerConfig.deploymentDurationSeconds,
+            confirmLabel: 'Start Deployment',
+          }
+    : null
   const handleNodesChange = (
     changes: NodeChange<InfrastructureFlowNode>[],
   ) => {
@@ -204,7 +257,9 @@ function App() {
                 node={selectedNode}
                 simulation={traffic}
                 onClose={() => setSelectedNodeId(null)}
-                onStartUpgrade={startServerUpgrade}
+                onStartUpgrade={(resourceId) =>
+                  setPendingAction({ kind: 'server-upgrade', resourceId })
+                }
               />
             </Panel>
           )}
@@ -233,8 +288,12 @@ function App() {
                 campaign={campaign}
                 simulation={traffic}
                 deployment={infrastructureDeployment}
-                onDeployLoadBalancer={startLoadBalancerDeployment}
-                onDeployAppServer={startAdditionalAppServerDeployment}
+                onDeployLoadBalancer={() =>
+                  setPendingAction({ kind: 'load-balancer' })
+                }
+                onDeployAppServer={() =>
+                  setPendingAction({ kind: 'app-server' })
+                }
               />
             </Panel>
           )}
@@ -278,9 +337,17 @@ function App() {
         onContinueToNextStage={() => {
           setSelectedNodeId(null)
           setHint(null)
+          setPendingAction(null)
           continueToNextStage()
         }}
       />
+      {pendingActionDetails && gameStatus === 'playing' && (
+        <ActionConfirmationDialog
+          {...pendingActionDetails}
+          onConfirm={confirmPendingAction}
+          onCancel={() => setPendingAction(null)}
+        />
+      )}
       {isStageBriefingOpen && (
         <StageBriefingOverlay
           key={stage.id}

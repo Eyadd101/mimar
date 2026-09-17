@@ -63,7 +63,11 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
 
 export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) {
   return (
-    <div className="infrastructure-node" data-kind={data.kind}>
+    <div
+      className="infrastructure-node"
+      data-kind={data.kind}
+      data-status={data.appServerMetrics?.status}
+    >
       {data.kind !== 'users' && (
         <Handle type="target" position={Position.Left} isConnectable={false} />
       )}
