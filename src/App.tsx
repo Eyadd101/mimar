@@ -36,6 +36,7 @@ function App() {
     gameOverReason,
     stage,
     objectiveProgress,
+    stageRating,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
@@ -166,6 +167,8 @@ function App() {
         status={gameStatus}
         reason={gameOverReason}
         simulation={traffic}
+        stageName={stage.name}
+        stageRating={stageRating}
         onRestartStage={handleRestartStage}
       />
     </main>

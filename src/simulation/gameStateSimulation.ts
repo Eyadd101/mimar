@@ -6,6 +6,10 @@ import {
   type StageObjectiveProgress,
 } from './stageObjectiveSimulation'
 import {
+  calculateStageRating,
+  type StageRating,
+} from './starRatingSimulation'
+import {
   advanceTrafficSimulation,
   createInitialTrafficState,
   startServerUpgrade,
@@ -29,6 +33,7 @@ export type GameState = {
   gameOverReason: GameOverReason | null
   stage: StageConfig
   objectiveProgress: StageObjectiveProgress
+  stageRating: StageRating | null
 }
 
 const bankruptcyReason: GameOverReason = {
@@ -55,6 +60,7 @@ export function createInitialGameState(
     gameOverReason: null,
     stage,
     objectiveProgress: createStageObjectiveProgress(stage),
+    stageRating: null,
   }
 }
 
@@ -87,6 +93,13 @@ export function advanceGameState(
     const stageWon =
       !gameOverReason &&
       isStageComplete(gameState.stage, objectiveProgress)
+    const stageRating = stageWon
+      ? calculateStageRating(
+          gameState.stage,
+          simulation,
+          objectiveProgress,
+        )
+      : null
 
     gameState = {
       ...gameState,
@@ -99,6 +112,7 @@ export function advanceGameState(
           : 'playing',
       gameOverReason,
       objectiveProgress,
+      stageRating,
     }
 
     if (gameOverReason || stageWon) {
@@ -126,12 +140,6 @@ export function restartStage(currentState: GameState): GameState {
     currentState.stageStartSnapshot,
     currentState.stage,
   )
-}
-
-export function markStageWon(currentState: GameState): GameState {
-  return currentState.status === 'playing'
-    ? { ...currentState, status: 'stage-won' }
-    : currentState
 }
 
 function getGameOverReason(

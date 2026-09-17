@@ -67,6 +67,15 @@ export type StageConfig = {
     type: 'all-required-objectives'
     requiredObjectiveIds: string[]
   }
+  starCriteria: {
+    twoStars: {
+      minimumSatisfaction: number
+    }
+    threeStars: {
+      minimumSatisfaction: number
+      minimumBalance: number
+    }
+  }
   failureConditions: StageFailureCondition[]
 }
 
@@ -103,6 +112,15 @@ export const prototypeStageConfig: StageConfig = {
   winCondition: {
     type: 'all-required-objectives',
     requiredObjectiveIds: ['survive-launch'],
+  },
+  starCriteria: {
+    twoStars: {
+      minimumSatisfaction: 85,
+    },
+    threeStars: {
+      minimumSatisfaction: 95,
+      minimumBalance: 75,
+    },
   },
   failureConditions: [
     { type: 'balance-zero' },

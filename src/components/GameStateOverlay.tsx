@@ -3,11 +3,14 @@ import type {
   GameStatus,
 } from '../simulation/gameStateSimulation'
 import type { TrafficSimulationState } from '../simulation/trafficSimulation'
+import type { StageRating } from '../simulation/starRatingSimulation'
 
 type GameStateOverlayProps = {
   status: GameStatus
   reason: GameOverReason | null
   simulation: TrafficSimulationState
+  stageName: string
+  stageRating: StageRating | null
   onRestartStage: () => void
 }
 
@@ -15,6 +18,8 @@ export function GameStateOverlay({
   status,
   reason,
   simulation,
+  stageName,
+  stageRating,
   onRestartStage,
 }: GameStateOverlayProps) {
   if (status === 'playing') {
@@ -29,7 +34,7 @@ export function GameStateOverlay({
         <p className="game-state-card__eyebrow">
           {stageWon ? 'Stage complete' : 'Game over'}
         </p>
-        <h2>{stageWon ? 'Stage Won' : reason?.title}</h2>
+        <h2>{stageWon ? stageName : reason?.title}</h2>
         <p className="game-state-card__message">
           {stageWon
             ? 'The primary objective has been completed.'
@@ -54,6 +59,28 @@ export function GameStateOverlay({
             <dd>{simulation.appServer.latencyMs} ms</dd>
           </div>
         </dl>
+
+        {stageWon && stageRating && (
+          <div className="stage-rating" aria-label={`${stageRating.stars} stars earned`}>
+            <div className="stage-rating__stars" aria-hidden="true">
+              {[1, 2, 3].map((star) => (
+                <span key={star} data-earned={star <= stageRating.stars}>★</span>
+              ))}
+            </div>
+            <p>{stageRating.stars} / 3 stars</p>
+            <ul>
+              {stageRating.explanations.map((item) => (
+                <li key={item.star} data-earned={item.earned}>
+                  <span aria-hidden="true">{item.earned ? '✓' : '×'}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.explanation}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {!stageWon && (
           <button type="button" onClick={onRestartStage}>
