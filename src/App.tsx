@@ -42,6 +42,7 @@ import {
   serverUpgradeConfig,
 } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
+import { getMostLoadedAppServer } from './simulation/trafficSimulation'
 import {
   validateStageOneConnection,
   type ConnectionExplanation,
@@ -143,6 +144,7 @@ function App() {
     traffic.appServers,
   ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
+  const mostLoadedAppServer = getMostLoadedAppServer(traffic)
   const displayEdges = useMemo(
     () =>
       campaignEdges.map((edge) => ({
@@ -262,8 +264,12 @@ function App() {
         <TrafficHud
           activeUsers={traffic.activeUsers}
           requestsPerSecond={traffic.requestsPerSecond}
+          requestsPerUserPerSecond={stage.trafficProfile.requestsPerUserPerSecond}
+          cpuUsage={mostLoadedAppServer?.cpuUsage ?? 0}
+          requestCapacity={mostLoadedAppServer?.requestCapacity ?? 0}
           latencyMs={traffic.applicationLatencyMs}
           customerSatisfaction={traffic.customerSatisfaction}
+          badLatencyDurationSeconds={traffic.badLatencyDurationSeconds}
           satisfactionReason={traffic.satisfactionReason}
           businessConsequenceReason={traffic.businessConsequenceReason}
           balance={traffic.balance}
@@ -272,6 +278,9 @@ function App() {
           netCashFlowPerPeriod={traffic.netCashFlowPerPeriod}
           costPeriodSeconds={appServerResourceConfig.costPeriodSeconds}
           gameTimeSeconds={traffic.gameTimeSeconds}
+          serviceStarted={serviceStarted}
+          isPaused={!isSimulationRunning}
+          isServiceOverloaded={traffic.isServiceOverloaded}
         />
         <div className="header-tools">
           <LanguageSelector />

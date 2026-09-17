@@ -17,6 +17,7 @@ const {
   economySimulation,
   gameStateSimulation,
   infrastructureData,
+  metricEducation,
   simulationClock,
   stageOneOnboardingSimulation,
   trafficSimulation,
@@ -181,6 +182,41 @@ test('language preference defaults safely and persists supported languages', () 
 
   storage.values.set(translations.languagePreferenceKey, 'unsupported')
   assert.equal(translations.readLanguagePreference(storage), 'en')
+})
+
+test('metric education explains live values in both languages', () => {
+  const snapshot = {
+    activeUsers: 20,
+    requestsPerSecond: 2,
+    requestsPerUserPerSecond: 0.1,
+    cpuUsage: 33.3,
+    requestCapacity: 6,
+    latencyMs: 95,
+    customerSatisfaction: 100,
+    badLatencyDurationSeconds: 0,
+    balance: 200,
+    revenuePerPeriod: 12,
+    infrastructureCostPerPeriod: 24,
+    netCashFlowPerPeriod: -12,
+    gameTimeSeconds: 10,
+    costPeriodSeconds: 30,
+    serviceStarted: true,
+    isPaused: false,
+    isServiceOverloaded: false,
+  }
+
+  assert.match(
+    metricEducation.getMetricCurrentReason('balance', snapshot, 'en'),
+    /cost is higher than revenue/,
+  )
+  assert.match(
+    metricEducation.getMetricCurrentReason('requests-per-second', snapshot, 'ar'),
+    /20/,
+  )
+  assert.equal(
+    metricEducation.metricEducationDefinitions.latency.labelKey,
+    'metric.latency',
+  )
 })
 
 test('CPU and memory remain between zero and one hundred', () => {

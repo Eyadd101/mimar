@@ -10,6 +10,7 @@ import * as infrastructureData from '../src/data/infrastructure'
 import * as stageOneOnboardingSimulation from '../src/simulation/stageOneOnboardingSimulation'
 import * as connectionValidation from '../src/simulation/connectionValidation'
 import * as translations from '../src/i18n/translations'
+import * as metricEducation from '../src/data/metricEducation'
 
 export {
   appServerSimulation,
@@ -22,6 +23,7 @@ export {
   stageOneOnboardingSimulation,
   connectionValidation,
   translations,
+  metricEducation,
   simulationClock,
   trafficSimulation,
 }
