@@ -69,6 +69,7 @@ type InitialTrafficStateOptions = {
   infrastructure?: TrafficInfrastructure
   balance?: number
   trafficProfile?: StageTrafficProfile
+  serviceActive?: boolean
 }
 
 const defaultInfrastructure: TrafficInfrastructure = {
@@ -102,7 +103,9 @@ export function createInitialTrafficState(
 ): TrafficSimulationState {
   const trafficProfile = options.trafficProfile ?? trafficSimulationConfig
   const infrastructure = options.infrastructure ?? defaultInfrastructure
-  const activeUsers = trafficProfile.initialActiveUsers
+  const activeUsers = options.serviceActive === false
+    ? 0
+    : trafficProfile.initialActiveUsers
   const requestsPerSecond = calculateRequestsPerSecond(
     activeUsers,
     trafficProfile.requestsPerUserPerSecond,
@@ -227,10 +230,12 @@ export function distributeRequestsEvenly(
 export function getMostLoadedAppServer(
   simulation: TrafficSimulationState,
 ) {
-  return simulation.appServers.reduce((mostLoaded, server) =>
-    server.utilizationRatio > mostLoaded.utilizationRatio
-      ? server
-      : mostLoaded,
+  return simulation.appServers.reduce<AppServerRuntimeMetrics | undefined>(
+    (mostLoaded, server) =>
+      !mostLoaded || server.utilizationRatio > mostLoaded.utilizationRatio
+        ? server
+        : mostLoaded,
+    undefined,
   )
 }
 
@@ -333,12 +338,14 @@ function calculateApplicationMetrics(
     0,
   )
   const applicationLatencyMs =
-    requestsPerSecond > 0
-      ? Math.round(weightedLatency / requestsPerSecond)
-      : Math.round(
-          appServers.reduce((total, server) => total + server.latencyMs, 0) /
-            appServers.length,
-        )
+    appServers.length === 0
+      ? 0
+      : requestsPerSecond > 0
+        ? Math.round(weightedLatency / requestsPerSecond)
+        : Math.round(
+            appServers.reduce((total, server) => total + server.latencyMs, 0) /
+              appServers.length,
+          )
   const infrastructureCostPerPeriod = appServers.reduce(
     (total, server) => total + server.costPerPeriod,
     infrastructure.loadBalancerCostPerPeriod,

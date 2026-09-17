@@ -1,6 +1,5 @@
 import {
   additionalAppServerConfig,
-  appServerResourceConfig,
   campaignProgressionConfig,
   economyConfig,
   loadBalancerResourceConfig,
@@ -70,36 +69,42 @@ export function createInitialCampaignState(
     currentStageIndex: 0,
     balance: economyConfig.initialBalance,
     infrastructure: {
-      resources: [
-        {
-          id: 'users',
-          type: 'users',
-          name: 'Users',
-          position: { x: 0, y: 0 },
-        },
-        {
-          id: 'server',
-          type: 'app-server',
-          name: appServerResourceConfig.name,
-          tierId: appServerResourceConfig.initialTierId,
-          position: { x: 340, y: 0 },
-        },
-        {
-          id: 'database',
-          type: 'database',
-          name: 'Database',
-          position: { x: 680, y: 0 },
-        },
-      ],
-      connections: [
-        { id: 'users-server', sourceId: 'users', targetId: 'server' },
-        { id: 'server-database', sourceId: 'server', targetId: 'database' },
-      ],
+      resources: [],
+      connections: [],
     },
     unlockedResourceTypes: ['users', 'app-server', 'database'],
     completedStages: [],
     seed,
   }
+}
+
+export function hasOperationalServicePath(campaign: CampaignState) {
+  const users = campaign.infrastructure.resources.find(
+    (resource) => resource.type === 'users',
+  )
+  const appServer = campaign.infrastructure.resources.find(
+    (resource) => resource.type === 'app-server',
+  )
+  const database = campaign.infrastructure.resources.find(
+    (resource) => resource.type === 'database',
+  )
+
+  if (!users || !appServer || !database) {
+    return false
+  }
+
+  return (
+    campaign.infrastructure.connections.some(
+      (connection) =>
+        connection.sourceId === users.id &&
+        connection.targetId === appServer.id,
+    ) &&
+    campaign.infrastructure.connections.some(
+      (connection) =>
+        connection.sourceId === appServer.id &&
+        connection.targetId === database.id,
+    )
+  )
 }
 
 export function getPrimaryAppServer(campaign: CampaignState) {

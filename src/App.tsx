@@ -17,6 +17,7 @@ import { InfrastructureActionsPanel } from './components/InfrastructureActionsPa
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
+import { ResourcePalette } from './components/ResourcePalette'
 import { SimulationSpeedControls } from './components/SimulationSpeedControls'
 import { StageObjectivePanel } from './components/StageObjectivePanel'
 import { StageBriefingOverlay } from './components/StageBriefingOverlay'
@@ -69,6 +70,8 @@ function App() {
     stageStatistics,
     hasNextStage,
     isStageBriefingOpen,
+    serviceStarted,
+    isSimulationRunning,
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
@@ -126,13 +129,13 @@ function App() {
             traffic.appServers,
             traffic.requestsPerSecond,
           ),
-          isPaused: gameSpeed === 0,
+          isPaused: !isSimulationRunning,
         },
       })),
     [
       campaign.infrastructure.resources,
       campaignEdges,
-      gameSpeed,
+      isSimulationRunning,
       traffic.appServers,
       traffic.requestsPerSecond,
     ],
@@ -258,6 +261,11 @@ function App() {
           <Panel position="top-left" className="stage-objectives-position">
             <StageObjectivePanel stage={stage} progress={objectiveProgress} />
           </Panel>
+          {stage.sequence === 1 && !serviceStarted && (
+            <Panel position="bottom-left" className="resource-palette-position">
+              <ResourcePalette />
+            </Panel>
+          )}
           {selectedNode && (
             <Panel position="top-right" className="resource-panel-position">
               <ResourceDetailsPanel

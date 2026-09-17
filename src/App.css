@@ -681,6 +681,68 @@
   margin: 150px 36px;
 }
 
+.resource-palette-position {
+  margin: 28px 36px 76px;
+}
+
+.resource-palette {
+  width: 260px;
+  overflow: hidden;
+  border: 1px solid #3e4d45;
+  border-radius: 10px;
+  background: #151d19eb;
+  box-shadow: 0 12px 32px #00000035;
+}
+
+.resource-palette__heading {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-bottom: 1px solid #303d36;
+}
+
+.resource-palette__heading span {
+  color: #83a18f;
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.resource-palette__heading strong {
+  color: #dbe6df;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.resource-palette__list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.resource-palette__card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #34443b;
+  border-radius: 7px;
+  background: #19231e;
+}
+
+.resource-palette__card strong {
+  color: #cfddd5;
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.resource-palette__card span {
+  color: #72867a;
+  font: 8px var(--mono);
+  text-transform: uppercase;
+}
+
 .stage-objectives {
   width: 270px;
   overflow: hidden;

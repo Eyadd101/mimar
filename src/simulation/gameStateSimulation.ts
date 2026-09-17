@@ -11,6 +11,7 @@ import {
   createNextCampaignState,
   createTrafficInfrastructure,
   hasLoadBalancer,
+  hasOperationalServicePath,
   syncCampaignWithSimulation,
   updateResourcePositions,
   type CampaignState,
@@ -69,6 +70,7 @@ export type StageRuntimeState = {
   trafficEvents: StageTrafficEventRuntime
   infrastructureDeployment: InfrastructureDeployment | null
   statistics: StageStatistics
+  serviceStarted: boolean
 }
 
 export type InfrastructureDeployment = {
@@ -137,7 +139,8 @@ export function advanceGameState(
 ): GameState {
   if (
     currentState.stageRuntime.status !== 'playing' ||
-    !currentState.stageRuntime.briefingDismissed
+    !currentState.stageRuntime.briefingDismissed ||
+    !currentState.stageRuntime.serviceStarted
   ) {
     return currentState
   }
@@ -289,7 +292,12 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     infrastructure: createTrafficInfrastructure(campaign),
     balance: campaign.balance,
     trafficProfile: stage.trafficProfile,
+    serviceActive:
+      campaign.currentStageIndex > 0 || hasOperationalServicePath(campaign),
   })
+
+  const serviceStarted =
+    campaign.currentStageIndex > 0 || hasOperationalServicePath(campaign)
 
   return {
     status: 'playing',
@@ -302,6 +310,7 @@ function createStageRuntime(campaign: CampaignState): StageRuntimeState {
     trafficEvents: createStageTrafficEvents(stage, campaign.seed),
     infrastructureDeployment: null,
     statistics: createInitialStageStatistics(simulation),
+    serviceStarted,
   }
 }
 
@@ -375,6 +384,7 @@ function advanceOneGameSecond(currentState: GameState): GameState {
       trafficEvents,
       infrastructureDeployment: deploymentResult.deployment,
       statistics,
+      serviceStarted: currentState.stageRuntime.serviceStarted,
     },
   }
 }

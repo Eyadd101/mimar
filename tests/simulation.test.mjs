@@ -31,6 +31,56 @@ function createMemoryStorage() {
   }
 }
 
+function createBuiltCampaign(seed) {
+  return {
+    ...campaignSimulation.createInitialCampaignState(seed),
+    infrastructure: {
+      resources: [
+        {
+          id: 'users',
+          type: 'users',
+          name: 'Users',
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'server',
+          type: 'app-server',
+          name: 'App Server',
+          tierId: 'small',
+          position: { x: 340, y: 0 },
+        },
+        {
+          id: 'database',
+          type: 'database',
+          name: 'Database',
+          position: { x: 680, y: 0 },
+        },
+      ],
+      connections: [
+        { id: 'users-server', sourceId: 'users', targetId: 'server' },
+        { id: 'server-database', sourceId: 'server', targetId: 'database' },
+      ],
+    },
+  }
+}
+
+function createReadyGameState() {
+  return gameStateSimulation.createInitialGameState(createBuiltCampaign())
+}
+
+test('a new Stage 1 campaign starts empty with its simulation stopped', () => {
+  const state = gameStateSimulation.dismissStageBriefing(
+    gameStateSimulation.createInitialGameState(),
+  )
+  const advanced = gameStateSimulation.advanceGameState(state, 10)
+
+  assert.deepEqual(state.campaign.infrastructure.resources, [])
+  assert.deepEqual(state.campaign.infrastructure.connections, [])
+  assert.equal(state.stageRuntime.serviceStarted, false)
+  assert.equal(state.stageRuntime.simulation.activeUsers, 0)
+  assert.equal(advanced.stageRuntime.simulation.gameTimeSeconds, 0)
+})
+
 test('CPU and memory remain between zero and one hundred', () => {
   for (const requestsPerSecond of [-100, 0, 3, 6, 14, 10_000]) {
     for (const tier of ['small', 'medium']) {
@@ -66,7 +116,7 @@ test('balance operations never produce a negative balance', () => {
 
 test('pause stops game time and deployment advancement', () => {
   let state = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   state = gameStateSimulation.beginServerUpgrade(state, 'server')
   const pausedSeconds = simulationClock.calculateTickGameSeconds(0, true)
@@ -85,7 +135,7 @@ test('pause stops game time and deployment advancement', () => {
 
 test('speed multipliers advance the shared game clock correctly', () => {
   const initial = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
 
   for (const speed of [1, 2, 4]) {
@@ -97,7 +147,7 @@ test('speed multipliers advance the shared game clock correctly', () => {
 
 test('server upgrade completes only after its game-time duration', () => {
   let state = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   state = gameStateSimulation.beginServerUpgrade(state, 'server')
   state = gameStateSimulation.advanceGameState(state, 29)
@@ -138,7 +188,7 @@ test('customer satisfaction remains bounded', () => {
 })
 
 test('restart restores the stage-start campaign snapshot', () => {
-  const initial = gameStateSimulation.createInitialGameState()
+  const initial = createReadyGameState()
   let changed = gameStateSimulation.moveCampaignResources(
     initial,
     [{ id: 'server', position: { x: 999, y: 999 } }],
@@ -161,7 +211,7 @@ test('distributed server traffic is balanced and totals exactly', () => {
 
 test('the primary survival condition completes at its configured duration', () => {
   let state = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   state = gameStateSimulation.advanceGameState(state, 269)
   assert.equal(state.stageRuntime.status, 'playing')
@@ -172,7 +222,7 @@ test('the primary survival condition completes at its configured duration', () =
 
 test('zero balance and sustained zero satisfaction trigger game over', () => {
   const initial = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   const bankrupt = gameStateSimulation.advanceGameState(
     {
@@ -208,7 +258,7 @@ test('zero balance and sustained zero satisfaction trigger game over', () => {
 
 test('campaign infrastructure survives a stage transition', () => {
   let state = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   state = gameStateSimulation.beginServerUpgrade(state, 'server')
   state = gameStateSimulation.advanceGameState(state, 270)
@@ -237,7 +287,9 @@ test('campaign saves round-trip and reject corrupt topology safely', () => {
     ...campaign,
     infrastructure: {
       ...campaign.infrastructure,
-      connections: [],
+      connections: [
+        { id: 'missing-edge', sourceId: 'missing', targetId: 'also-missing' },
+      ],
     },
   }
   storage.values.set(
@@ -252,7 +304,7 @@ test('campaign saves round-trip and reject corrupt topology safely', () => {
 })
 
 test('horizontal scaling unlocks only for the launch preparation stage', () => {
-  const initialCampaign = campaignSimulation.createInitialCampaignState()
+  const initialCampaign = createBuiltCampaign()
   const verticalLimit = gameStateSimulation.createInitialGameState({
     ...initialCampaign,
     currentStageIndex: 2,
@@ -274,7 +326,7 @@ test('horizontal scaling unlocks only for the launch preparation stage', () => {
 
 test('repeated node drags preserve infrastructure identity and runtime state', () => {
   let gameState = gameStateSimulation.dismissStageBriefing(
-    gameStateSimulation.createInitialGameState(),
+    createReadyGameState(),
   )
   const originalConnections = gameState.campaign.infrastructure.connections
   const originalStageRuntime = gameState.stageRuntime
@@ -380,7 +432,7 @@ test('repeated node drags preserve infrastructure identity and runtime state', (
 test('position batches preserve every stage topology', () => {
   for (let currentStageIndex = 0; currentStageIndex < 4; currentStageIndex += 1) {
     let campaign = {
-      ...campaignSimulation.createInitialCampaignState(),
+      ...createBuiltCampaign(),
       currentStageIndex,
     }
 

@@ -152,7 +152,10 @@ function isValidCampaign(value: unknown): value is CampaignState {
     ) &&
     new Set(completedStageIds).size === completedStageIds.length &&
     completedStageIds.length <= Number(value.currentStageIndex)
-  const infrastructureIsValid = isValidInfrastructure(value.infrastructure)
+  const infrastructureIsValid = isValidInfrastructure(
+    value.infrastructure,
+    Number(value.currentStageIndex),
+  )
   const loadBalancerUnlockIsValid =
     !infrastructureContainsResource(value.infrastructure, 'load-balancer') ||
     (Array.isArray(value.unlockedResourceTypes) &&
@@ -169,7 +172,7 @@ function isValidCampaign(value: unknown): value is CampaignState {
   )
 }
 
-function isValidInfrastructure(value: unknown) {
+function isValidInfrastructure(value: unknown, currentStageIndex: number) {
   if (
     !isRecord(value) ||
     !Array.isArray(value.resources) ||
@@ -191,13 +194,17 @@ function isValidInfrastructure(value: unknown) {
   const loadBalancers = resources.filter(
     (resource) => resource.type === 'load-balancer',
   )
-  const resourceCountsAreValid =
-    users.length === 1 &&
-    databases.length === 1 &&
-    appServers.length >= 1 &&
-    appServers.length <= 2 &&
-    loadBalancers.length <= 1 &&
-    (loadBalancers.length === 1 || appServers.length === 1)
+  const resourceCountsAreValid = currentStageIndex === 0
+    ? users.length <= 1 &&
+      databases.length <= 1 &&
+      appServers.length <= 1 &&
+      loadBalancers.length === 0
+    : users.length === 1 &&
+      databases.length === 1 &&
+      appServers.length >= 1 &&
+      appServers.length <= 2 &&
+      loadBalancers.length <= 1 &&
+      (loadBalancers.length === 1 || appServers.length === 1)
   const connectionIds = new Set<string>()
   const connectionPairs = new Set<string>()
   const connectionsAreWellFormed = value.connections.every((connection) => {
@@ -217,8 +224,28 @@ function isValidInfrastructure(value: unknown) {
     return true
   })
 
-  if (!resourceCountsAreValid || !connectionsAreWellFormed) {
+  if (
+    !resourceCountsAreValid ||
+    !connectionsAreWellFormed ||
+    resourceIds.size !== value.resources.length ||
+    connectionIds.size !== value.connections.length ||
+    connectionPairs.size !== value.connections.length
+  ) {
     return false
+  }
+
+  if (currentStageIndex === 0) {
+    const allowedConnections = new Set<string>()
+    if (users[0] && appServers[0]) {
+      allowedConnections.add(`${users[0].id}->${appServers[0].id}`)
+    }
+    if (appServers[0] && databases[0]) {
+      allowedConnections.add(`${appServers[0].id}->${databases[0].id}`)
+    }
+
+    return [...connectionPairs].every((connection) =>
+      allowedConnections.has(connection),
+    )
   }
 
   const expectedConnections = loadBalancers[0]
@@ -235,8 +262,6 @@ function isValidInfrastructure(value: unknown) {
       ]
 
   return (
-    resourceIds.size === value.resources.length &&
-    connectionIds.size === value.connections.length &&
     connectionPairs.size === expectedConnections.length &&
     expectedConnections.every((connection) => connectionPairs.has(connection))
   )

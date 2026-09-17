@@ -10,6 +10,10 @@ export function getContextualHint(
   const { badLatencyDurationSeconds, requestsPerSecond } = simulation
   const appServer = getMostLoadedAppServer(simulation)
 
+  if (!appServer) {
+    return 'Build and connect the required resources to start the service.'
+  }
+
   if (
     badLatencyDurationSeconds >=
     customerSatisfactionConfig.sustainedBadLatencySeconds

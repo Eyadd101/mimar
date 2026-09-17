@@ -35,7 +35,8 @@ export function useGameSimulation() {
     gameSpeed,
     campaignStarted &&
       gameState.stageRuntime.status === 'playing' &&
-      gameState.stageRuntime.briefingDismissed,
+      gameState.stageRuntime.briefingDismissed &&
+      gameState.stageRuntime.serviceStarted,
   )
 
   useEffect(() => {
@@ -142,7 +143,9 @@ export function useGameSimulation() {
     stageStatistics: gameState.stageRuntime.statistics,
     hasNextStage: hasNextCampaignStage(gameState),
     isStageBriefingOpen: !gameState.stageRuntime.briefingDismissed,
-    gameSpeed: effectiveGameSpeed,
+    serviceStarted: gameState.stageRuntime.serviceStarted,
+    isSimulationRunning: effectiveGameSpeed > 0,
+    gameSpeed,
     setGameSpeed,
     startServerUpgrade: upgradeServer,
     startLoadBalancerDeployment: deployLoadBalancer,
