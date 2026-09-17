@@ -302,7 +302,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
     'Horizontal scaling means sharing traffic across multiple servers.',
   ],
   trafficEvents: [],
-  unlocksResourceTypes: ['load-balancer'],
+  unlocksResourceTypes: [],
   minimumSurvivalDurationSeconds: 330,
   primaryObjective: {
     id: 'observe-vertical-limit',

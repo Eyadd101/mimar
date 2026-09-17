@@ -250,3 +250,24 @@ test('campaign saves round-trip and reject corrupt topology safely', () => {
 
   assert.equal(campaignSave.loadCampaignSave(storage).status, 'corrupt')
 })
+
+test('horizontal scaling unlocks only for the launch preparation stage', () => {
+  const initialCampaign = campaignSimulation.createInitialCampaignState()
+  const verticalLimit = gameStateSimulation.createInitialGameState({
+    ...initialCampaign,
+    currentStageIndex: 2,
+  })
+  const launch = gameStateSimulation.createInitialGameState({
+    ...initialCampaign,
+    currentStageIndex: 3,
+  })
+
+  assert.equal(
+    verticalLimit.campaign.unlockedResourceTypes.includes('load-balancer'),
+    false,
+  )
+  assert.equal(
+    launch.campaign.unlockedResourceTypes.includes('load-balancer'),
+    true,
+  )
+})
