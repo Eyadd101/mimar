@@ -17,6 +17,7 @@ export type InfrastructureNodeData = {
   description: string
   number: string
   appServerMetrics?: AppServerMetrics
+  canConnect?: boolean
 }
 
 export type InfrastructureFlowNode = Node<InfrastructureNodeData, 'infrastructure'>

@@ -6,6 +6,7 @@ import {
 import {
   addAdditionalAppServerResource,
   addLoadBalancerResource,
+  addStageOneConnection,
   addStageOneResource,
   applyResourceUnlocks,
   createInitialCampaignState,
@@ -273,6 +274,48 @@ export function placeStageOneResource(
     stageRuntime: {
       ...currentState.stageRuntime,
       simulation,
+      statistics: createInitialStageStatistics(simulation),
+    },
+  }
+}
+
+export function connectStageOneResources(
+  currentState: GameState,
+  sourceId: string,
+  targetId: string,
+): GameState {
+  if (
+    currentState.stageRuntime.status !== 'playing' ||
+    currentState.stageRuntime.serviceStarted
+  ) {
+    return currentState
+  }
+
+  const campaign = addStageOneConnection(
+    currentState.campaign,
+    sourceId,
+    targetId,
+  )
+  if (campaign === currentState.campaign) {
+    return currentState
+  }
+
+  const stage = getCurrentStage(currentState)
+  const serviceStarted = hasOperationalServicePath(campaign)
+  const simulation = createInitialTrafficState({
+    infrastructure: createTrafficInfrastructure(campaign),
+    balance: currentState.stageRuntime.simulation.balance,
+    trafficProfile: stage.trafficProfile,
+    serviceActive: serviceStarted,
+  })
+
+  return {
+    ...currentState,
+    campaign,
+    stageRuntime: {
+      ...currentState.stageRuntime,
+      simulation,
+      serviceStarted,
       statistics: createInitialStageStatistics(simulation),
     },
   }

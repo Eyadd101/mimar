@@ -12,6 +12,7 @@ const {
   appServerSimulation,
   campaignSave,
   campaignSimulation,
+  connectionValidation,
   customerSatisfactionSimulation,
   economySimulation,
   gameStateSimulation,
@@ -125,6 +126,49 @@ test('Stage 1 guided build advances only from player infrastructure changes', ()
     'connect-users-app-server',
   )
   assert.equal(state.campaign.infrastructure.connections.length, 0)
+})
+
+test('Stage 1 accepts only the educational request path and starts traffic when complete', () => {
+  let state = gameStateSimulation.createInitialGameState()
+  state = gameStateSimulation.placeStageOneResource(state, 'users')
+  state = gameStateSimulation.placeStageOneResource(state, 'app-server')
+
+  const invalid = connectionValidation.validateStageOneConnection(
+    state.campaign.infrastructure,
+    'server',
+    'users',
+  )
+  assert.equal(invalid.valid, false)
+  assert.match(invalid.explanation.arabic, /خادم التطبيق/)
+
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'users',
+    'server',
+  )
+  state = gameStateSimulation.placeStageOneResource(state, 'database')
+
+  const directDatabase = connectionValidation.validateStageOneConnection(
+    state.campaign.infrastructure,
+    'users',
+    'database',
+  )
+  assert.equal(directDatabase.valid, false)
+  assert.match(directDatabase.explanation.english, /do not connect directly/)
+
+  state = gameStateSimulation.connectStageOneResources(
+    state,
+    'server',
+    'database',
+  )
+  assert.equal(state.stageRuntime.serviceStarted, true)
+  assert.equal(state.stageRuntime.simulation.activeUsers, 20)
+  assert.deepEqual(
+    state.campaign.infrastructure.connections.map(
+      (connection) => `${connection.sourceId}->${connection.targetId}`,
+    ),
+    ['users->server', 'server->database'],
+  )
 })
 
 test('CPU and memory remain between zero and one hundred', () => {

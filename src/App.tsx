@@ -5,6 +5,7 @@ import {
   Controls,
   Panel,
   ReactFlow,
+  type Connection,
   type NodeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -40,6 +41,10 @@ import {
   serverUpgradeConfig,
 } from './simulation/config'
 import { getContextualHint } from './simulation/hintSimulation'
+import {
+  validateStageOneConnection,
+  type ConnectionExplanation,
+} from './simulation/connectionValidation'
 import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
 
@@ -57,6 +62,9 @@ function App() {
   const [hint, setHint] = useState<string | null>(null)
   const [pendingAction, setPendingAction] =
     useState<PendingInfrastructureAction | null>(null)
+  const [connectionFeedback, setConnectionFeedback] = useState<
+    (ConnectionExplanation & { valid: boolean }) | null
+  >(null)
   const {
     simulation: traffic,
     campaignStarted,
@@ -87,6 +95,7 @@ function App() {
     beginStage,
     updateResourcePositions,
     addResource,
+    connectResources,
   } = useGameSimulation()
   const [flowNodeRuntime, setFlowNodeRuntime] =
     useState<InfrastructureNodeRuntime>({})
@@ -108,6 +117,7 @@ function App() {
       selected: node.id === selectedNodeId,
       data: {
         ...node.data,
+        canConnect: stage.sequence === 1 && !serviceStarted,
         appServerMetrics:
           node.data.kind === 'server'
             ? traffic.appServers.find(
@@ -121,7 +131,14 @@ function App() {
       presentedNodes,
       flowNodeRuntime,
     )
-  }, [flowNodeRuntime, nodes, selectedNodeId, traffic.appServers])
+  }, [
+    flowNodeRuntime,
+    nodes,
+    selectedNodeId,
+    serviceStarted,
+    stage.sequence,
+    traffic.appServers,
+  ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const displayEdges = useMemo(
     () =>
@@ -205,6 +222,25 @@ function App() {
     setFlowNodeRuntime(result.runtime)
     updateResourcePositions(result.positionUpdates)
   }
+  const handleConnect = (connection: Connection) => {
+    if (!connection.source || !connection.target) {
+      return
+    }
+
+    const result = validateStageOneConnection(
+      campaign.infrastructure,
+      connection.source,
+      connection.target,
+    )
+    setConnectionFeedback({
+      ...result.explanation,
+      valid: result.valid,
+    })
+
+    if (result.valid) {
+      connectResources(connection.source, connection.target)
+    }
+  }
 
   return (
     <main className="game">
@@ -242,6 +278,7 @@ function App() {
           nodes={displayNodes}
           edges={displayEdges}
           onNodesChange={handleNodesChange}
+          onConnect={handleConnect}
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
           onPaneClick={() => setSelectedNodeId(null)}
           nodeTypes={nodeTypes}
@@ -251,7 +288,7 @@ function App() {
           fitViewOptions={fitViewOptions}
           minZoom={0.25}
           maxZoom={1.6}
-          nodesConnectable={false}
+          nodesConnectable={stage.sequence === 1 && !serviceStarted}
           edgesReconnectable={false}
           edgesFocusable={false}
           deleteKeyCode={null}
@@ -275,6 +312,25 @@ function App() {
                 onAddResource={addResource}
                 currentStep={stageOneBuildStep}
               />
+            </Panel>
+          )}
+          {connectionFeedback && !serviceStarted && (
+            <Panel position="top-center" className="connection-feedback-position">
+              <aside
+                className="connection-feedback nodrag nopan"
+                data-valid={connectionFeedback.valid}
+                role={connectionFeedback.valid ? 'status' : 'alert'}
+              >
+                <button
+                  type="button"
+                  onClick={() => setConnectionFeedback(null)}
+                  aria-label="Dismiss connection message"
+                >
+                  ×
+                </button>
+                <p>{connectionFeedback.english}</p>
+                <p lang="ar" dir="rtl">{connectionFeedback.arabic}</p>
+              </aside>
             </Panel>
           )}
           {stage.sequence === 1 && !serviceStarted && (

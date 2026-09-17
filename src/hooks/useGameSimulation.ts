@@ -10,6 +10,7 @@ import {
   beginLoadBalancerDeployment,
   beginServerUpgrade,
   continueToNextStage,
+  connectStageOneResources,
   createInitialGameState,
   dismissStageBriefing,
   getCurrentStage,
@@ -134,6 +135,12 @@ export function useGameSimulation() {
     [],
   )
 
+  const connectResources = useCallback((sourceId: string, targetId: string) => {
+    setGameState((currentState) =>
+      connectStageOneResources(currentState, sourceId, targetId),
+    )
+  }, [])
+
   const stage = getCurrentStage(gameState)
 
   return {
@@ -168,5 +175,6 @@ export function useGameSimulation() {
     beginStage,
     updateResourcePositions,
     addResource,
+    connectResources,
   }
 }

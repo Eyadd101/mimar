@@ -68,8 +68,12 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
       data-kind={data.kind}
       data-status={data.appServerMetrics?.status}
     >
-      {data.kind !== 'users' && (
-        <Handle type="target" position={Position.Left} isConnectable={false} />
+      {(data.canConnect || data.kind !== 'users') && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          isConnectable={data.canConnect === true}
+        />
       )}
 
       <div className="node-heading">
@@ -126,8 +130,12 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
         </svg>
       </div>
 
-      {data.kind !== 'database' && (
-        <Handle type="source" position={Position.Right} isConnectable={false} />
+      {(data.canConnect || data.kind !== 'database') && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          isConnectable={data.canConnect === true}
+        />
       )}
     </div>
   )

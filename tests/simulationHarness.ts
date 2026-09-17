@@ -8,6 +8,7 @@ import * as simulationClock from '../src/simulation/simulationClock'
 import * as trafficSimulation from '../src/simulation/trafficSimulation'
 import * as infrastructureData from '../src/data/infrastructure'
 import * as stageOneOnboardingSimulation from '../src/simulation/stageOneOnboardingSimulation'
+import * as connectionValidation from '../src/simulation/connectionValidation'
 
 export {
   appServerSimulation,
@@ -18,6 +19,7 @@ export {
   gameStateSimulation,
   infrastructureData,
   stageOneOnboardingSimulation,
+  connectionValidation,
   simulationClock,
   trafficSimulation,
 }

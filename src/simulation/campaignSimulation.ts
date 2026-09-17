@@ -7,6 +7,7 @@ import {
   type ServerTierId,
 } from './config'
 import { stageOneResourcePalette } from '../data/resourcePalette'
+import { validateStageOneConnection } from './connectionValidation'
 import type { StageRating } from './starRatingSimulation'
 import type {
   TrafficInfrastructure,
@@ -153,6 +154,38 @@ export function addStageOneResource(
     infrastructure: {
       ...campaign.infrastructure,
       resources: [...campaign.infrastructure.resources, resource],
+    },
+  }
+}
+
+export function addStageOneConnection(
+  campaign: CampaignState,
+  sourceId: string,
+  targetId: string,
+) {
+  if (
+    campaign.currentStageIndex !== 0 ||
+    !validateStageOneConnection(
+      campaign.infrastructure,
+      sourceId,
+      targetId,
+    ).valid
+  ) {
+    return campaign
+  }
+
+  return {
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      connections: [
+        ...campaign.infrastructure.connections,
+        {
+          id: `${sourceId}-${targetId}`,
+          sourceId,
+          targetId,
+        },
+      ],
     },
   }
 }
