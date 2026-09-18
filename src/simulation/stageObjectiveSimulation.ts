@@ -3,6 +3,7 @@ import type {
   StageObjectiveDefinition,
 } from '../data/stages'
 import type { TrafficSimulationState } from './trafficSimulation'
+import type { TranslationMessage } from '../i18n/translations'
 
 export type ObjectiveProgress = {
   completed: boolean
@@ -59,18 +60,36 @@ export function isStageComplete(
 export function getObjectiveProgressLabel(
   objective: StageObjectiveDefinition,
   progress: ObjectiveProgress,
-) {
+): TranslationMessage {
   switch (objective.type) {
     case 'survive-duration':
     case 'maintain-satisfaction':
     case 'maintain-latency':
-      return `${Math.floor(progress.current)} / ${progress.target}s`
+      return {
+        key: 'objective.progressDuration',
+        variables: {
+          current: Math.floor(progress.current),
+          target: progress.target,
+        },
+      }
     case 'finish-satisfaction':
-      return `${progress.current.toFixed(1)}% / ${progress.target}%`
+      return {
+        key: 'objective.progressPercent',
+        variables: {
+          current: progress.current.toFixed(1),
+          target: progress.target,
+        },
+      }
     case 'finish-balance':
-      return `${progress.current.toFixed(1)} / ${progress.target} cr`
+      return {
+        key: 'objective.progressCredits',
+        variables: {
+          current: progress.current.toFixed(1),
+          target: progress.target,
+        },
+      }
     case 'handle-traffic-event':
-      return progress.completed ? 'Handled' : 'Pending'
+      return { key: progress.completed ? 'objective.handled' : 'objective.pending' }
   }
 }
 

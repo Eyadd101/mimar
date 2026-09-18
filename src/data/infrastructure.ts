@@ -10,11 +10,12 @@ import type {
   CampaignInfrastructureState,
   CampaignResource,
 } from '../simulation/campaignSimulation'
+import type { TranslationKey } from '../i18n/translations'
 
 export type InfrastructureNodeData = {
   label: string
   kind: 'users' | 'server' | 'database' | 'load-balancer'
-  description: string
+  descriptionKey: TranslationKey
   number: string
   appServerMetrics?: AppServerMetrics
   canConnect?: boolean
@@ -34,23 +35,23 @@ export type InfrastructureNodeRuntime = Record<
 
 const resourcePresentation: Record<
   CampaignResource['type'],
-  Pick<InfrastructureNodeData, 'kind' | 'description'>
+  Pick<InfrastructureNodeData, 'kind' | 'descriptionKey'>
 > = {
   users: {
     kind: 'users',
-    description: 'The starting point',
+    descriptionKey: 'resource.node.usersDescription',
   },
   'app-server': {
     kind: 'server',
-    description: 'Application compute',
+    descriptionKey: 'resource.node.appServerDescription',
   },
   database: {
     kind: 'database',
-    description: 'Persistent storage',
+    descriptionKey: 'resource.node.databaseDescription',
   },
   'load-balancer': {
     kind: 'load-balancer',
-    description: 'Traffic distribution',
+    descriptionKey: 'resource.node.loadBalancerDescription',
   },
 }
 

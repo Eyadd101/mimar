@@ -1,12 +1,18 @@
 import { customerSatisfactionConfig } from './config'
+import type { TranslationMessage } from '../i18n/translations'
 
 export type CustomerSatisfactionState = {
   customerSatisfaction: number
   badLatencyDurationSeconds: number
-  satisfactionReason: string | null
+  satisfactionReason: TranslationMessage | null
 }
 
-const satisfactionDecreaseReason = `Customer satisfaction decreased because latency remained above ${customerSatisfactionConfig.badLatencyThresholdMs} ms.`
+const satisfactionDecreaseReason: TranslationMessage = {
+  key: 'notice.satisfactionDecrease',
+  variables: {
+    threshold: customerSatisfactionConfig.badLatencyThresholdMs,
+  },
+}
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(Math.max(value, minimum), maximum)

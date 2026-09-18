@@ -2,10 +2,10 @@ import type {
   CampaignInfrastructureState,
   CampaignResourceType,
 } from './campaignSimulation'
+import type { TranslationKey } from '../i18n/translations'
 
 export type ConnectionExplanation = {
-  english: string
-  arabic: string
+  key: TranslationKey
 }
 
 export type ConnectionValidationResult =
@@ -23,36 +23,23 @@ const stageOneConnectionRules: readonly ConnectionRule[] = [
 ]
 
 const validExplanation: ConnectionExplanation = {
-  english: 'Connection created. Requests can follow this path.',
-  arabic: 'تم إنشاء الاتصال. يمكن للطلبات المرور عبر هذا المسار.',
+  key: 'connection.valid',
 }
 
 const invalidPairExplanations: Partial<
   Record<`${CampaignResourceType}->${CampaignResourceType}`, ConnectionExplanation>
 > = {
   'users->database': {
-    english:
-      'Users normally do not connect directly to the database. Requests go through the application server first.',
-    arabic:
-      'عادةً لا يتصل المستخدم مباشرة بقاعدة البيانات. يرسل المستخدم الطلب إلى التطبيق، ثم يتعامل التطبيق مع قاعدة البيانات.',
+    key: 'connection.usersDatabase',
   },
   'database->users': {
-    english:
-      'The database stores application data. It does not send user requests.',
-    arabic:
-      'تخزن قاعدة البيانات بيانات التطبيق، ولا ترسل طلبات المستخدمين.',
+    key: 'connection.databaseUsers',
   },
   'database->app-server': {
-    english:
-      'The application server requests data from the database, so the request path points from the App Server to the Database.',
-    arabic:
-      'يطلب خادم التطبيق البيانات من قاعدة البيانات، لذلك يتجه مسار الطلب من خادم التطبيق إلى قاعدة البيانات.',
+    key: 'connection.databaseAppServer',
   },
   'app-server->users': {
-    english:
-      'User requests enter the App Server. Connect Users to the App Server to show that request direction.',
-    arabic:
-      'تصل طلبات المستخدمين إلى خادم التطبيق. صِل المستخدمين بخادم التطبيق لإظهار اتجاه الطلب.',
+    key: 'connection.appServerUsers',
   },
 }
 
@@ -72,8 +59,7 @@ export function validateStageOneConnection(
     return {
       valid: false,
       explanation: {
-        english: 'Both resources must be on the canvas before they can connect.',
-        arabic: 'يجب وضع الموردين على اللوحة قبل توصيلهما.',
+        key: 'connection.resourcesMissing',
       },
     }
   }
@@ -82,8 +68,7 @@ export function validateStageOneConnection(
     return {
       valid: false,
       explanation: {
-        english: 'A resource cannot connect to itself.',
-        arabic: 'لا يمكن توصيل المورد بنفسه.',
+        key: 'connection.self',
       },
     }
   }
@@ -96,8 +81,7 @@ export function validateStageOneConnection(
     return {
       valid: false,
       explanation: {
-        english: 'These resources are already connected.',
-        arabic: 'هذان الموردان متصلان بالفعل.',
+        key: 'connection.duplicate',
       },
     }
   }
@@ -114,9 +98,7 @@ export function validateStageOneConnection(
     valid: false,
     explanation:
       invalidPairExplanations[`${source.type}->${target.type}`] ?? {
-        english:
-          'This connection does not belong in the Stage 1 request path.',
-        arabic: 'هذا الاتصال ليس جزءًا من مسار الطلب في المرحلة الأولى.',
+        key: 'connection.invalidStageOne',
       },
   }
 }

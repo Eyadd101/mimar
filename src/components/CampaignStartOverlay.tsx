@@ -12,19 +12,25 @@ export function CampaignStartOverlay({
   onNewCampaign,
   onContinueCampaign,
 }: CampaignStartOverlayProps) {
-  const { t } = useLanguage()
+  const { direction, t } = useLanguage()
+  const saveErrorKey =
+    saveResult.status === 'corrupt'
+      ? saveResult.error === 'invalid'
+        ? 'campaign.saveInvalid'
+        : 'campaign.saveUnreadable'
+      : null
 
   return (
     <div className="campaign-start-overlay" role="dialog" aria-modal="true">
-      <section className="campaign-start-card">
-        <p className="campaign-start-card__eyebrow">Cloud Game</p>
+      <section className="campaign-start-card" dir={direction}>
+        <p className="campaign-start-card__eyebrow">{t('app.brand')}</p>
         <h1>{t('campaign.title')}</h1>
         <p>{t('campaign.description')}</p>
 
         {saveResult.status === 'corrupt' && (
           <div className="campaign-start-card__save-error" role="alert">
             <strong>{t('campaign.saveUnavailable')}</strong>
-            <span>{saveResult.message} {t('campaign.saveReset')}</span>
+            <span>{saveErrorKey ? t(saveErrorKey) : ''} {t('campaign.saveReset')}</span>
           </div>
         )}
 

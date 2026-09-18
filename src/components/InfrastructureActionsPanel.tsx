@@ -9,6 +9,9 @@ import {
   type InfrastructureDeployment,
 } from '../simulation/gameStateSimulation'
 import type { TrafficSimulationState } from '../simulation/trafficSimulation'
+import { useLanguage } from '../i18n/useLanguage'
+import type { TranslationKey } from '../i18n/translations'
+import { TechnicalTerm } from './TechnicalTerm'
 
 type InfrastructureActionsPanelProps = {
   campaign: CampaignState
@@ -25,6 +28,7 @@ export function InfrastructureActionsPanel({
   onDeployLoadBalancer,
   onDeployAppServer,
 }: InfrastructureActionsPanelProps) {
+  const { direction, t } = useLanguage()
   const hasLoadBalancer = campaign.infrastructure.resources.some(
     (resource) => resource.type === 'load-balancer',
   )
@@ -33,10 +37,10 @@ export function InfrastructureActionsPanel({
   )
 
   return (
-    <aside className="infrastructure-actions nodrag nopan" aria-label="Infrastructure actions">
+    <aside className="infrastructure-actions nodrag nopan" aria-label={t('build.title')} dir={direction}>
       <div className="infrastructure-actions__heading">
-        <span>Build</span>
-        <strong>Horizontal scaling</strong>
+        <span>{t('build.title')}</span>
+        <strong>{t('build.horizontalScaling')}</strong>
       </div>
 
       {deployment ? (
@@ -46,13 +50,13 @@ export function InfrastructureActionsPanel({
         />
       ) : hasLoadBalancer && hasAdditionalServer ? (
         <p className="infrastructure-actions__ready">
-          Load-balanced application servers are active.
+          {t('build.ready')}
         </p>
       ) : (
         <div className="infrastructure-actions__options">
           {!hasLoadBalancer && (
             <BuildOption
-              title={loadBalancerResourceConfig.name}
+              titleKey="resource.loadBalancer"
               awsReference={loadBalancerResourceConfig.awsReference}
               cost={loadBalancerResourceConfig.deploymentCost}
               duration={loadBalancerResourceConfig.deploymentDurationSeconds}
@@ -67,7 +71,7 @@ export function InfrastructureActionsPanel({
           )}
           {!hasAdditionalServer && (
             <BuildOption
-              title={additionalAppServerConfig.name}
+              titleKey="resource.appServerB"
               awsReference="EC2"
               cost={additionalAppServerConfig.deploymentCost}
               duration={additionalAppServerConfig.deploymentDurationSeconds}
@@ -79,7 +83,7 @@ export function InfrastructureActionsPanel({
                 )
               }
               disabledReason={
-                hasLoadBalancer ? undefined : 'Deploy a Load Balancer first'
+                hasLoadBalancer ? undefined : t('build.loadBalancerFirst')
               }
               onDeploy={onDeployAppServer}
             />
@@ -91,7 +95,7 @@ export function InfrastructureActionsPanel({
 }
 
 type BuildOptionProps = {
-  title: string
+  titleKey: TranslationKey
   awsReference: string
   cost: number
   duration: number
@@ -101,7 +105,7 @@ type BuildOptionProps = {
 }
 
 function BuildOption({
-  title,
+  titleKey,
   awsReference,
   cost,
   duration,
@@ -109,15 +113,17 @@ function BuildOption({
   disabledReason,
   onDeploy,
 }: BuildOptionProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="build-option">
       <div>
-        <strong>{title}</strong>
+        <strong><TechnicalTerm translationKey={titleKey} /></strong>
         <span>{awsReference}</span>
       </div>
-      <p>{cost} credits · {duration} game seconds</p>
+      <p>{t('common.credits', { value: cost })} · {t('common.gameSeconds', { value: duration })}</p>
       <button type="button" disabled={disabled} onClick={onDeploy}>
-        {disabledReason ?? (disabled ? 'Insufficient balance' : 'Deploy')}
+        {disabledReason ?? (disabled ? t('resource.insufficientBalance') : t('common.deploy'))}
       </button>
     </div>
   )
@@ -130,6 +136,7 @@ function DeploymentStatus({
   deployment: InfrastructureDeployment
   gameTimeSeconds: number
 }) {
+  const { t } = useLanguage()
   const progress = calculateInfrastructureDeploymentProgress(
     deployment,
     gameTimeSeconds,
@@ -139,28 +146,29 @@ function DeploymentStatus({
     deployment.completesAtGameTimeSeconds - gameTimeSeconds,
     0,
   )
-  const resourceName =
+  const resourceKey: TranslationKey =
     deployment.kind === 'load-balancer'
-      ? loadBalancerResourceConfig.name
-      : additionalAppServerConfig.name
+      ? 'resource.loadBalancer'
+      : 'resource.appServerB'
+  const resourceName = t(resourceKey)
 
   return (
     <div className="infrastructure-actions__deployment">
       <div>
-        <span>Deploying {resourceName}</span>
+        <span>{t('common.deploying', { resource: resourceName })}</span>
         <strong>{percent}%</strong>
       </div>
       <div
         className="deployment-progress"
         role="progressbar"
-        aria-label={`${resourceName} deployment`}
+        aria-label={t('resource.deploymentAria', { resource: resourceName })}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
       >
         <span style={{ width: `${percent}%` }} />
       </div>
-      <p>{remaining} game seconds remaining</p>
+      <p>{t('resource.deploymentRemaining', { seconds: remaining })}</p>
     </div>
   )
 }

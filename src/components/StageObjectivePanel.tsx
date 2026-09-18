@@ -19,7 +19,7 @@ export function StageObjectivePanel({
   learningProgress,
   serviceStarted,
 }: StageObjectivePanelProps) {
-  const { language, t } = useLanguage()
+  const { direction, t } = useLanguage()
   const primaryProgress = progress[stage.primaryObjective.id]
   const primaryProgressPercent = primaryProgress
     ? Math.min(Math.round((primaryProgress.current / primaryProgress.target) * 100), 100)
@@ -28,14 +28,14 @@ export function StageObjectivePanel({
   return (
     <aside
       className="stage-objectives nodrag nopan"
-      aria-label="Stage objectives"
-      dir={language === 'ar' ? 'rtl' : 'ltr'}
+      aria-label={t('stage.objectives')}
+      dir={direction}
     >
       <div className="stage-objectives__heading">
         <span>{t('stage.label')} {stage.sequence}</span>
-        <strong>{stage.name}</strong>
+        <strong>{t(stage.nameKey)}</strong>
       </div>
-      <p className="stage-objectives__briefing">{stage.storyBriefing}</p>
+      <p className="stage-objectives__briefing">{t(stage.storyBriefingKey)}</p>
       {stage.learningSteps.length > 0 && (
         <div className="stage-learning">
           <div className="stage-learning__heading">
@@ -55,7 +55,7 @@ export function StageObjectivePanel({
                   <span aria-hidden="true">
                     {stepProgress?.completed ? '✓' : index + 1}
                   </span>
-                  <p>{language === 'ar' ? step.arabicTitle : step.title}</p>
+                  <p>{t(step.titleKey)}</p>
                 </li>
               )
             })}
@@ -69,7 +69,7 @@ export function StageObjectivePanel({
         </div>
         <div
           role="progressbar"
-          aria-label="Primary objective progress"
+          aria-label={t('stage.primaryProgress')}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={primaryProgressPercent}
@@ -101,9 +101,12 @@ type ObjectiveRowProps = {
 }
 
 function ObjectiveRow({ label, objective, progress }: ObjectiveRowProps) {
+  const { t } = useLanguage()
+
   if (!progress) {
     return null
   }
+  const progressMessage = getObjectiveProgressLabel(objective, progress)
 
   return (
     <div className="stage-objectives__item" data-complete={progress.completed}>
@@ -112,8 +115,8 @@ function ObjectiveRow({ label, objective, progress }: ObjectiveRowProps) {
       </span>
       <div>
         <small>{label}</small>
-        <p>{objective.title}</p>
-        <span>{getObjectiveProgressLabel(objective, progress)}</span>
+        <p>{t(objective.titleKey)}</p>
+        <span>{t(progressMessage.key, progressMessage.variables)}</span>
       </div>
     </div>
   )

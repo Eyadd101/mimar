@@ -1,11 +1,12 @@
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
+import type { TranslationKey } from '../i18n/translations'
 
 export type StageOnePaletteResource = {
   type: Extract<CampaignResourceType, 'users' | 'app-server' | 'database'>
   id: string
-  englishName: string
-  arabicName: string
-  description: string
+  name: string
+  labelKey: TranslationKey
+  descriptionKey: TranslationKey
   position: { x: number; y: number }
 }
 
@@ -13,25 +14,25 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
   {
     type: 'users',
     id: 'users',
-    englishName: 'Users',
-    arabicName: 'المستخدمون',
-    description: 'People sending requests to your application.',
+    name: 'Users',
+    labelKey: 'resource.users',
+    descriptionKey: 'resource.palette.usersDescription',
     position: { x: 330, y: 250 },
   },
   {
     type: 'app-server',
     id: 'server',
-    englishName: 'App Server',
-    arabicName: 'خادم التطبيق',
-    description: 'Runs the application logic and processes requests.',
+    name: 'App Server',
+    labelKey: 'resource.appServer',
+    descriptionKey: 'resource.palette.appServerDescription',
     position: { x: 670, y: 250 },
   },
   {
     type: 'database',
     id: 'database',
-    englishName: 'Database',
-    arabicName: 'قاعدة البيانات',
-    description: 'Stores persistent application data.',
+    name: 'Database',
+    labelKey: 'resource.database',
+    descriptionKey: 'resource.palette.databaseDescription',
     position: { x: 1010, y: 250 },
   },
 ]

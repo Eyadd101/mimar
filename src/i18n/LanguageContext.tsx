@@ -6,7 +6,7 @@ import {
 } from 'react'
 import {
   readLanguagePreference,
-  translations,
+  translate,
   writeLanguagePreference,
   type Language,
 } from './translations'
@@ -34,7 +34,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     writeLanguagePreference(language, getBrowserStorage())
     document.documentElement.lang = language
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+    // The graph uses a stable left-to-right coordinate system. Individual
+    // Arabic text surfaces opt into RTL without mirroring the application.
+    document.documentElement.dir = 'ltr'
   }, [language])
 
   const contextValue = useMemo<LanguageContextValue>(
@@ -42,7 +44,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       language,
       direction: language === 'ar' ? 'rtl' : 'ltr',
       setLanguage,
-      t: (key) => translations[language][key],
+      t: (key, variables) => translate(language, key, variables),
     }),
     [language],
   )

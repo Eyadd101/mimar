@@ -22,7 +22,7 @@ export function SimulationSpeedControls({
   }
 
   return (
-    <div className="speed-controls" aria-label="Game speed controls">
+    <div className="speed-controls" aria-label={t('app.gameSpeedControls')}>
       {simulationSpeedOptions.map((speed) => (
         <button
           key={speed}

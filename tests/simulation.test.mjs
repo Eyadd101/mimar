@@ -147,7 +147,10 @@ test('Stage 1 accepts only the educational request path and starts traffic when 
     'users',
   )
   assert.equal(invalid.valid, false)
-  assert.match(invalid.explanation.arabic, /خادم التطبيق/)
+  assert.match(
+    translations.translate('ar', invalid.explanation.key),
+    /خادم التطبيق/,
+  )
 
   state = gameStateSimulation.connectStageOneResources(
     state,
@@ -162,7 +165,10 @@ test('Stage 1 accepts only the educational request path and starts traffic when 
     'database',
   )
   assert.equal(directDatabase.valid, false)
-  assert.match(directDatabase.explanation.english, /do not connect directly/)
+  assert.match(
+    translations.translate('en', directDatabase.explanation.key),
+    /do not connect directly/,
+  )
 
   state = gameStateSimulation.connectStageOneResources(
     state,
@@ -195,8 +201,8 @@ test('every reversed or bypassed Stage 1 connection returns an explanation', () 
       targetId,
     )
     assert.equal(result.valid, false)
-    assert.ok(result.explanation.english.length > 20)
-    assert.ok(result.explanation.arabic.length > 20)
+    assert.ok(translations.translate('en', result.explanation.key).length > 20)
+    assert.ok(translations.translate('ar', result.explanation.key).length > 20)
   }
 })
 
@@ -241,6 +247,37 @@ test('language preference defaults safely and persists supported languages', () 
 
   storage.values.set(translations.languagePreferenceKey, 'unsupported')
   assert.equal(translations.readLanguagePreference(storage), 'en')
+
+  const englishKeys = Object.keys(translations.translations.en)
+  const arabicKeys = Object.keys(translations.translations.ar)
+  assert.deepEqual(arabicKeys, englishKeys)
+  assert.ok(
+    Object.values(translations.translations.ar).every(
+      (translation) => translation.trim().length > 0,
+    ),
+  )
+  for (const key of englishKeys) {
+    const variables = (value) =>
+      [...value.matchAll(/{{([^}]+)}}/g)]
+        .map((match) => match[1])
+        .sort()
+    assert.deepEqual(
+      variables(translations.translations.ar[key]),
+      variables(translations.translations.en[key]),
+      `${key} must use the same interpolation variables in both languages`,
+    )
+  }
+  assert.equal(
+    translations.translate('ar', 'event.beginsIn', { time: '1:30' }),
+    'يبدأ خلال 1:30',
+  )
+  assert.equal(
+    translations.translate('en', 'app.graphCount', {
+      nodes: 3,
+      connections: 2,
+    }),
+    '3 nodes / 2 connections',
+  )
 })
 
 test('metric education explains live values in both languages', () => {
@@ -266,11 +303,17 @@ test('metric education explains live values in both languages', () => {
   }
 
   assert.match(
-    metricEducation.getMetricCurrentReason('balance', snapshot, 'en'),
+    translations.translateMessage(
+      'en',
+      metricEducation.getMetricCurrentReason('balance', snapshot),
+    ),
     /cost is higher than revenue/,
   )
   assert.match(
-    metricEducation.getMetricCurrentReason('requests-per-second', snapshot, 'ar'),
+    translations.translateMessage(
+      'ar',
+      metricEducation.getMetricCurrentReason('requests-per-second', snapshot),
+    ),
     /20/,
   )
   assert.equal(
@@ -278,11 +321,11 @@ test('metric education explains live values in both languages', () => {
     'metric.latency',
   )
   assert.deepEqual(
-    metricEducation.getLiveMetricCause('balance', snapshot, 'en'),
-    { trend: 'down', text: 'Cost exceeds revenue' },
+    metricEducation.getLiveMetricCause('balance', snapshot),
+    { trend: 'down', message: { key: 'cause.costExceedsRevenue' } },
   )
   assert.equal(
-    metricEducation.getLiveMetricCause('cpu-usage', snapshot, 'en'),
+    metricEducation.getLiveMetricCause('cpu-usage', snapshot),
     null,
   )
 })

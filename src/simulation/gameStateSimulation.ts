@@ -58,8 +58,6 @@ export type GameOverReasonCode = 'bankruptcy' | 'service-failure'
 
 export type GameOverReason = {
   code: GameOverReasonCode
-  title: string
-  message: string
 }
 
 export type StageRuntimeState = {
@@ -91,14 +89,10 @@ export type GameState = {
 
 const bankruptcyReason: GameOverReason = {
   code: 'bankruptcy',
-  title: 'Bankruptcy',
-  message: 'Your company can no longer pay its infrastructure costs.',
 }
 
 const serviceFailureReason: GameOverReason = {
   code: 'service-failure',
-  title: 'Service Failure',
-  message: 'Customer satisfaction remained at 0% for too long.',
 }
 
 export function createInitialGameState(

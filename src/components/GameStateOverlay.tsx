@@ -5,7 +5,6 @@ import type {
 import type { TrafficSimulationState } from '../simulation/trafficSimulation'
 import type { StageRating } from '../simulation/starRatingSimulation'
 import type { CampaignState } from '../simulation/campaignSimulation'
-import { getInfrastructureSummary } from '../simulation/campaignSimulation'
 import type { StageConfig } from '../data/stages'
 import {
   calculateAverageLatency,
@@ -14,6 +13,7 @@ import {
 import { createGameOverFailureChain } from '../simulation/gameOverExplanationSimulation'
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
+import type { TranslationKey } from '../i18n/translations'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -42,7 +42,7 @@ export function GameStateOverlay({
   onRestartCampaign,
   onContinueToNextStage,
 }: GameStateOverlayProps) {
-  const { t } = useLanguage()
+  const { direction, t } = useLanguage()
 
   if (status === 'playing') {
     return null
@@ -52,45 +52,73 @@ export function GameStateOverlay({
   const failureChain = reason
     ? createGameOverFailureChain(reason, simulation, stageStatistics)
     : []
+  const getStarExplanation = (star: 1 | 2 | 3, earned: boolean) => {
+    if (star === 1) {
+      return t(earned ? 'game.star1Earned' : 'game.star1Missed')
+    }
+
+    if (star === 2) {
+      return t(earned ? 'game.star2Earned' : 'game.star2Missed', {
+        satisfaction: earned
+          ? simulation.customerSatisfaction.toFixed(1)
+          : stage.starCriteria.twoStars.minimumSatisfaction,
+      })
+    }
+
+    return t(earned ? 'game.star3Earned' : 'game.star3Missed', {
+      satisfaction: stage.starCriteria.threeStars.minimumSatisfaction,
+      balance: earned
+        ? simulation.balance.toFixed(1)
+        : stage.starCriteria.threeStars.minimumBalance,
+    })
+  }
 
   return (
     <div className="game-state-overlay" role="dialog" aria-modal="true">
-      <section className="game-state-card">
+      <section className="game-state-card" dir={direction}>
         <p className="game-state-card__eyebrow">
           {stageWon ? t('game.stageComplete') : t('game.gameOver')}
         </p>
-        <h2>{stageWon ? stage.name : reason?.title}</h2>
+        <h2>
+          {stageWon
+            ? t(stage.nameKey)
+            : reason?.code === 'bankruptcy'
+              ? t('game.bankruptcyTitle')
+              : t('game.serviceFailureTitle')}
+        </h2>
         <p className="game-state-card__message">
           {stageWon
-            ? 'The primary objective has been completed.'
-            : reason?.message}
+            ? t('game.primaryComplete')
+            : reason?.code === 'bankruptcy'
+              ? t('game.bankruptcyMessage')
+              : t('game.serviceFailureMessage')}
         </p>
 
         <dl className="game-state-card__metrics">
           {stageWon ? (
             <>
-              <ResultMetric label="Peak users" value={stageStatistics.peakActiveUsers} />
+              <ResultMetric translationKey="metric.peakUsers" value={stageStatistics.peakActiveUsers} />
               <ResultMetric
-                label="Average latency"
+                translationKey="metric.averageLatency"
                 value={`${calculateAverageLatency(stageStatistics)} ms`}
               />
               <ResultMetric
-                label="Lowest satisfaction"
+                translationKey="metric.lowestSatisfaction"
                 value={`${stageStatistics.lowestSatisfaction.toFixed(1)}%`}
               />
               <ResultMetric
-                label="Infrastructure cost"
+                translationKey="metric.infrastructureCost"
                 value={`${stageStatistics.totalInfrastructureCost} cr`}
               />
               <ResultMetric
-                label="Remaining balance"
+                translationKey="metric.remainingBalance"
                 value={`${simulation.balance.toFixed(1)} cr`}
               />
-              <ResultMetric label="Game time" value={`${simulation.gameTimeSeconds}s`} />
+              <ResultMetric translationKey="metric.gameTime" value={`${simulation.gameTimeSeconds}s`} />
             </>
           ) : (
             <>
-              <ResultMetric label="Game time" value={`${simulation.gameTimeSeconds}s`} />
+              <ResultMetric translationKey="metric.gameTime" value={`${simulation.gameTimeSeconds}s`} />
               <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
               <ResultMetric
                 translationKey="metric.satisfaction"
@@ -105,20 +133,20 @@ export function GameStateOverlay({
         </dl>
 
         {stageWon && stageRating && (
-          <div className="stage-rating" aria-label={`${stageRating.stars} stars earned`}>
+          <div className="stage-rating" aria-label={t('game.starsEarned', { stars: stageRating.stars })}>
             <div className="stage-rating__stars" aria-hidden="true">
               {[1, 2, 3].map((star) => (
                 <span key={star} data-earned={star <= stageRating.stars}>★</span>
               ))}
             </div>
-            <p>{stageRating.stars} / 3 stars</p>
+            <p>{t('game.starsCount', { stars: stageRating.stars })}</p>
             <ul>
               {stageRating.explanations.map((item) => (
                 <li key={item.star} data-earned={item.earned}>
                   <span aria-hidden="true">{item.earned ? '✓' : '×'}</span>
                   <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.explanation}</p>
+                    <strong>{t(getStarTitleKey(item.star))}</strong>
+                    <p>{getStarExplanation(item.star, item.earned)}</p>
                   </div>
                 </li>
               ))}
@@ -129,18 +157,22 @@ export function GameStateOverlay({
         {stageWon && (
           <div className="stage-recap">
             <div>
-              <span>Infrastructure</span>
+              <span>{t('game.infrastructure')}</span>
               <ul>
-                {getInfrastructureSummary(campaign).map((item) => (
-                  <li key={item}>{item}</li>
+                {campaign.infrastructure.resources
+                  .filter((resource) => resource.type !== 'users')
+                  .map((resource) => (
+                  <li key={resource.id}>
+                    <ResourceSummary resource={resource} />
+                  </li>
                 ))}
               </ul>
             </div>
             <div>
-              <span>What you learned</span>
+              <span>{t('game.whatLearned')}</span>
               <ul>
-                {stage.learningGoals.map((goal) => (
-                  <li key={goal}>{goal}</li>
+                {stage.learningGoalKeys.map((goalKey) => (
+                  <li key={goalKey}>{t(goalKey)}</li>
                 ))}
               </ul>
             </div>
@@ -148,11 +180,11 @@ export function GameStateOverlay({
         )}
 
         {!stageWon && (
-          <div className="failure-chain" aria-label="Why the stage failed">
-            <span>What happened</span>
+          <div className="failure-chain" aria-label={t('game.whyFailed')}>
+            <span>{t('game.whatHappened')}</span>
             <ol>
-              {failureChain.map((step) => (
-                <li key={step}>{step}</li>
+              {failureChain.map((step, index) => (
+                <li key={`${step.key}-${index}`}>{t(step.key, step.variables)}</li>
               ))}
             </ol>
           </div>
@@ -165,21 +197,56 @@ export function GameStateOverlay({
         )}
         {stageWon && !hasNextStage && (
           <p className="game-state-card__campaign-end">
-            All currently available stages are complete.
+            {t('game.allStagesComplete')}
           </p>
         )}
         {!stageWon && (
           <div className="game-state-card__actions">
             <button type="button" onClick={onRestartStage}>
-              Retry Stage
+              {t('action.retryStage')}
             </button>
             <button type="button" onClick={onRestartCampaign}>
-              Return to Campaign Start
+              {t('action.returnCampaignStart')}
             </button>
           </div>
         )}
       </section>
     </div>
+  )
+}
+
+function getStarTitleKey(star: 1 | 2 | 3): TranslationKey {
+  const keys: Record<1 | 2 | 3, TranslationKey> = {
+    1: 'game.star1Title',
+    2: 'game.star2Title',
+    3: 'game.star3Title',
+  }
+  return keys[star]
+}
+
+function ResourceSummary({
+  resource,
+}: {
+  resource: CampaignState['infrastructure']['resources'][number]
+}) {
+  if (resource.type === 'app-server') {
+    return (
+      <>
+        <TechnicalTerm
+          translationKey={resource.id === 'server-b' ? 'resource.appServerB' : 'resource.appServer'}
+        />{' '}
+        —{' '}
+        <TechnicalTerm
+          translationKey={resource.tierId === 'medium' ? 'resource.mediumServer' : 'resource.smallServer'}
+        />
+      </>
+    )
+  }
+
+  return (
+    <TechnicalTerm
+      translationKey={resource.type === 'load-balancer' ? 'resource.loadBalancer' : 'resource.database'}
+    />
   )
 }
 

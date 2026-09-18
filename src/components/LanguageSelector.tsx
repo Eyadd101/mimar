@@ -4,7 +4,7 @@ export function LanguageSelector() {
   const { language, setLanguage, t } = useLanguage()
 
   return (
-    <label className="language-selector">
+    <label className="language-selector" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <span>{t('language.selector')}</span>
       <select
         value={language}

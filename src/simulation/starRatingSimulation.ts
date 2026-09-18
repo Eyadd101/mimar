@@ -6,8 +6,6 @@ import type { TrafficSimulationState } from './trafficSimulation'
 export type StarRatingExplanation = {
   star: 1 | 2 | 3
   earned: boolean
-  title: string
-  explanation: string
 }
 
 export type StageRating = {
@@ -37,26 +35,14 @@ export function calculateStageRating(
       {
         star: 1,
         earned: earnedFirstStar,
-        title: 'Primary objective',
-        explanation: earnedFirstStar
-          ? 'The required stage objective was completed.'
-          : 'Complete the required stage objective.',
       },
       {
         star: 2,
         earned: earnedSecondStar,
-        title: 'Reliable service',
-        explanation: earnedSecondStar
-          ? `Satisfaction finished at ${simulation.customerSatisfaction.toFixed(1)}%.`
-          : `Finish with at least ${stage.starCriteria.twoStars.minimumSatisfaction}% satisfaction.`,
       },
       {
         star: 3,
         earned: earnedThirdStar,
-        title: 'Efficient operation',
-        explanation: earnedThirdStar
-          ? `Strong satisfaction and ${simulation.balance.toFixed(1)} credits remained.`
-          : `Finish with ${stage.starCriteria.threeStars.minimumSatisfaction}% satisfaction and ${stage.starCriteria.threeStars.minimumBalance} credits.`,
       },
     ],
   }

@@ -4,7 +4,6 @@ import {
   type MetricEducationSnapshot,
   type MetricId,
 } from '../data/metricEducation'
-import { translations } from '../i18n/translations'
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 
@@ -19,16 +18,19 @@ export function MetricExplanationPanel({
   snapshot,
   onClose,
 }: MetricExplanationPanelProps) {
-  const { language, t } = useLanguage()
+  const { direction, t } = useLanguage()
   const definition = metricEducationDefinitions[metricId]
-  const currentReason = getMetricCurrentReason(metricId, snapshot, language)
+  const currentReason = getMetricCurrentReason(metricId, snapshot)
 
   return (
     <aside
       className="metric-explanation"
       role="dialog"
-      aria-label={`${translations.en[definition.labelKey]} explanation`}
+      aria-label={t('education.explanationAria', {
+        metric: t(definition.labelKey),
+      })}
       aria-live="polite"
+      dir={direction}
     >
       <button
         type="button"
@@ -39,30 +41,25 @@ export function MetricExplanationPanel({
         ×
       </button>
       <div className="metric-explanation__title">
-        <strong lang="ar" dir="rtl">
-          {translations.ar[definition.labelKey]}
-        </strong>
-        <span lang="en" dir="ltr">
-          {translations.en[definition.labelKey]}
-        </span>
+        <TechnicalTerm translationKey={definition.labelKey} />
       </div>
       <section>
         <h3>{t('education.meaning')}</h3>
-        <p>{definition.meaning[language]}</p>
+        <p>{t(definition.meaningKey)}</p>
       </section>
       <div className="metric-explanation__drivers">
         <EducationList
           title={t('education.increases')}
-          items={definition.increases.map((item) => item[language])}
+          items={definition.increaseKeys.map((key) => t(key))}
         />
         <EducationList
           title={t('education.decreases')}
-          items={definition.decreases.map((item) => item[language])}
+          items={definition.decreaseKeys.map((key) => t(key))}
         />
       </div>
       <section className="metric-explanation__reason">
         <h3>{t('education.currentReason')}</h3>
-        <p>{currentReason}</p>
+        <p>{t(currentReason.key, currentReason.variables)}</p>
       </section>
       {metricId === 'balance' && (
         <>
@@ -80,7 +77,7 @@ export function MetricExplanationPanel({
             </div>
             <div>
               <dt><TechnicalTerm translationKey="metric.incidentCosts" /></dt>
-              <dd>−{snapshot.incidentCosts.toFixed(1)} total</dd>
+              <dd>−{t('common.total', { value: snapshot.incidentCosts.toFixed(1) })}</dd>
             </div>
             <div>
               <dt><TechnicalTerm translationKey="metric.netCashFlow" /></dt>

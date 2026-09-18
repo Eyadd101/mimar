@@ -1,5 +1,8 @@
+import type { TranslationMessage } from '../i18n/translations'
+import { useLanguage } from '../i18n/useLanguage'
+
 type HintPanelProps = {
-  hint: string | null
+  hint: TranslationMessage | null
   onRequestHint: () => void
   onDismissHint: () => void
 }
@@ -9,7 +12,7 @@ export function HintPanel({
   onRequestHint,
   onDismissHint,
 }: HintPanelProps) {
-  const { t } = useLanguage()
+  const { direction, t } = useLanguage()
 
   return (
     <div className="hint-control">
@@ -17,7 +20,7 @@ export function HintPanel({
         {t('action.hint')}
       </button>
       {hint && (
-        <div className="hint-popover" role="status">
+        <div className="hint-popover" role="status" dir={direction}>
           <div className="hint-popover__header">
             <span>{t('hint.system')}</span>
             <button
@@ -28,10 +31,9 @@ export function HintPanel({
               ×
             </button>
           </div>
-          <p>{hint}</p>
+          <p>{t(hint.key, hint.variables)}</p>
         </div>
       )}
     </div>
   )
 }
-import { useLanguage } from '../i18n/useLanguage'

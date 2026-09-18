@@ -2,6 +2,7 @@ import type {
   StageConfig,
   TrafficEventDefinition,
 } from '../data/stages'
+import type { TranslationKey } from '../i18n/translations'
 
 export type TrafficEventStatus = 'upcoming' | 'active' | 'completed'
 
@@ -10,7 +11,7 @@ export type TrafficEventRuntime = {
   status: TrafficEventStatus
   actualMultiplier: number
   outcomeKind: TrafficEventOutcomeKind
-  storyExplanation: string | null
+  storyExplanationKey: TranslationKey | null
 }
 
 export type TrafficEventOutcomeKind =
@@ -22,7 +23,7 @@ export type TrafficEventOutcomeKind =
 export type TrafficEventOutcome = {
   multiplier: number
   kind: TrafficEventOutcomeKind
-  storyExplanation: string | null
+  storyExplanationKey: TranslationKey | null
 }
 
 export type StageTrafficEventRuntime = Record<string, TrafficEventRuntime>
@@ -52,7 +53,7 @@ function createEventRuntime(
     status: 'upcoming' as const,
     actualMultiplier: outcome.multiplier,
     outcomeKind: outcome.kind,
-    storyExplanation: outcome.storyExplanation,
+    storyExplanationKey: outcome.storyExplanationKey,
   }
 }
 
@@ -142,20 +143,20 @@ export function selectTrafficEventOutcome(
   return createOutcome(
     'tail',
     event.outcomeProfile.tailRange,
-    event.outcomeProfile.tailExplanation,
+    event.outcomeProfile.tailExplanationKey,
   )
 
   function createOutcome(
     kind: TrafficEventOutcomeKind,
     range: readonly [number, number],
-    storyExplanation: string | null = null,
+    storyExplanationKey: TranslationKey | null = null,
   ): TrafficEventOutcome {
     return {
       multiplier: roundToOneDecimal(
         range[0] + (range[1] - range[0]) * valueSample,
       ),
       kind,
-      storyExplanation,
+      storyExplanationKey,
     }
   }
 }

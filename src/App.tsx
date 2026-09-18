@@ -51,6 +51,7 @@ import {
 import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
 import { useLanguage } from './i18n/useLanguage'
+import type { TranslationMessage } from './i18n/translations'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
 const edgeTypes = { requestFlow: RequestFlowEdge }
@@ -64,7 +65,7 @@ type PendingInfrastructureAction =
 function App() {
   const { direction, t } = useLanguage()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const [hint, setHint] = useState<string | null>(null)
+  const [hint, setHint] = useState<TranslationMessage | null>(null)
   const [pendingAction, setPendingAction] =
     useState<PendingInfrastructureAction | null>(null)
   const [connectionFeedback, setConnectionFeedback] = useState<
@@ -216,28 +217,28 @@ function App() {
   const pendingActionDetails = pendingAction
     ? pendingAction.kind === 'server-upgrade'
       ? {
-          title: 'Upgrade to Medium Server',
-          description: 'Increase the selected server request capacity.',
+          title: t('resource.upgradeMedium'),
+          description: t('action.upgradeDescription'),
           cost: serverUpgradeConfig.upgradeCost,
           durationSeconds: serverUpgradeConfig.deploymentDurationSeconds,
-          confirmLabel: 'Start Upgrade',
+          confirmLabel: t('action.startUpgrade'),
         }
       : pendingAction.kind === 'load-balancer'
         ? {
-            title: 'Deploy Load Balancer',
-            description: 'Add traffic distribution to the infrastructure.',
+            title: t('action.deployResource', { resource: t('resource.loadBalancer') }),
+            description: t('action.loadBalancerDescription'),
             cost: loadBalancerResourceConfig.deploymentCost,
             durationSeconds:
               loadBalancerResourceConfig.deploymentDurationSeconds,
-            confirmLabel: 'Start Deployment',
+            confirmLabel: t('action.startDeployment'),
           }
         : {
-            title: `Deploy ${additionalAppServerConfig.name}`,
-            description: 'Add application capacity behind the Load Balancer.',
+            title: t('action.deployResource', { resource: t('resource.appServerB') }),
+            description: t('action.appServerDescription'),
             cost: additionalAppServerConfig.deploymentCost,
             durationSeconds:
               additionalAppServerConfig.deploymentDurationSeconds,
-            confirmLabel: 'Start Deployment',
+            confirmLabel: t('action.startDeployment'),
           }
     : null
   const handleNodesChange = (
@@ -269,7 +270,7 @@ function App() {
   }
 
   return (
-    <main className="game" dir={direction}>
+    <main className="game" dir="ltr" data-language={direction === 'rtl' ? 'ar' : 'en'}>
       <header className="game-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
@@ -278,7 +279,7 @@ function App() {
               <path d="M9 14l3-3 3 3M12 11v10" />
             </svg>
           </span>
-          <span className="brand-name">Cloud Game</span>
+          <span className="brand-name">{t('app.brand')}</span>
           <span className="brand-divider" aria-hidden="true" />
           <span className="header-caption">{t('app.caption')}</span>
         </div>
@@ -306,11 +307,11 @@ function App() {
         />
         <div className="header-tools">
           <LanguageSelector />
-          <span className="prototype-badge">Prototype <span>01</span></span>
+          <span className="prototype-badge">{t('app.prototype')} <span>01</span></span>
         </div>
       </header>
 
-      <section className="canvas" aria-label="Infrastructure canvas">
+      <section className="canvas" aria-label={t('app.infrastructureCanvas')}>
         <ReactFlow
           nodes={displayNodes}
           edges={displayEdges}
@@ -331,13 +332,13 @@ function App() {
           deleteKeyCode={null}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#293532" />
-          <Panel position="top-left" className="canvas-heading">
-            <p className="eyebrow">Campaign / {t('stage.label')} {stage.sequence}</p>
-            <h1>{stage.name}</h1>
-            <p>
-              {campaign.infrastructure.resources.length} resources ·{' '}
-              {campaign.infrastructure.connections.length} connections
-            </p>
+          <Panel position="top-left" className="canvas-heading" dir={direction}>
+            <p className="eyebrow">{t('app.campaign')} / {t('stage.label')} {stage.sequence}</p>
+            <h1>{t(stage.nameKey)}</h1>
+            <p>{t('app.resourceCount', {
+              resources: campaign.infrastructure.resources.length,
+              connections: campaign.infrastructure.connections.length,
+            })}</p>
           </Panel>
           {(stage.sequence !== 1 || serviceStarted) && (
             <Panel position="top-left" className="stage-objectives-position">
@@ -350,7 +351,7 @@ function App() {
             </Panel>
           )}
           {stage.sequence === 1 && !serviceStarted && (
-            <Panel position="bottom-left" className="resource-palette-position">
+            <Panel position="top-left" className="resource-palette-position">
               <ResourcePalette
                 resources={campaign.infrastructure.resources}
                 onAddResource={addResource}
@@ -364,16 +365,16 @@ function App() {
                 className="connection-feedback nodrag nopan"
                 data-valid={connectionFeedback.valid}
                 role={connectionFeedback.valid ? 'status' : 'alert'}
+                dir={direction}
               >
                 <button
                   type="button"
                   onClick={() => setConnectionFeedback(null)}
-                  aria-label="Dismiss connection message"
+                  aria-label={t('connection.dismiss')}
                 >
                   ×
                 </button>
-                <p>{connectionFeedback.english}</p>
-                <p lang="ar" dir="rtl">{connectionFeedback.arabic}</p>
+                <p>{t(connectionFeedback.key)}</p>
               </aside>
             </Panel>
           )}
@@ -434,10 +435,9 @@ function App() {
       </section>
 
       <footer className="game-footer">
-        <p className="business-loop">
+        <p className="business-loop" dir={direction}>
           <span className="hint-dot" aria-hidden="true" />
-          Performance <span>→</span> Satisfaction <span>→</span> Revenue{' '}
-          <span>→</span> Balance
+          {t('app.businessLoop')}
         </p>
         <SimulationSpeedControls
           gameSpeed={gameSpeed}
@@ -449,10 +449,10 @@ function App() {
             onRequestHint={() => setHint(getContextualHint(traffic, stage))}
             onDismissHint={() => setHint(null)}
           />
-          <p className="graph-count">
-            {campaign.infrastructure.resources.length} nodes <span>/</span>{' '}
-            {campaign.infrastructure.connections.length} connections
-          </p>
+          <p className="graph-count" dir={direction}>{t('app.graphCount', {
+            nodes: campaign.infrastructure.resources.length,
+            connections: campaign.infrastructure.connections.length,
+          })}</p>
         </div>
       </footer>
       <GameStateOverlay

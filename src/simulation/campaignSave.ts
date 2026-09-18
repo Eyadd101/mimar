@@ -20,7 +20,7 @@ type StorageWriter = Pick<Storage, 'setItem' | 'removeItem'>
 export type CampaignSaveResult =
   | { status: 'empty' }
   | { status: 'ready'; campaign: CampaignState }
-  | { status: 'corrupt'; message: string }
+  | { status: 'corrupt'; error: 'invalid' | 'unreadable' }
 
 const resourceTypes: readonly CampaignResourceType[] = [
   'users',
@@ -46,7 +46,7 @@ export function loadCampaignSave(
     if (!isValidSaveEnvelope(parsed)) {
       return {
         status: 'corrupt',
-        message: 'The saved campaign is invalid or from an unsupported version.',
+        error: 'invalid',
       }
     }
 
@@ -54,7 +54,7 @@ export function loadCampaignSave(
   } catch {
     return {
       status: 'corrupt',
-      message: 'The saved campaign could not be read.',
+      error: 'unreadable',
     }
   }
 }

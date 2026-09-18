@@ -9,7 +9,7 @@ export function TechnicalTerm({ translationKey }: TechnicalTermProps) {
   const { language, t } = useLanguage()
 
   return (
-    <span className="technical-term">
+    <span className="technical-term" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <span>{t(translationKey)}</span>
       {language === 'ar' && (
         <small lang="en" dir="ltr">

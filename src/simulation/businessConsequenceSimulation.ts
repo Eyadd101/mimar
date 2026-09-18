@@ -1,10 +1,11 @@
 import { businessConsequenceConfig } from './config'
+import type { TranslationMessage } from '../i18n/translations'
 
 export type BusinessConsequenceState = {
   severeOutageDurationSeconds: number
   outagePenaltyAppliedForIncident: boolean
   totalFinancialPenalties: number
-  businessConsequenceReason: string | null
+  businessConsequenceReason: TranslationMessage | null
 }
 
 export function createInitialBusinessConsequenceState(): BusinessConsequenceState {
@@ -20,7 +21,7 @@ export function advanceBusinessConsequences(
   currentState: BusinessConsequenceState,
   latencyMs: number,
   balance: number,
-) {
+): { balance: number; consequenceState: BusinessConsequenceState } {
   const currentConsequenceState: BusinessConsequenceState = {
     severeOutageDurationSeconds: currentState.severeOutageDurationSeconds,
     outagePenaltyAppliedForIncident:
@@ -70,7 +71,13 @@ export function advanceBusinessConsequences(
       totalFinancialPenalties:
         currentState.totalFinancialPenalties +
         businessConsequenceConfig.severeOutagePenalty,
-      businessConsequenceReason: `Severe outage penalty: ${businessConsequenceConfig.severeOutagePenalty} credits after latency remained above ${businessConsequenceConfig.severeOutageLatencyMs} ms.`,
+      businessConsequenceReason: {
+        key: 'notice.outagePenalty',
+        variables: {
+          penalty: businessConsequenceConfig.severeOutagePenalty,
+          latency: businessConsequenceConfig.severeOutageLatencyMs,
+        },
+      },
     },
   }
 }

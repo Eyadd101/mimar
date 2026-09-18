@@ -17,25 +17,27 @@ export function ActionConfirmationDialog({
   onConfirm,
   onCancel,
 }: ActionConfirmationDialogProps) {
+  const { direction, t } = useLanguage()
+
   return (
     <div className="action-confirmation" role="alertdialog" aria-modal="true">
-      <section className="action-confirmation__card">
-        <p>Confirm infrastructure change</p>
+      <section className="action-confirmation__card" dir={direction}>
+        <p>{t('action.confirmInfrastructure')}</p>
         <h2>{title}</h2>
         <span>{description}</span>
         <dl>
           <div>
-            <dt>Immediate cost</dt>
-            <dd>{cost} credits</dd>
+            <dt>{t('action.immediateCost')}</dt>
+            <dd>{t('common.credits', { value: cost })}</dd>
           </div>
           <div>
-            <dt>Deployment</dt>
-            <dd>{durationSeconds} game seconds</dd>
+            <dt>{t('action.deployment')}</dt>
+            <dd>{t('common.gameSeconds', { value: durationSeconds })}</dd>
           </div>
         </dl>
         <div>
           <button type="button" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="button" onClick={onConfirm} autoFocus>
             {confirmLabel}
@@ -45,3 +47,4 @@ export function ActionConfirmationDialog({
     </div>
   )
 }
+import { useLanguage } from '../i18n/useLanguage'

@@ -138,14 +138,14 @@ export function addStageOneResource(
       ? {
           id: definition.id,
           type: resourceType,
-          name: definition.englishName,
+          name: definition.name,
           tierId: appServerResourceConfig.initialTierId,
           position: { ...definition.position },
         }
       : {
           id: definition.id,
           type: resourceType,
-          name: definition.englishName,
+          name: definition.name,
           position: { ...definition.position },
         }
 
@@ -396,27 +396,6 @@ export function createNextCampaignState(
       { stageId: completedStageId, stars },
     ],
   }
-}
-
-export function getInfrastructureSummary(campaign: CampaignState) {
-  return campaign.infrastructure.resources
-    .filter(
-      (resource) =>
-        resource.type === 'app-server' ||
-        resource.type === 'load-balancer' ||
-        resource.type === 'database',
-    )
-    .map((resource) => {
-      if (resource.type === 'app-server') {
-        return `${resource.name} — ${resource.tierId === 'medium' ? 'Medium Server' : 'Small Server'}`
-      }
-
-      if (resource.type === 'load-balancer') {
-        return `${resource.name} — ALB`
-      }
-
-      return resource.name
-    })
 }
 
 function rebuildInfrastructure(campaign: CampaignState): CampaignState {

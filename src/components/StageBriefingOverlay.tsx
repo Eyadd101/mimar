@@ -12,7 +12,7 @@ export function StageBriefingOverlay({
   onBeginStage,
 }: StageBriefingOverlayProps) {
   const [stepIndex, setStepIndex] = useState(0)
-  const { language, t } = useLanguage()
+  const { direction, t } = useLanguage()
   const step = stage.tutorialSteps[stepIndex]
 
   if (!step) {
@@ -23,12 +23,12 @@ export function StageBriefingOverlay({
 
   return (
     <div className="stage-briefing-overlay" role="dialog" aria-modal="true">
-      <section className="stage-briefing-card">
+      <section className="stage-briefing-card" dir={direction}>
         <p className="stage-briefing-card__eyebrow">
-          {t('stage.label')} {stage.sequence} · {stage.name}
+          {t('stage.label')} {stage.sequence} · {t(stage.nameKey)}
         </p>
-        <h2>{language === 'ar' ? step.arabicTitle ?? step.title : step.title}</h2>
-        <p>{language === 'ar' ? step.arabicMessage ?? step.message : step.message}</p>
+        <h2>{t(step.titleKey)}</h2>
+        <p>{t(step.messageKey)}</p>
         <div className="stage-briefing-card__footer">
           <span>
             {stepIndex + 1} / {stage.tutorialSteps.length}

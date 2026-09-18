@@ -74,13 +74,13 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
   )
 }
 
-export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) {
+export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNode>) {
   const { language, t } = useLanguage()
-  const resourceLabelKey = resourceLabelKeys[data.kind]
-  const englishResourceLabel =
-    data.kind === 'server' && data.label !== 'App Server'
-      ? data.label
-      : getEnglishTranslation(resourceLabelKey)
+  const resourceLabelKey =
+    data.kind === 'server' && id === 'server-b'
+      ? 'resource.appServerB'
+      : resourceLabelKeys[data.kind]
+  const englishResourceLabel = getEnglishTranslation(resourceLabelKey)
 
   return (
     <div
@@ -109,7 +109,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
           <small lang="en" dir="ltr">{englishResourceLabel}</small>
         )}
       </h2>
-      <p className="node-description">{data.description}</p>
+      <p className="node-description">{t(data.descriptionKey)}</p>
       {data.kind === 'server' && data.appServerMetrics && (
         <div
           className="server-cpu"
@@ -122,7 +122,7 @@ export function InfrastructureNode({ data }: NodeProps<InfrastructureFlowNode>) 
           <div
             className="server-cpu__track"
             role="progressbar"
-            aria-label="App Server CPU usage"
+            aria-label={`${t('resource.appServer')} ${t('metric.cpuUsage')}`}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={data.appServerMetrics.cpuUsage}

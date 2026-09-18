@@ -8,6 +8,7 @@ import { useLanguage } from '../i18n/useLanguage'
 import { gameFeedbackConfig } from '../simulation/config'
 import { MetricExplanationPanel } from './MetricExplanationPanel'
 import { TechnicalTerm } from './TechnicalTerm'
+import type { TranslationMessage } from '../i18n/translations'
 
 type TrafficHudProps = {
   activeUsers: number
@@ -18,8 +19,8 @@ type TrafficHudProps = {
   latencyMs: number
   customerSatisfaction: number
   badLatencyDurationSeconds: number
-  satisfactionReason: string | null
-  businessConsequenceReason: string | null
+  satisfactionReason: TranslationMessage | null
+  businessConsequenceReason: TranslationMessage | null
   balance: number
   revenuePerPeriod: number
   infrastructureCost: number
@@ -45,7 +46,7 @@ function formatGameTime(totalSeconds: number) {
 
 export function TrafficHud(props: TrafficHudProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricId | null>(null)
-  const { language } = useLanguage()
+  const { direction, t } = useLanguage()
   const {
     activeUsers,
     requestsPerSecond,
@@ -69,9 +70,9 @@ export function TrafficHud(props: TrafficHudProps) {
         : 'healthy'
   const balanceWarning =
     balanceState === 'critical'
-      ? `Bankruptcy danger: only ${formatCredits(balance)} credits remain.`
+      ? t('warning.bankruptcy', { balance: formatCredits(balance) })
       : balanceState === 'low'
-        ? `Runway warning: balance has fallen to ${formatCredits(balance)} credits.`
+        ? t('warning.runway', { balance: formatCredits(balance) })
         : null
   const snapshot: MetricEducationSnapshot = {
     ...props,
@@ -131,9 +132,9 @@ export function TrafficHud(props: TrafficHudProps) {
 
   return (
     <div className="traffic-hud-shell">
-      <div className="traffic-hud" aria-label="Traffic simulation">
+      <div className="traffic-hud" aria-label={t('app.trafficSimulation')}>
         {metrics.map((metric) => {
-          const cause = getLiveMetricCause(metric.id, snapshot, language)
+          const cause = getLiveMetricCause(metric.id, snapshot)
 
           return (
             <button
@@ -156,7 +157,7 @@ export function TrafficHud(props: TrafficHudProps) {
               <strong>{metric.value}</strong>
               {cause && (
                 <span className="traffic-hud__cause" data-trend={cause.trend}>
-                  {cause.trend === 'up' ? '↑' : '↓'} {cause.text}
+                  {cause.trend === 'up' ? '↑' : '↓'} {t(cause.message.key, cause.message.variables)}
                 </span>
               )}
             </button>
@@ -172,8 +173,12 @@ export function TrafficHud(props: TrafficHudProps) {
       )}
       {!selectedMetric &&
         (businessConsequenceReason || satisfactionReason || balanceWarning) && (
-          <p className="traffic-hud__notice" role="status">
-            {businessConsequenceReason ?? satisfactionReason ?? balanceWarning}
+          <p className="traffic-hud__notice" role="status" dir={direction}>
+            {businessConsequenceReason
+              ? t(businessConsequenceReason.key, businessConsequenceReason.variables)
+              : satisfactionReason
+                ? t(satisfactionReason.key, satisfactionReason.variables)
+                : balanceWarning}
           </p>
         )}
     </div>

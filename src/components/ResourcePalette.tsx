@@ -5,6 +5,7 @@ import type {
 } from '../simulation/campaignSimulation'
 import type { StageOneBuildStep } from '../simulation/stageOneOnboardingSimulation'
 import { useLanguage } from '../i18n/useLanguage'
+import { TechnicalTerm } from './TechnicalTerm'
 
 type ResourcePaletteProps = {
   resources: readonly CampaignResource[]
@@ -24,7 +25,7 @@ export function ResourcePalette({
   return (
     <aside
       className="resource-palette nodrag nopan"
-      aria-label="Resource palette"
+      aria-label={t('palette.title')}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       <div className="resource-palette__heading">
@@ -43,10 +44,9 @@ export function ResourcePalette({
           return (
             <article className="resource-palette__card" key={resource.type}>
               <div>
-                <strong>{resource.englishName}</strong>
-                <span lang="ar" dir="rtl">{resource.arabicName}</span>
+                <strong><TechnicalTerm translationKey={resource.labelKey} /></strong>
               </div>
-              <p>{resource.description}</p>
+              <p>{t(resource.descriptionKey)}</p>
               <button
                 type="button"
                 disabled={isDisabled}

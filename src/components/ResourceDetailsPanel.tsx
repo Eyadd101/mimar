@@ -22,11 +22,11 @@ type ResourceDetailsPanelProps = {
   onStartUpgrade: (resourceId: string) => void
 }
 
-const placeholderTypes = {
-  users: 'Traffic Source',
-  server: 'App Server',
-  database: 'Database',
-  'load-balancer': 'Load Balancer',
+const placeholderTypeKeys: Record<InfrastructureFlowNode['data']['kind'], TranslationKey> = {
+  users: 'resource.trafficSource',
+  server: 'resource.appServer',
+  database: 'resource.database',
+  'load-balancer': 'resource.loadBalancer',
 } as const
 
 const statusTranslationKeys: Record<string, TranslationKey> = {
@@ -70,17 +70,31 @@ export function ResourceDetailsPanel({
   )
   const anotherUpgradeIsDeploying =
     simulation.serverDeployment !== null && deployment === null
+  const resourceNameKey: TranslationKey =
+    node.id === 'server-b'
+      ? 'resource.appServerB'
+      : node.data.kind === 'server'
+        ? 'resource.appServer'
+        : node.data.kind === 'load-balancer'
+          ? 'resource.loadBalancer'
+          : node.data.kind === 'database'
+            ? 'resource.database'
+            : 'resource.users'
+  const tierKey: TranslationKey =
+    appServer?.tierId === 'medium'
+      ? 'resource.mediumServer'
+      : 'resource.smallServer'
 
   return (
     <aside
       className="resource-panel nodrag nopan"
-      aria-label="Resource details"
+      aria-label={t('resource.details')}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       <div className="resource-panel__header">
         <div>
           <p className="resource-panel__eyebrow">{t('resource.details')}</p>
-          <h2>{node.data.label}</h2>
+          <h2><TechnicalTerm translationKey={resourceNameKey} /></h2>
         </div>
         <button
           type="button"
@@ -95,20 +109,20 @@ export function ResourceDetailsPanel({
       {isAppServer && appServer ? (
         <dl className="resource-panel__details">
           <div>
-            <dt>{t('resource.name')}</dt>
-            <dd>{appServer.resourceName}</dd>
+            <dt><TechnicalTerm translationKey="resource.name" /></dt>
+            <dd><TechnicalTerm translationKey={resourceNameKey} /></dd>
           </div>
           <div>
-            <dt>{t('resource.genericType')}</dt>
+            <dt><TechnicalTerm translationKey="resource.genericType" /></dt>
             <dd><TechnicalTerm translationKey="resource.appServer" /></dd>
           </div>
           <div>
-            <dt>{t('resource.awsReference')}</dt>
+            <dt><TechnicalTerm translationKey="resource.awsReference" /></dt>
             <dd>{appServerResourceConfig.awsReference}</dd>
           </div>
           <div>
             <dt><TechnicalTerm translationKey="metric.currentTier" /></dt>
-            <dd>{appServer.tierName}</dd>
+            <dd><TechnicalTerm translationKey={tierKey} /></dd>
           </div>
           <div>
             <dt><TechnicalTerm translationKey="metric.requestCapacity" /></dt>
@@ -131,28 +145,28 @@ export function ResourceDetailsPanel({
             <dd>{appServer.latencyMs} ms</dd>
           </div>
           <div>
-            <dt>{t('metric.status')}</dt>
+            <dt><TechnicalTerm translationKey="metric.status" /></dt>
             <dd data-status={appServer.status}>
               {t(statusTranslationKeys[appServer.status])}
             </dd>
           </div>
           <div>
-            <dt>{t('resource.costPerPeriod')} · {appServerResourceConfig.costPeriodSeconds}s</dt>
-            <dd>{appServer.costPerPeriod} credits</dd>
+            <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
+            <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
           </div>
         </dl>
       ) : isLoadBalancer ? (
         <dl className="resource-panel__details">
           <div>
-            <dt>{t('resource.name')}</dt>
-            <dd>{loadBalancerResourceConfig.name}</dd>
-          </div>
-          <div>
-            <dt>{t('resource.genericType')}</dt>
+            <dt><TechnicalTerm translationKey="resource.name" /></dt>
             <dd><TechnicalTerm translationKey="resource.loadBalancer" /></dd>
           </div>
           <div>
-            <dt>{t('resource.awsReference')}</dt>
+            <dt><TechnicalTerm translationKey="resource.genericType" /></dt>
+            <dd><TechnicalTerm translationKey="resource.loadBalancer" /></dd>
+          </div>
+          <div>
+            <dt><TechnicalTerm translationKey="resource.awsReference" /></dt>
             <dd>{loadBalancerResourceConfig.awsReference}</dd>
           </div>
           <div>
@@ -164,13 +178,13 @@ export function ResourceDetailsPanel({
             <dd>{simulation.appServers.length}</dd>
           </div>
           <div>
-            <dt>{t('resource.costPerPeriod')} · {appServerResourceConfig.costPeriodSeconds}s</dt>
-            <dd>{loadBalancerResourceConfig.costPerPeriod} credits</dd>
+            <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
+            <dd>{t('common.credits', { value: loadBalancerResourceConfig.costPerPeriod })}</dd>
           </div>
         </dl>
       ) : (
         <div className="resource-panel__placeholder">
-          <p>{placeholderTypes[node.data.kind]}</p>
+          <p><TechnicalTerm translationKey={placeholderTypeKeys[node.data.kind]} /></p>
           <span>{t('resource.moreDetailsLater')}</span>
         </div>
       )}
@@ -180,20 +194,20 @@ export function ResourceDetailsPanel({
           {deployment ? (
             <>
               <div className="resource-panel__upgrade-heading">
-                <span>Deploying {upgradeTarget.name}</span>
+                <span>{t('common.deploying', { resource: t('resource.mediumServer') })}</span>
                 <strong>{deploymentPercent}%</strong>
               </div>
               <div
                 className="deployment-progress"
                 role="progressbar"
-                aria-label="Server upgrade deployment"
+                aria-label={t('resource.upgradeDeploymentAria')}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={deploymentPercent}
               >
                 <span style={{ width: `${deploymentPercent}%` }} />
               </div>
-              <p>{deploymentSecondsRemaining} {t('resource.deploymentRemaining')}</p>
+              <p>{t('resource.deploymentRemaining', { seconds: deploymentSecondsRemaining })}</p>
             </>
           ) : appServer.tierId ===
             serverUpgradeConfig.targetTierId ? (
@@ -203,16 +217,16 @@ export function ResourceDetailsPanel({
           ) : (
             <>
               <div className="resource-panel__upgrade-heading">
-                <span>{upgradeTarget.name}</span>
+                <span><TechnicalTerm translationKey="resource.mediumServer" /></span>
                 <strong>
                   {upgradeTarget.requestCapacity} req/s
                 </strong>
               </div>
               <p>
-                {serverUpgradeConfig.upgradeCost} credits ·{' '}
-                {serverUpgradeConfig.deploymentDurationSeconds} game seconds
+                {t('common.credits', { value: serverUpgradeConfig.upgradeCost })} ·{' '}
+                {t('common.gameSeconds', { value: serverUpgradeConfig.deploymentDurationSeconds })}
               </p>
-              <p>{t('resource.availableBalance')}: {simulation.balance} credits</p>
+              <p>{t('resource.availableBalance')}: {t('common.credits', { value: simulation.balance })}</p>
               <button
                 type="button"
                 className="resource-panel__upgrade-button"

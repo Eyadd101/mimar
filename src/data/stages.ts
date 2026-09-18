@@ -1,50 +1,51 @@
 import { gameStateConfig } from '../simulation/config'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
+import type { TranslationKey } from '../i18n/translations'
 
 export type StageObjectiveDefinition =
   | {
       id: string
       type: 'survive-duration'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       durationSeconds: number
     }
   | {
       id: string
       type: 'finish-satisfaction'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       minimumSatisfaction: number
     }
   | {
       id: string
       type: 'finish-balance'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       minimumBalance: number
     }
   | {
       id: string
       type: 'maintain-satisfaction'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       minimumSatisfaction: number
       durationSeconds: number
     }
   | {
       id: string
       type: 'maintain-latency'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       maximumLatencyMs: number
       durationSeconds: number
     }
   | {
       id: string
       type: 'handle-traffic-event'
-      title: string
-      description: string
+      titleKey: TranslationKey
+      descriptionKey: TranslationKey
       eventId: string
     }
 
@@ -65,10 +66,8 @@ export type StageTrafficProfile = {
 }
 
 export type TutorialStep = {
-  title: string
-  message: string
-  arabicTitle?: string
-  arabicMessage?: string
+  titleKey: TranslationKey
+  messageKey: TranslationKey
 }
 
 export type StageLearningStepDefinition =
@@ -76,42 +75,36 @@ export type StageLearningStepDefinition =
       id: string
       type: 'place-resource'
       resourceType: CampaignResourceType
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
   | {
       id: string
       type: 'connect-resources'
       sourceType: CampaignResourceType
       targetType: CampaignResourceType
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
   | {
       id: string
       type: 'start-service'
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
   | {
       id: string
       type: 'observe-growth'
       durationSeconds: number
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
   | {
       id: string
       type: 'reach-server-tier'
       tierId: ServerTierId
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
   | {
       id: string
       type: 'complete-stage'
-      title: string
-      arabicTitle: string
+      titleKey: TranslationKey
     }
 
 export type StageResourceUnlock = 'load-balancer'
@@ -119,9 +112,9 @@ export type StageResourceUnlock = 'load-balancer'
 export type TrafficEventDefinition = {
   id: string
   type: 'traffic-multiplier'
-  sender: string
-  title: string
-  message: string
+  senderKey: TranslationKey
+  titleKey: TranslationKey
+  messageKey: TranslationKey
   startsAtSecond: number
   durationSeconds: number
   forecastMinimumMultiplier: number
@@ -135,19 +128,19 @@ export type TrafficEventDefinition = {
     moderatelyLowerRange: readonly [number, number]
     moderatelyHigherRange: readonly [number, number]
     tailRange: readonly [number, number]
-    tailExplanation: string
+    tailExplanationKey: TranslationKey
   }
 }
 
 export type StageConfig = {
   id: string
   sequence: number
-  name: string
-  storyBriefing: string
+  nameKey: TranslationKey
+  storyBriefingKey: TranslationKey
   trafficProfile: StageTrafficProfile
   tutorialSteps: TutorialStep[]
   learningSteps: StageLearningStepDefinition[]
-  learningGoals: string[]
+  learningGoalKeys: TranslationKey[]
   trafficEvents: TrafficEventDefinition[]
   unlocksResourceTypes: StageResourceUnlock[]
   minimumSurvivalDurationSeconds: number
@@ -172,9 +165,8 @@ export type StageConfig = {
 export const prototypeStageConfig: StageConfig = {
   id: 'first-users',
   sequence: 1,
-  name: 'First Users',
-  storyBriefing:
-    'The SaaS startup has launched. Only a small number of customers are using it—for now.',
+  nameKey: 'stage.firstUsers.name',
+  storyBriefingKey: 'stage.firstUsers.briefing',
   trafficProfile: {
     initialActiveUsers: 20,
     activeUserGrowthIntervalSeconds: 5,
@@ -183,12 +175,8 @@ export const prototypeStageConfig: StageConfig = {
   },
   tutorialSteps: [
     {
-      title: 'Build your first service',
-      message:
-        'The canvas starts empty. Place and connect each resource to create the request path, then observe what happens as users arrive.',
-      arabicTitle: 'ابنِ خدمتك الأولى',
-      arabicMessage:
-        'تبدأ اللوحة فارغة. ضع كل مورد وصِل بينها لإنشاء مسار الطلب، ثم راقب ما يحدث عند وصول المستخدمين.',
+      titleKey: 'stage.firstUsers.tutorialTitle',
+      messageKey: 'stage.firstUsers.tutorialMessage',
     },
   ],
   learningSteps: [
@@ -196,69 +184,60 @@ export const prototypeStageConfig: StageConfig = {
       id: 'place-users',
       type: 'place-resource',
       resourceType: 'users',
-      title: 'Place Users',
-      arabicTitle: 'ضع المستخدمين',
+      titleKey: 'learning.placeUsers',
     },
     {
       id: 'place-app-server',
       type: 'place-resource',
       resourceType: 'app-server',
-      title: 'Place App Server',
-      arabicTitle: 'ضع خادم التطبيق',
+      titleKey: 'learning.placeAppServer',
     },
     {
       id: 'connect-users-server',
       type: 'connect-resources',
       sourceType: 'users',
       targetType: 'app-server',
-      title: 'Connect Users → App Server',
-      arabicTitle: 'صِل المستخدمين بخادم التطبيق',
+      titleKey: 'learning.connectUsersServer',
     },
     {
       id: 'place-database',
       type: 'place-resource',
       resourceType: 'database',
-      title: 'Place Database',
-      arabicTitle: 'ضع قاعدة البيانات',
+      titleKey: 'learning.placeDatabase',
     },
     {
       id: 'connect-server-database',
       type: 'connect-resources',
       sourceType: 'app-server',
       targetType: 'database',
-      title: 'Connect App Server → Database',
-      arabicTitle: 'صِل خادم التطبيق بقاعدة البيانات',
+      titleKey: 'learning.connectServerDatabase',
     },
     {
       id: 'start-service',
       type: 'start-service',
-      title: 'Start the service',
-      arabicTitle: 'ابدأ الخدمة',
+      titleKey: 'learning.startService',
     },
     {
       id: 'observe-growth',
       type: 'observe-growth',
       durationSeconds: 30,
-      title: 'Observe user growth',
-      arabicTitle: 'راقب نمو المستخدمين',
+      titleKey: 'learning.observeGrowth',
     },
     {
       id: 'respond-load',
       type: 'reach-server-tier',
       tierId: 'medium',
-      title: 'Respond to server load',
-      arabicTitle: 'استجب لحمل الخادم',
+      titleKey: 'learning.respondLoad',
     },
     {
       id: 'complete-stage',
       type: 'complete-stage',
-      title: 'Complete the stage',
-      arabicTitle: 'أكمل المرحلة',
+      titleKey: 'learning.completeStage',
     },
   ],
-  learningGoals: [
-    'Requests turn user activity into server load.',
-    'Vertical scaling increases one server’s capacity.',
+  learningGoalKeys: [
+    'learning.goal.requestsLoad',
+    'learning.goal.verticalCapacity',
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
@@ -266,23 +245,23 @@ export const prototypeStageConfig: StageConfig = {
   primaryObjective: {
     id: 'survive-first-users',
     type: 'survive-duration',
-    title: 'Survive the growth period',
-    description: 'Stay solvent and operational for 4½ game minutes.',
+    titleKey: 'objective.surviveGrowth.title',
+    descriptionKey: 'objective.surviveGrowth.description',
     durationSeconds: 270,
   },
   secondaryObjectives: [
     {
       id: 'healthy-customers',
       type: 'finish-satisfaction',
-      title: 'Healthy customers',
-      description: 'Finish with at least 75% satisfaction.',
+      titleKey: 'objective.healthyCustomers.title',
+      descriptionKey: 'objective.healthyCustomers.description',
       minimumSatisfaction: 75,
     },
     {
       id: 'cash-reserve',
       type: 'finish-balance',
-      title: 'Protect the runway',
-      description: 'Finish with at least 50 credits.',
+      titleKey: 'objective.cashReserve.title',
+      descriptionKey: 'objective.cashReserve.description',
       minimumBalance: 50,
     },
   ],
@@ -313,9 +292,8 @@ export const growthPreviewStageConfig: StageConfig = {
   ...prototypeStageConfig,
   id: 'marketing-campaign',
   sequence: 2,
-  name: 'Marketing Campaign',
-  storyBriefing:
-    'Marketing is launching a major campaign. Read the forecast and prepare the infrastructure before customers arrive.',
+  nameKey: 'stage.marketingCampaign.name',
+  storyBriefingKey: 'stage.marketingCampaign.briefing',
   trafficProfile: {
     initialActiveUsers: 20,
     activeUserGrowthIntervalSeconds: 10,
@@ -324,17 +302,17 @@ export const growthPreviewStageConfig: StageConfig = {
   },
   tutorialSteps: [],
   learningSteps: [],
-  learningGoals: [
-    'Capacity planning uses forecasts to prepare before demand arrives.',
-    'Forecasts describe a range rather than a guaranteed result.',
+  learningGoalKeys: [
+    'learning.goal.capacityPlanning',
+    'learning.goal.forecastRange',
   ],
   trafficEvents: [
     {
       id: 'marketing-launch',
       type: 'traffic-multiplier',
-      sender: 'Marketing Team',
-      title: 'Major campaign launch',
-      message: "We're launching a major campaign soon.",
+      senderKey: 'event.marketing.sender',
+      titleKey: 'event.marketing.title',
+      messageKey: 'event.marketing.message',
       startsAtSecond: 120,
       durationSeconds: 90,
       forecastMinimumMultiplier: 3,
@@ -348,8 +326,7 @@ export const growthPreviewStageConfig: StageConfig = {
         moderatelyLowerRange: [3, 3.5],
         moderatelyHigherRange: [5, 6.5],
         tailRange: [6.5, 7.9],
-        tailExplanation:
-          'Your campaign went viral after a large creator shared the product.',
+        tailExplanationKey: 'event.marketing.tail',
       },
     },
   ],
@@ -357,23 +334,23 @@ export const growthPreviewStageConfig: StageConfig = {
   primaryObjective: {
     id: 'survive-growth-preview',
     type: 'survive-duration',
-    title: 'Keep growing',
-    description: 'Stay operational through the marketing campaign.',
+    titleKey: 'objective.keepGrowing.title',
+    descriptionKey: 'objective.keepGrowing.description',
     durationSeconds: 300,
   },
   secondaryObjectives: [
     {
       id: 'handle-marketing-launch',
       type: 'handle-traffic-event',
-      title: 'Handle the campaign',
-      description: 'Remain operational until the campaign traffic ends.',
+      titleKey: 'objective.handleCampaign.title',
+      descriptionKey: 'objective.handleCampaign.description',
       eventId: 'marketing-launch',
     },
     {
       id: 'growth-preview-satisfaction',
       type: 'finish-satisfaction',
-      title: 'Protect customer trust',
-      description: 'Finish with at least 75% satisfaction.',
+      titleKey: 'objective.protectTrust75.title',
+      descriptionKey: 'objective.protectTrust75.description',
       minimumSatisfaction: 75,
     },
   ],
@@ -388,9 +365,8 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   ...prototypeStageConfig,
   id: 'vertical-scaling-limit',
   sequence: 3,
-  name: 'Vertical Scaling Limit',
-  storyBriefing:
-    'The company is growing faster. The Medium Server is the largest vertical tier available, and one machine still handles every request.',
+  nameKey: 'stage.verticalScalingLimit.name',
+  storyBriefingKey: 'stage.verticalScalingLimit.briefing',
   trafficProfile: {
     initialActiveUsers: 40,
     activeUserGrowthIntervalSeconds: 5,
@@ -399,15 +375,14 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   },
   tutorialSteps: [
     {
-      title: 'A new kind of limit',
-      message:
-        'Vertical scaling made one server stronger. Watch what happens when growth catches up with the largest available tier.',
+      titleKey: 'stage.verticalScalingLimit.tutorialTitle',
+      messageKey: 'stage.verticalScalingLimit.tutorialMessage',
     },
   ],
   learningSteps: [],
-  learningGoals: [
-    'Vertical scaling eventually reaches a practical ceiling.',
-    'Horizontal scaling means sharing traffic across multiple servers.',
+  learningGoalKeys: [
+    'learning.goal.verticalCeiling',
+    'learning.goal.horizontalSharing',
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
@@ -415,23 +390,23 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   primaryObjective: {
     id: 'observe-vertical-limit',
     type: 'survive-duration',
-    title: 'Reach the scaling ceiling',
-    description: 'Keep the company operating for 5½ game minutes.',
+    titleKey: 'objective.scalingCeiling.title',
+    descriptionKey: 'objective.scalingCeiling.description',
     durationSeconds: 330,
   },
   secondaryObjectives: [
     {
       id: 'vertical-limit-satisfaction',
       type: 'finish-satisfaction',
-      title: 'Protect customer trust',
-      description: 'Finish with at least 70% satisfaction.',
+      titleKey: 'objective.protectTrust70.title',
+      descriptionKey: 'objective.protectTrust70.description',
       minimumSatisfaction: 70,
     },
     {
       id: 'vertical-limit-latency',
       type: 'maintain-latency',
-      title: 'Keep response time controlled',
-      description: 'Maintain latency below 600 ms for 60 seconds.',
+      titleKey: 'objective.controlLatency600.title',
+      descriptionKey: 'objective.controlLatency600.description',
       maximumLatencyMs: 600,
       durationSeconds: 60,
     },
@@ -455,9 +430,8 @@ export const surviveTheLaunchStageConfig: StageConfig = {
   ...prototypeStageConfig,
   id: 'survive-the-launch',
   sequence: 4,
-  name: 'Survive the Launch',
-  storyBriefing:
-    'The startup is launching a major feature. Use the forecast and preparation window to build enough application capacity.',
+  nameKey: 'stage.surviveLaunch.name',
+  storyBriefingKey: 'stage.surviveLaunch.briefing',
   trafficProfile: {
     initialActiveUsers: 30,
     activeUserGrowthIntervalSeconds: 20,
@@ -466,18 +440,17 @@ export const surviveTheLaunchStageConfig: StageConfig = {
   },
   tutorialSteps: [],
   learningSteps: [],
-  learningGoals: [
-    'A Load Balancer distributes incoming requests across servers.',
-    'Horizontal scaling adds servers so no single machine handles all traffic.',
+  learningGoalKeys: [
+    'learning.goal.loadBalancer',
+    'learning.goal.multipleServers',
   ],
   trafficEvents: [
     {
       id: 'feature-launch',
       type: 'traffic-multiplier',
-      sender: 'Product Team',
-      title: 'Major feature launch',
-      message:
-        'Launch traffic begins soon. Prepare enough capacity before customers arrive.',
+      senderKey: 'event.launch.sender',
+      titleKey: 'event.launch.title',
+      messageKey: 'event.launch.message',
       startsAtSecond: 60,
       durationSeconds: 300,
       forecastMinimumMultiplier: 4.5,
@@ -491,8 +464,7 @@ export const surviveTheLaunchStageConfig: StageConfig = {
         moderatelyLowerRange: [4.5, 5],
         moderatelyHigherRange: [6, 7],
         tailRange: [7, 7.5],
-        tailExplanation:
-          'Launch coverage spread farther than expected after the feature trended online.',
+        tailExplanationKey: 'event.launch.tail',
       },
     },
   ],
@@ -501,30 +473,30 @@ export const surviveTheLaunchStageConfig: StageConfig = {
   primaryObjective: {
     id: 'survive-feature-launch',
     type: 'survive-duration',
-    title: 'Survive the launch',
-    description: 'Remain solvent and operational for 6½ game minutes.',
+    titleKey: 'objective.surviveLaunch.title',
+    descriptionKey: 'objective.surviveLaunch.description',
     durationSeconds: 390,
   },
   secondaryObjectives: [
     {
       id: 'handle-feature-launch',
       type: 'handle-traffic-event',
-      title: 'Handle launch traffic',
-      description: 'Remain operational until the launch traffic ends.',
+      titleKey: 'objective.handleLaunch.title',
+      descriptionKey: 'objective.handleLaunch.description',
       eventId: 'feature-launch',
     },
     {
       id: 'launch-satisfaction',
       type: 'finish-satisfaction',
-      title: 'Protect customer trust',
-      description: 'Finish with at least 80% satisfaction.',
+      titleKey: 'objective.protectTrust80.title',
+      descriptionKey: 'objective.protectTrust80.description',
       minimumSatisfaction: 80,
     },
     {
       id: 'launch-latency',
       type: 'maintain-latency',
-      title: 'Responsive launch',
-      description: 'Maintain latency below 400 ms for 120 seconds.',
+      titleKey: 'objective.responsiveLaunch.title',
+      descriptionKey: 'objective.responsiveLaunch.description',
       maximumLatencyMs: 400,
       durationSeconds: 120,
     },

@@ -1,5 +1,6 @@
 import type { TrafficEventDefinition } from '../data/stages'
 import type { StageTrafficEventRuntime } from '../simulation/trafficEventSimulation'
+import { useLanguage } from '../i18n/useLanguage'
 
 type EventTimelinePanelProps = {
   events: TrafficEventDefinition[]
@@ -12,14 +13,16 @@ export function EventTimelinePanel({
   runtime,
   gameTimeSeconds,
 }: EventTimelinePanelProps) {
+  const { direction, t } = useLanguage()
+
   if (events.length === 0) {
     return null
   }
 
   return (
-    <aside className="event-timeline nodrag nopan" aria-label="Event timeline">
+    <aside className="event-timeline nodrag nopan" aria-label={t('event.timeline')} dir={direction}>
       <div className="event-timeline__heading">
-        <span>Inbox / Timeline</span>
+        <span>{t('event.timeline')}</span>
         <strong>{events.length}</strong>
       </div>
       {events.map((event) => {
@@ -36,33 +39,35 @@ export function EventTimelinePanel({
             data-status={eventRuntime?.status ?? 'upcoming'}
           >
             <div className="event-timeline__meta">
-              <span>{event.sender}</span>
+              <span>{t(event.senderKey)}</span>
               <strong>
                 {eventRuntime?.status === 'upcoming'
-                  ? `Begins in ${formatCountdown(startsIn)}`
+                  ? t('event.beginsIn', { time: formatCountdown(startsIn) })
                   : eventRuntime?.status === 'active'
-                    ? 'Live now'
-                    : 'Completed'}
+                    ? t('event.liveNow')
+                    : t('event.completed')}
               </strong>
             </div>
-            <h3>{event.title}</h3>
-            <p>{event.message}</p>
+            <h3>{t(event.titleKey)}</h3>
+            <p>{t(event.messageKey)}</p>
             <div className="traffic-forecast">
-              <span>Traffic forecast</span>
+              <span>{t('event.trafficForecast')}</span>
               <strong>
                 {event.forecastMinimumMultiplier}x–
                 {event.forecastMaximumMultiplier}x
               </strong>
-              <small>Estimate — actual traffic may differ</small>
+              <small>{t('event.estimateNotice')}</small>
             </div>
             {eventRuntime && eventRuntime.status !== 'upcoming' && (
               <>
                 <p className="event-timeline__actual">
-                  Actual traffic: {eventRuntime.actualMultiplier.toFixed(1)}x
+                  {t('event.actualTraffic', {
+                    multiplier: eventRuntime.actualMultiplier.toFixed(1),
+                  })}
                 </p>
-                {eventRuntime.storyExplanation && (
+                {eventRuntime.storyExplanationKey && (
                   <p className="event-timeline__story">
-                    {eventRuntime.storyExplanation}
+                    {t(eventRuntime.storyExplanationKey)}
                   </p>
                 )}
               </>
