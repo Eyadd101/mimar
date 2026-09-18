@@ -88,6 +88,7 @@ export function getObjectiveProgressLabel(
           target: progress.target,
         },
       }
+    case 'durable-storage':
     case 'healthy-background':
     case 'handle-traffic-event':
       return { key: progress.completed ? 'objective.handled' : 'objective.pending' }
@@ -122,6 +123,7 @@ function createObjectiveProgress(
         current: 0,
         target: objective.minimumBalance,
       }
+    case 'durable-storage':
     case 'healthy-background':
     case 'handle-traffic-event':
       return { completed: false, current: 0, target: 1 }
@@ -184,6 +186,10 @@ function evaluateObjective(
         current,
         target: objective.durationSeconds,
       }
+    }
+    case 'durable-storage': {
+      const completed = simulation.storage.connected && simulation.storage.localObjects === 0
+      return { completed, current: completed ? 1 : 0, target: 1 }
     }
     case 'healthy-background': {
       const completed = simulation.queue.oldestMessageAge <= objective.maximumAgeSeconds && (simulation.queue.connected ? simulation.queue.workerConnected && simulation.queue.processingRate >= simulation.queue.enqueueRate : simulation.applicationLatencyMs <= 350)

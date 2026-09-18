@@ -55,3 +55,12 @@ export const backgroundStage = createExpandedStage({
 })
 backgroundStage.secondaryObjectives.push({ id: 'background', type: 'healthy-background', titleKey: 'advanced.processingRate', descriptionKey: 'advanced.backgroundGoal', maximumAgeSeconds: 30 })
 backgroundStage.winCondition.requiredObjectiveIds.push('background')
+
+export const uploadsStage = createExpandedStage({
+  id: 'growing-uploads', sequence: 8,
+  nameKey: 'advanced.stage8', storyKey: 'advanced.stage8Story', lessonKey: 'advanced.stage8Lesson',
+  durationSeconds: 360, unlocks: ['object-storage'],
+  trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5, backgroundJobsPerRequest: .25, uploadsPerRequest: .1 },
+})
+uploadsStage.secondaryObjectives.push({ id: 'durable-files', type: 'durable-storage', titleKey: 'advanced.storage', descriptionKey: 'advanced.storageGoal' })
+uploadsStage.winCondition.requiredObjectiveIds.push('durable-files')

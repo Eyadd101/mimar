@@ -15,6 +15,7 @@ export function getContextualHint(
     return { key: 'hint.buildPath' }
   }
 
+  if (simulation.storage.localPressure > .5) return { key: 'advanced.storageHint' }
   if (simulation.queue.depth > 0) return { key: 'advanced.queueHint' }
   if (stage?.trafficProfile.backgroundJobsPerRequest && !simulation.queue.connected) return { key: 'advanced.backgroundHint' }
 

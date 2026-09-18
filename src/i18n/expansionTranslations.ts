@@ -1,4 +1,10 @@
 export const expansionEnglish = {
+  "advanced.stage8": "Growing Uploads",
+  "advanced.stage8Story": "Customers now upload files regularly. The application is keeping them on its local disk. Watch storage pressure and consider what happens when that machine is replaced. Separate compute from persistent data.",
+  "advanced.stage8Lesson": "Object Storage holds shared, durable files independently of application compute. A server replacement should not erase customer uploads.",
+  "advanced.storageGoal": "Move uploaded files off application local disk into shared, durable storage.",
+  "advanced.storageHint": "Files are accumulating on application local disk. This space belongs to a machine, not to the service.",
+
   "advanced.storage": "Object Storage",
   "advanced.storagePurpose": "Durable, shared storage for uploads. Application local disk is tied to a machine and is at risk during replacement.",
   "advanced.storedObjects": "Stored Objects",
@@ -56,6 +62,12 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.stage8": "تزايد الملفات المرفوعة",
+  "advanced.stage8Story": "يرفع العملاء ملفات بانتظام ويحفظها التطبيق على قرصه المحلي. راقب ضغط التخزين وفكّر فيما يحدث عند استبدال الجهاز. افصل الحوسبة عن البيانات الدائمة.",
+  "advanced.stage8Lesson": "يحفظ تخزين الكائنات الملفات بصورة مشتركة ودائمة بعيداً عن حوسبة التطبيق. استبدال خادم يجب ألا يمحو ملفات العملاء.",
+  "advanced.storageGoal": "انقل الملفات من قرص التطبيق المحلي إلى تخزين دائم ومشترك.",
+  "advanced.storageHint": "تتراكم الملفات على قرص التطبيق المحلي. هذه المساحة مرتبطة بجهاز، وليست بالخدمة.",
+
   "advanced.storage": "تخزين الكائنات",
   "advanced.storagePurpose": "تخزين دائم ومشترك للملفات. القرص المحلي مرتبط بجهاز واحد وتتعرض ملفاته للخطر عند استبداله.",
   "advanced.storedObjects": "الكائنات المخزنة",

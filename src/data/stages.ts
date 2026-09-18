@@ -1,10 +1,12 @@
-import { databaseBottleneckStage, readHeavyStage, backgroundStage } from './expandedStages'
+import { databaseBottleneckStage, readHeavyStage, backgroundStage, uploadsStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
 import type { TranslationKey } from '../i18n/translations'
 
 export type StageObjectiveDefinition =
+  | { id: string; type: 'durable-storage'; titleKey: TranslationKey; descriptionKey: TranslationKey }
+
   | { id: string; type: 'healthy-background'; titleKey: TranslationKey; descriptionKey: TranslationKey; maximumAgeSeconds: number }
 
   | {
@@ -530,6 +532,7 @@ export const campaignStageConfigs: readonly StageConfig[] = [
   databaseBottleneckStage,
   readHeavyStage,
   backgroundStage,
+  uploadsStage,
 ]
 
 export function getCampaignStage(stageIndex: number) {
