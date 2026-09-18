@@ -1,4 +1,4 @@
-import { backupConfig } from './expansionConfig'
+import { backupConfig, databaseDownsizeConfig } from './expansionConfig'
 import { canRestoreDatabase, type BackupSettings } from './backupSimulation'
 import { advanceSecurity, secureSettings, type SecurityRisk } from './securitySimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './expansionConfig'
@@ -81,7 +81,7 @@ export type StageRuntimeState = {
 }
 
 export type InfrastructureDeployment = {
-  kind: 'load-balancer' | 'app-server' | 'database-upgrade' | AdvancedResourceType
+  kind: 'load-balancer' | 'app-server' | 'database-upgrade' | 'database-downsize' | AdvancedResourceType
   startedAtGameTimeSeconds: number
   completesAtGameTimeSeconds: number
   cost: number
@@ -216,6 +216,11 @@ export function beginAdvancedResourceDeployment(state: GameState, type: Advanced
   const definition = advancedResourceConfigs[type]
   if (!state.campaign.unlockedResourceTypes.includes(type) || state.campaign.infrastructure.resources.some(resource => resource.type === type)) return state
   return beginInfrastructureDeployment(state, type, definition.deploymentCost, definition.deploymentDurationSeconds)
+}
+
+export function beginDatabaseDownsize(state: GameState): GameState {
+  if (!state.campaign.unlockedControls?.includes('database-scaling') || !state.campaign.unlockedResourceTypes.includes('cache') || !state.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId === 'medium')) return state
+  return beginInfrastructureDeployment(state, 'database-downsize', databaseDownsizeConfig.deploymentCost, databaseDownsizeConfig.deploymentDurationSeconds)
 }
 
 export function beginDatabaseUpgrade(state: GameState): GameState {
@@ -525,7 +530,7 @@ function beginInfrastructureDeployment(
 ) {
   const simulation = currentState.stageRuntime.simulation
   const resourceAlreadyExists =
-    kind in advancedResourceConfigs ? currentState.campaign.infrastructure.resources.some(resource => resource.type === kind) : kind === 'database-upgrade'
+    kind === 'database-downsize' ? false : kind in advancedResourceConfigs ? currentState.campaign.infrastructure.resources.some(resource => resource.type === kind) : kind === 'database-upgrade'
       ? currentState.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId === 'medium')
       : kind === 'load-balancer'
       ? hasLoadBalancer(currentState.campaign)
@@ -533,7 +538,7 @@ function beginInfrastructureDeployment(
           (resource) => resource.id === additionalAppServerConfig.id,
         )
   const resourceIsUnlocked =
-    kind in advancedResourceConfigs || kind === 'database-upgrade' || kind === 'app-server' ||
+    kind in advancedResourceConfigs || kind === 'database-downsize' || kind === 'database-upgrade' || kind === 'app-server' ||
     currentState.campaign.unlockedResourceTypes.includes('load-balancer')
 
   if (
@@ -585,8 +590,8 @@ function advanceInfrastructureDeployment(
 
   return {
     campaign:
-      deployment.kind in advancedResourceConfigs ? addAdvancedResource(campaign, deployment.kind as AdvancedResourceType) : deployment.kind === 'database-upgrade'
-        ? { ...campaign, infrastructure: { ...campaign.infrastructure, resources: campaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, databaseTierId: 'medium' as const } : resource) } }
+      deployment.kind in advancedResourceConfigs ? addAdvancedResource(campaign, deployment.kind as AdvancedResourceType) : (deployment.kind === 'database-upgrade' || deployment.kind === 'database-downsize')
+        ? { ...campaign, infrastructure: { ...campaign.infrastructure, resources: campaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, databaseTierId: deployment.kind === 'database-upgrade' ? 'medium' as const : 'small' as const } : resource) } }
         : deployment.kind === 'load-balancer'
         ? addLoadBalancerResource(campaign)
         : addAdditionalAppServerResource(campaign),

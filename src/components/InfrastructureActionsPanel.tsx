@@ -156,7 +156,7 @@ export function DeploymentStatus({
     0,
   )
   const resourceKey: TranslationKey =
-    deployment.kind in advancedResourceConfigs ? advancedResourceConfigs[deployment.kind as AdvancedResourceType].labelKey : deployment.kind === 'database-upgrade' ? 'advanced.mediumDatabase' : deployment.kind === 'load-balancer'
+    deployment.kind === 'database-downsize' ? 'advanced.smallDatabase' : deployment.kind in advancedResourceConfigs ? advancedResourceConfigs[deployment.kind as AdvancedResourceType].labelKey : deployment.kind === 'database-upgrade' ? 'advanced.mediumDatabase' : deployment.kind === 'load-balancer'
       ? 'resource.loadBalancer'
       : 'resource.appServerB'
   const resourceName = t(resourceKey)

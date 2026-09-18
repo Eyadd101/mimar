@@ -1,5 +1,5 @@
 import { ReliabilityTimeline } from './components/ReliabilityTimeline'
-import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, backupConfig } from './simulation/expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, databaseDownsizeConfig, backupConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
 import {
   Background,
@@ -65,6 +65,7 @@ type PendingInfrastructureAction =
   | { kind: 'load-balancer' }
   | { kind: 'app-server' }
   | { kind: 'database-upgrade' }
+  | { kind: 'database-downsize' }
   | { kind: 'database-restore' }
   | { kind: 'advanced'; resourceType: AdvancedResourceType }
 
@@ -98,6 +99,7 @@ function App() {
     setGameSpeed,
     startServerUpgrade,
     startDatabaseUpgrade,
+    startDatabaseDownsize,
     startAdvancedDeployment,
     configureSecurity,
     configureBackups,
@@ -218,7 +220,9 @@ function App() {
     restartCampaign()
   }
   const confirmPendingAction = () => {
-    if (pendingAction?.kind === 'database-restore') {
+    if (pendingAction?.kind === 'database-downsize') {
+      startDatabaseDownsize()
+    } else if (pendingAction?.kind === 'database-restore') {
       startDatabaseRestore()
     } else if (pendingAction?.kind === 'advanced') {
       startAdvancedDeployment(pendingAction.resourceType)
@@ -235,7 +239,8 @@ function App() {
     setPendingAction(null)
   }
   const pendingActionDetails = pendingAction
-    ? pendingAction.kind === 'database-restore' ? { title: t('advanced.restore'), description: t('advanced.backupPurpose'), cost: backupConfig.restoreCost, durationSeconds: backupConfig.restoreDurationSeconds, confirmLabel: t('advanced.restore') }
+    ? pendingAction.kind === 'database-downsize' ? { title: t('advanced.downsize'), description: t('advanced.downsizeWarning'), cost: databaseDownsizeConfig.deploymentCost, durationSeconds: databaseDownsizeConfig.deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
+      : pendingAction.kind === 'database-restore' ? { title: t('advanced.restore'), description: t('advanced.backupPurpose'), cost: backupConfig.restoreCost, durationSeconds: backupConfig.restoreDurationSeconds, confirmLabel: t('advanced.restore') }
       : pendingAction.kind === 'advanced' ? { title: t(advancedResourceConfigs[pendingAction.resourceType].labelKey), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
       : pendingAction.kind === 'database-upgrade'
       ? { title: t('advanced.upgradeDatabase'), description: t('advanced.databasePurpose'), cost: databaseUpgradeConfig.deploymentCost, durationSeconds: databaseUpgradeConfig.deploymentDurationSeconds, confirmLabel: t('action.startUpgrade') }
@@ -421,6 +426,7 @@ function App() {
                 serviceStarted={serviceStarted}
                 databaseUpgradeUnlocked={campaign.unlockedControls?.includes('database-scaling') ?? false}
                 infrastructureDeployment={infrastructureDeployment}
+                onDownsizeDatabase={() => setPendingAction({ kind: 'database-downsize' })}
                 onUpgradeDatabase={() => setPendingAction({ kind: 'database-upgrade' })}
                 onClose={() => setSelectedNodeId(null)}
                 onStartUpgrade={(resourceId) =>

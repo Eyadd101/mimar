@@ -3,7 +3,7 @@ import { reliabilityConfig } from './expansionConfig'
 import { advanceBackups, restoreDatabase, defaultBackupSettings, initialDatabaseData, getBackupCost, type BackupSettings, type DatabaseData } from './backupSimulation'
 import { advanceSecurity, clearSecurityRuntime, secureSettings, type SecuritySettings, type SecurityRuntime } from './securitySimulation'
 import { securityConfig, backupConfig } from './expansionConfig'
-import { advanceStorage, emptyStoredData, type StoredData, type StorageMetrics } from './storageSimulation'
+import { advanceStorage, calculateStorageCost, emptyStoredData, type StoredData, type StorageMetrics } from './storageSimulation'
 import { advanceQueue, emptyQueue, type QueueMetrics } from './queueSimulation'
 import { queueConfig } from './expansionConfig'
 import { calculateCacheMetrics, type CacheMetrics } from './cacheSimulation'
@@ -52,6 +52,7 @@ export type TrafficInfrastructure = {
   backupSettings?: BackupSettings
   databaseData?: DatabaseData
   securitySettings?: SecuritySettings
+  objectStorageProvisioned?: boolean
   hasObjectStorage?: boolean
   storedData?: StoredData
   hasQueue?: boolean
@@ -147,11 +148,14 @@ export function createInitialTrafficState(
     requestsPerSecond,
     infrastructure,
     trafficProfile.queriesPerRequest,
+    requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
   )
+  const storage = advanceStorage(infrastructure.storedData ?? emptyStoredData, requestsPerSecond * (trafficProfile.uploadsPerRequest ?? 0), infrastructure.hasObjectStorage ?? false, 0)
+  if (infrastructure.objectStorageProvisioned) storage.costPerPeriod = calculateStorageCost(storage.storageUsedGiB, storage.connected ? storage.requestRate : 0)
   const activeInfrastructureCost =
     options.serviceActive === false
       ? 0
-      : application.infrastructureCostPerPeriod
+      : application.infrastructureCostPerPeriod + storage.costPerPeriod + getBackupCost(infrastructure.backupSettings ?? defaultBackupSettings)
   const satisfaction = createInitialCustomerSatisfactionState()
   const consequences = createInitialBusinessConsequenceState()
 
@@ -164,7 +168,7 @@ export function createInitialTrafficState(
     dataLossOccurred: false,
     databaseData: infrastructure.databaseData ?? initialDatabaseData,
     security: advanceSecurity(clearSecurityRuntime, infrastructure.securitySettings ?? secureSettings, 0).state,
-    storage: advanceStorage(infrastructure.storedData ?? emptyStoredData, 0, infrastructure.hasObjectStorage ?? false, 0),
+    storage,
     failedResourceIds: [],
     queue: emptyQueue,
     serverDeployment: null,
@@ -175,6 +179,7 @@ export function createInitialTrafficState(
       satisfaction.customerSatisfaction,
       activeInfrastructureCost,
       options.balance,
+      trafficProfile.maximumRevenuePerPeriod,
     ),
   }
 }
@@ -321,6 +326,7 @@ function advanceOneGameSecond(
     : infrastructure
   const failedResourceIds = getFailedResourceIds(trafficProfile.failures ?? [], gameTimeSeconds)
   const storage = advanceStorage(currentState.storage, requestsPerSecond * (trafficProfile.uploadsPerRequest ?? 0), infrastructure.hasObjectStorage ?? false)
+  if (infrastructure.objectStorageProvisioned) storage.costPerPeriod = calculateStorageCost(storage.storageUsedGiB, storage.connected ? storage.requestRate : 0)
   const application = calculateApplicationMetrics(
     requestsPerSecond,
     effectiveInfrastructure,
@@ -351,6 +357,7 @@ function advanceOneGameSecond(
     satisfaction.customerSatisfaction,
     application.infrastructureCostPerPeriod,
     economyPeriodIsDue,
+    trafficProfile.maximumRevenuePerPeriod,
   )
   const consequences = advanceBusinessConsequences(
     currentState,
@@ -388,7 +395,7 @@ function calculateApplicationMetrics(
   failedResourceIds: string[] = [],
 ) {
   const cache = calculateCacheMetrics(requestsPerSecond * (queriesPerRequest ?? databaseConfig.queriesPerRequest), infrastructure.hasCache ?? false)
-  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : cache.databaseQueries, 1, infrastructure.databaseTierId)
+  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : cache.databaseQueries, 1, infrastructure.databaseTierId, requestsPerSecond)
   const effectiveRequests = requestsPerSecond + (infrastructure.hasQueue ? 0 : backgroundJobs * queueConfig.synchronousRequestEquivalentsPerJob)
   const availableServers = infrastructure.appServers.filter(resource => !failedResourceIds.includes(resource.id))
   const availableShares = infrastructure.distributesTraffic ? distributeRequestsEvenly(effectiveRequests, availableServers.length) : availableServers.map(resource => resource.id === infrastructure.appServers[0]?.id ? effectiveRequests : 0)

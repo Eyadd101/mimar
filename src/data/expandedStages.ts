@@ -1,3 +1,4 @@
+import { expansionEconomyConfig } from '../simulation/expansionConfig'
 import type { StageConfig, StageTrafficProfile } from './stages'
 import type { TranslationKey } from '../i18n/translations'
 import { gameStateConfig } from '../simulation/config'
@@ -16,7 +17,7 @@ export function createExpandedStage(options: {
   return {
     id: options.id, sequence: options.sequence, nameKey: options.nameKey,
     storyBriefingKey: options.storyKey,
-    trafficProfile: options.trafficProfile,
+    trafficProfile: { ...options.trafficProfile, maximumRevenuePerPeriod: expansionEconomyConfig.maximumRevenuePerPeriod },
     tutorialSteps: [{ titleKey: options.nameKey, messageKey: options.storyKey }],
     learningSteps: [], learningGoalKeys: [options.lessonKey], trafficEvents: [],
     unlocksResourceTypes: options.unlocks ?? [],

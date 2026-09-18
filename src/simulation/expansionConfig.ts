@@ -1,8 +1,6 @@
 /** All rates use game seconds; all operating costs use the existing 30s period. */
 export const databaseConfig = {
   queriesPerRequest: 1,
-  queryCapacity: 60,
-  connectionCapacity: 80,
   connectionsPerRequest: 2,
   baselineMemory: 25,
   connectionMemory: 45,
@@ -10,7 +8,6 @@ export const databaseConfig = {
   baseLatencyMs: 15,
   loadLatencyMs: 80,
   overloadLatencyMs: 700,
-  costPerPeriod: 3,
 } as const
 
 export const databaseTierConfigs = {
@@ -38,3 +35,6 @@ export const securityConfig = { gracePeriodSeconds: 90, incidentCost: 40, incide
 export const backupConfig = { frequenciesSeconds: [60, 120], baseCostPerPeriod: 3, restoreCost: 10, restoreDurationSeconds: 20, dataLossLatencyMs: 2000 } as const
 
 export const reliabilityConfig = { unavailableLatencyMs: 2000 } as const
+
+export const expansionEconomyConfig = { maximumRevenuePerPeriod: 110 } as const
+export const databaseDownsizeConfig = { deploymentCost: 20, deploymentDurationSeconds: 20 } as const

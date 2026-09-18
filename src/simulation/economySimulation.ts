@@ -17,13 +17,14 @@ const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
 export function calculateRevenuePerPeriod(
   activeUsers: number,
   customerSatisfaction: number,
+  maximumRevenuePerPeriod: number = economyConfig.maximumRevenuePerPeriod,
 ) {
   return roundToOneDecimal(
     Math.min(
-      activeUsers * economyConfig.revenuePerActiveUserPerPeriod,
-      economyConfig.maximumRevenuePerPeriod,
+      Math.max(0, activeUsers) * economyConfig.revenuePerActiveUserPerPeriod,
+      maximumRevenuePerPeriod,
     ) *
-      (customerSatisfaction / 100),
+      (Math.min(100, Math.max(0, customerSatisfaction)) / 100),
   )
 }
 
@@ -32,10 +33,12 @@ export function createInitialEconomyState(
   customerSatisfaction: number,
   infrastructureCostPerPeriod: number,
   initialBalance: number = economyConfig.initialBalance,
+  maximumRevenuePerPeriod: number = economyConfig.maximumRevenuePerPeriod,
 ): EconomyState {
   const revenuePerPeriod = calculateRevenuePerPeriod(
     activeUsers,
     customerSatisfaction,
+    maximumRevenuePerPeriod,
   )
 
   return {
@@ -54,10 +57,12 @@ export function advanceEconomy(
   customerSatisfaction: number,
   infrastructureCostPerPeriod: number,
   periodIsDue: boolean,
+  maximumRevenuePerPeriod: number = economyConfig.maximumRevenuePerPeriod,
 ): EconomyState {
   const revenuePerPeriod = calculateRevenuePerPeriod(
     activeUsers,
     customerSatisfaction,
+    maximumRevenuePerPeriod,
   )
   const netCashFlowPerPeriod = roundToOneDecimal(
     revenuePerPeriod - infrastructureCostPerPeriod,

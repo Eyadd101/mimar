@@ -2,11 +2,11 @@ import { databaseConfig, databaseTierConfigs, type DatabaseTierId } from './expa
 
 export type DatabaseMetrics = ReturnType<typeof calculateDatabaseMetrics>
 
-export function calculateDatabaseMetrics(requestsPerSecond: number, queriesPerRequest: number = databaseConfig.queriesPerRequest, tierId: DatabaseTierId = 'small') {
+export function calculateDatabaseMetrics(requestsPerSecond: number, queriesPerRequest: number = databaseConfig.queriesPerRequest, tierId: DatabaseTierId = 'small', connectionRequestRate = requestsPerSecond) {
   const tier = databaseTierConfigs[tierId]
   const queryLoad = Math.max(0, requestsPerSecond * queriesPerRequest)
   const capacity = tier.queryCapacity
-  const activeConnections = Math.ceil(Math.max(0, requestsPerSecond) * databaseConfig.connectionsPerRequest)
+  const activeConnections = Math.ceil(Math.max(0, connectionRequestRate) * databaseConfig.connectionsPerRequest)
   const utilization = Math.max(queryLoad / capacity, activeConnections / tier.connectionCapacity)
   // CPU tracks query work; memory combines a resident baseline and connections.
   const cpuUsage = Math.min(100, Math.max(0, queryLoad / capacity * 100))

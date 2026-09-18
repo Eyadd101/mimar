@@ -396,6 +396,7 @@ export function createTrafficInfrastructure(
     backupSettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings,
     databaseData: campaign.databaseData ?? initialDatabaseData,
     securitySettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings,
+    objectStorageProvisioned: campaign.infrastructure.resources.some(resource => resource.type === 'object-storage'),
     hasObjectStorage: isAdvancedResourceConnected(campaign, 'object-storage'),
     storedData: campaign.storedData ?? emptyStoredData,
     hasQueue: isAdvancedResourceConnected(campaign, 'queue'),

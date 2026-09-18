@@ -66,6 +66,7 @@ export type StageFailureCondition =
     }
 
 export type StageTrafficProfile = {
+  maximumRevenuePerPeriod?: number
   failures?: InfrastructureFailure[]
   dataLossAtSecond?: number
   uploadsPerRequest?: number

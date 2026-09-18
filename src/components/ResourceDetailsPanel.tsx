@@ -5,7 +5,7 @@ import { defaultBackupSettings, type BackupSettings } from '../simulation/backup
 import { DatabaseSecurityControls } from './DatabaseSecurityControls'
 import { secureSettings, type SecurityRisk } from '../simulation/securitySimulation'
 import type { CampaignState } from '../simulation/campaignSimulation'
-import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from '../simulation/expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, databaseDownsizeConfig } from '../simulation/expansionConfig'
 import type { InfrastructureDeployment } from '../simulation/gameStateSimulation'
 import { DeploymentStatus } from './InfrastructureActionsPanel'
 import type { InfrastructureFlowNode } from '../data/infrastructure'
@@ -34,6 +34,7 @@ type ResourceDetailsPanelProps = {
   serviceStarted: boolean
   databaseUpgradeUnlocked: boolean
   infrastructureDeployment: InfrastructureDeployment | null
+  onDownsizeDatabase: () => void
   onUpgradeDatabase: () => void
   onClose: () => void
   onStartUpgrade: (resourceId: string) => void
@@ -63,7 +64,7 @@ export function ResourceDetailsPanel({
   simulation,
   serviceStarted,
   onClose,
-  databaseUpgradeUnlocked, infrastructureDeployment, onUpgradeDatabase,
+  databaseUpgradeUnlocked, infrastructureDeployment, onUpgradeDatabase, onDownsizeDatabase,
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
   const { language, t } = useLanguage()
@@ -214,7 +215,8 @@ export function ResourceDetailsPanel({
           </dl>
           {campaign.unlockedControls?.includes('backups') && <DatabaseBackupControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings} data={simulation.databaseData} balance={simulation.balance} onRestore={onRestoreDatabase} restoreRemainingSeconds={simulation.databaseRestoreCompletesAt === null ? null : Math.max(0, simulation.databaseRestoreCompletesAt - simulation.gameTimeSeconds)} onChange={onConfigureBackups} />}
           {campaign.unlockedControls?.includes('security') && <DatabaseSecurityControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings} runtime={simulation.security} onChange={onConfigureSecurity} />}
-          {infrastructureDeployment?.kind === 'database-upgrade' ? <DeploymentStatus deployment={infrastructureDeployment} gameTimeSeconds={simulation.gameTimeSeconds} /> : databaseUpgradeUnlocked && simulation.database.tierId === 'small' && <button className="resource-panel__upgrade-button" disabled={!!infrastructureDeployment || simulation.balance < databaseUpgradeConfig.deploymentCost} onClick={onUpgradeDatabase}>{t('advanced.upgradeDatabase')} · {databaseUpgradeConfig.deploymentCost}</button>}
+          {(infrastructureDeployment?.kind === 'database-upgrade' || infrastructureDeployment?.kind === 'database-downsize') ? <DeploymentStatus deployment={infrastructureDeployment} gameTimeSeconds={simulation.gameTimeSeconds} /> : databaseUpgradeUnlocked && simulation.database.tierId === 'small' && <button className="resource-panel__upgrade-button" disabled={!!infrastructureDeployment || simulation.balance < databaseUpgradeConfig.deploymentCost} onClick={onUpgradeDatabase}>{t('advanced.upgradeDatabase')} · {databaseUpgradeConfig.deploymentCost}</button>}
+          {databaseUpgradeUnlocked && campaign.unlockedResourceTypes.includes('cache') && simulation.database.tierId === 'medium' && <button className="resource-panel__upgrade-button" disabled={!!infrastructureDeployment || simulation.balance < databaseDownsizeConfig.deploymentCost} onClick={onDownsizeDatabase}>{t('advanced.downsize')} · {databaseDownsizeConfig.deploymentCost}</button>}
         </>
       ) : isLoadBalancer ? (
         <dl className="resource-panel__details">

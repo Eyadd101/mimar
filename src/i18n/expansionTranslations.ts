@@ -1,4 +1,7 @@
 export const expansionEnglish = {
+  "advanced.downsize": "Resize to Small Database",
+  "advanced.downsizeWarning": "Reduces query capacity and operating cost. Check current query load first: a cache only avoids repeated reads. Resizing takes game time and preserves data.",
+
   "advanced.connectionDirection": "This direction does not match resource responsibilities. Users enter through application compute or a load balancer. Applications call databases, caches, queues, or object storage; queues feed workers and caches call databases.",
 
   "advanced.currentResources": "{{count}} resources deployed",
@@ -117,6 +120,9 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.downsize": "تغيير الحجم إلى قاعدة صغيرة",
+  "advanced.downsizeWarning": "يقلل سعة الاستعلامات وتكلفة التشغيل. افحص الحمل أولاً: التخزين المؤقت يتجنب القراءات المتكررة فقط. يستغرق التغيير وقت لعب ويحفظ البيانات.",
+
   "advanced.connectionDirection": "هذا الاتجاه لا يناسب مسؤوليات الموارد. يدخل المستخدمون عبر التطبيق أو موزّع الحمل. يتصل التطبيق بقواعد البيانات والتخزين المؤقت والطوابير وتخزين الكائنات؛ تغذّي الطوابير العمال ويتصل التخزين المؤقت بقاعدة البيانات.",
 
   "advanced.currentResources": "{{count}} موارد منشورة",
