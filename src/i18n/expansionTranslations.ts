@@ -1,4 +1,11 @@
 export const expansionEnglish = {
+  "advanced.stage7": "Too Much Work",
+  "advanced.stage7Story": "The reporting feature now performs expensive exports inside normal user requests. Slow background work is blocking interactive traffic. Investigate which work must finish before a response can return.",
+  "advanced.stage7Lesson": "Asynchronous processing separates long-running jobs from the interactive request path. A queue buffers jobs; workers process them.",
+  "advanced.backgroundGoal": "Keep background processing caught up and estimated message age under 30 seconds.",
+  "advanced.queueHint": "Jobs are waiting in the queue. Compare the enqueue and processing rates.",
+  "advanced.backgroundHint": "Application servers are processing long-running jobs synchronously with user requests.",
+
   "advanced.queue": "Message Queue",
   "advanced.worker": "Worker",
   "advanced.queuePurpose": "Buffers background jobs so user requests can finish promptly. A queue stores work; a worker must process it.",
@@ -43,6 +50,13 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.stage7": "عمل أكثر من اللازم",
+  "advanced.stage7Story": "تنفّذ ميزة التقارير عمليات تصدير مكلفة ضمن طلبات المستخدمين. هذا العمل الخلفي يعطل الطلبات التفاعلية. افحص العمل الذي يجب إنهاؤه فعلاً قبل إرسال الاستجابة.",
+  "advanced.stage7Lesson": "المعالجة غير المتزامنة تفصل المهام الطويلة عن مسار الطلب. يحتفظ الطابور بالمهام ويعالجها العمال.",
+  "advanced.backgroundGoal": "حافظ على مواكبة المعالجة للمهام وعمر الرسائل التقديري أقل من 30 ثانية.",
+  "advanced.queueHint": "تنتظر مهام في الطابور. قارن معدل الإضافة بمعدل المعالجة.",
+  "advanced.backgroundHint": "تعالج خوادم التطبيق مهام طويلة بشكل متزامن مع طلبات المستخدمين.",
+
   "advanced.queue": "طابور الرسائل",
   "advanced.worker": "عامل المعالجة",
   "advanced.queuePurpose": "يحتفظ بالمهام الخلفية لتستجيب الخدمة بسرعة. الطابور يخزن العمل ويحتاج إلى عامل لمعالجته.",

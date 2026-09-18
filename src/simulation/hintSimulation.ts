@@ -15,6 +15,9 @@ export function getContextualHint(
     return { key: 'hint.buildPath' }
   }
 
+  if (simulation.queue.depth > 0) return { key: 'advanced.queueHint' }
+  if (stage?.trafficProfile.backgroundJobsPerRequest && !simulation.queue.connected) return { key: 'advanced.backgroundHint' }
+
   if (simulation.database.utilization > 1 && !appServer.isOverloaded) {
     return { key: 'advanced.databaseHint' }
   }

@@ -1,10 +1,12 @@
-import { databaseBottleneckStage, readHeavyStage } from './expandedStages'
+import { databaseBottleneckStage, readHeavyStage, backgroundStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
 import type { TranslationKey } from '../i18n/translations'
 
 export type StageObjectiveDefinition =
+  | { id: string; type: 'healthy-background'; titleKey: TranslationKey; descriptionKey: TranslationKey; maximumAgeSeconds: number }
+
   | {
       id: string
       type: 'survive-duration'
@@ -526,6 +528,7 @@ export const campaignStageConfigs: readonly StageConfig[] = [
   surviveTheLaunchStageConfig,
   databaseBottleneckStage,
   readHeavyStage,
+  backgroundStage,
 ]
 
 export function getCampaignStage(stageIndex: number) {

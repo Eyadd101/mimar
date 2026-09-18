@@ -46,3 +46,12 @@ export const readHeavyStage = createExpandedStage({
   durationSeconds: 360, unlocks: ['cache'],
   trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 8 },
 })
+
+export const backgroundStage = createExpandedStage({
+  id: 'too-much-work', sequence: 7,
+  nameKey: 'advanced.stage7', storyKey: 'advanced.stage7Story', lessonKey: 'advanced.stage7Lesson',
+  durationSeconds: 390, unlocks: ['queue', 'worker'],
+  trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5, backgroundJobsPerRequest: .25 },
+})
+backgroundStage.secondaryObjectives.push({ id: 'background', type: 'healthy-background', titleKey: 'advanced.processingRate', descriptionKey: 'advanced.backgroundGoal', maximumAgeSeconds: 30 })
+backgroundStage.winCondition.requiredObjectiveIds.push('background')

@@ -88,6 +88,7 @@ export function getObjectiveProgressLabel(
           target: progress.target,
         },
       }
+    case 'healthy-background':
     case 'handle-traffic-event':
       return { key: progress.completed ? 'objective.handled' : 'objective.pending' }
   }
@@ -121,6 +122,7 @@ function createObjectiveProgress(
         current: 0,
         target: objective.minimumBalance,
       }
+    case 'healthy-background':
     case 'handle-traffic-event':
       return { completed: false, current: 0, target: 1 }
   }
@@ -182,6 +184,10 @@ function evaluateObjective(
         current,
         target: objective.durationSeconds,
       }
+    }
+    case 'healthy-background': {
+      const completed = simulation.queue.oldestMessageAge <= objective.maximumAgeSeconds && (simulation.queue.connected ? simulation.queue.workerConnected && simulation.queue.processingRate >= simulation.queue.enqueueRate : simulation.applicationLatencyMs <= 350)
+      return { completed, current: completed ? 1 : 0, target: 1 }
     }
     case 'handle-traffic-event': {
       const completed =
