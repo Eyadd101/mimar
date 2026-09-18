@@ -1,4 +1,10 @@
 export const expansionEnglish = {
+  "advanced.stage9": "Too Public",
+  "advanced.stage9Story": "An integration change left the existing database publicly accessible, with open network access and excessive permissions. A security review has flagged the configuration. Inspect database settings before exposure becomes an incident.",
+  "advanced.stage9Lesson": "Private access and least privilege reduce exposure. Give each component only the network access and permissions it needs.",
+  "advanced.securityGoal": "Remove exposed database settings before completing the stage.",
+  "advanced.securityHint": "The database configuration permits access beyond the application’s needs. Inspect its exposure settings.",
+
   "advanced.security": "Security Configuration",
   "advanced.securityPurpose": "Checked settings expose the service. Limit access to what the application needs. There are no random unavoidable attacks.",
   "advanced.publicDatabase": "Public Database",
@@ -72,6 +78,12 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.stage9": "مكشوفة أكثر من اللازم",
+  "advanced.stage9Story": "ترك تغيير في التكامل قاعدة البيانات الحالية متاحة للعامة مع شبكة مفتوحة وصلاحيات زائدة. أبلغت المراجعة الأمنية عن الإعدادات. افحصها قبل تحوّل التعرض إلى حادث.",
+  "advanced.stage9Lesson": "الوصول الخاص وأقل قدر من الصلاحيات يقللان التعرض. امنح كل مكوّن الوصول والصلاحيات اللازمة فقط.",
+  "advanced.securityGoal": "أزل إعدادات التعرض في قاعدة البيانات قبل إكمال المرحلة.",
+  "advanced.securityHint": "تتيح إعدادات قاعدة البيانات وصولاً يتجاوز حاجة التطبيق. افحص إعدادات التعرض.",
+
   "advanced.security": "إعدادات الأمان",
   "advanced.securityPurpose": "الإعدادات المحددة تعرّض الخدمة للخطر. امنح فقط الوصول الذي يحتاجه التطبيق. لا توجد هجمات عشوائية لا يمكن تجنبها.",
   "advanced.publicDatabase": "قاعدة بيانات عامة",

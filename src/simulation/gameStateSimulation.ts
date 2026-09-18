@@ -105,11 +105,15 @@ export function createInitialGameState(
   if (!stage) {
     throw new Error('Campaign stage configuration is missing.')
   }
-  const preparedCampaign = applyResourceUnlocks(
+  let preparedCampaign = applyResourceUnlocks(
     campaign,
     stage.unlocksResourceTypes,
   )
 
+  if (stage.initialSecurity && !preparedCampaign.unlockedControls?.includes('security')) {
+    preparedCampaign = { ...preparedCampaign, infrastructure: { ...preparedCampaign.infrastructure, resources: preparedCampaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, security: { ...stage.initialSecurity! } } : resource) } }
+  }
+  if (stage.unlocksControls?.length) preparedCampaign = { ...preparedCampaign, unlockedControls: [...new Set([...(preparedCampaign.unlockedControls ?? []), ...stage.unlocksControls])] }
   return {
     campaign: preparedCampaign,
     stageRuntime: createStageRuntime(preparedCampaign),

@@ -64,3 +64,14 @@ export const uploadsStage = createExpandedStage({
 })
 uploadsStage.secondaryObjectives.push({ id: 'durable-files', type: 'durable-storage', titleKey: 'advanced.storage', descriptionKey: 'advanced.storageGoal' })
 uploadsStage.winCondition.requiredObjectiveIds.push('durable-files')
+
+export const securityStage = createExpandedStage({
+  id: 'too-public', sequence: 9,
+  nameKey: 'advanced.stage9', storyKey: 'advanced.stage9Story', lessonKey: 'advanced.stage9Lesson',
+  durationSeconds: 330,
+  trafficProfile: { initialActiveUsers: 160, activeUserGrowthIntervalSeconds: 30, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5, backgroundJobsPerRequest: .25, uploadsPerRequest: .1 },
+})
+securityStage.unlocksControls = ['security']
+securityStage.initialSecurity = { publicDatabase: true, weakCredentials: false, excessivePermissions: true, openNetwork: true }
+securityStage.secondaryObjectives.push({ id: 'secure', type: 'secure-configuration', titleKey: 'advanced.security', descriptionKey: 'advanced.securityGoal' })
+securityStage.winCondition.requiredObjectiveIds.push('secure')
