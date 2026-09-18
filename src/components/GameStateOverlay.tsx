@@ -1,3 +1,4 @@
+import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type {
   GameOverReason,
   GameStatus,
@@ -132,6 +133,7 @@ export function GameStateOverlay({
           )}
         </dl>
 
+        {stageWon && stage.sequence >= 6 && <p className="stage-recap">{t('advanced.cacheRecap', { hits: simulation.cache.requestsServed.toFixed(1), queries: simulation.database.queryLoad.toFixed(1), cost: simulation.infrastructureCostPerPeriod })}</p>}
         {stageWon && stageRating && (
           <div className="stage-rating" aria-label={t('game.starsEarned', { stars: stageRating.stars })}>
             <div className="stage-rating__stars" aria-hidden="true">
@@ -245,7 +247,7 @@ function ResourceSummary({
 
   return (
     <TechnicalTerm
-      translationKey={resource.type === 'load-balancer' ? 'resource.loadBalancer' : 'resource.database'}
+      translationKey={resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].labelKey : resource.type === 'database' ? (resource.databaseTierId === 'medium' ? 'advanced.mediumDatabase' : 'advanced.smallDatabase') : resource.type === 'load-balancer' ? 'resource.loadBalancer' : 'resource.database'}
     />
   )
 }

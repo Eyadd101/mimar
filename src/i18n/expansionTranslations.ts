@@ -1,4 +1,9 @@
 export const expansionEnglish = {
+  "advanced.stage6": "Read Heavy Traffic",
+  "advanced.stage6Story": "The popular dashboard repeatedly reads the same data. Inspect the database workload. A larger database can handle more queries; a cache can avoid repeated read work. Compare ongoing cost and capacity.",
+  "advanced.stage6Lesson": "Caching reduces repeated reads, not writes. Small Database plus Cache can cost less than Medium Database for a read-heavy workload.",
+  "advanced.cacheRecap": "At completion: {{hits}} queries/sec served by cache; {{queries}} queries/sec reached the database. Total infrastructure cost: {{cost}} credits/period. Cache adds cost but can reduce the database capacity you need.",
+
   "advanced.cache": "Cache",
   "advanced.cachePurpose": "Serves repeated reads. Writes and misses still reach the database; cache capacity is finite.",
   "advanced.hitRate": "Cache Hit Rate",
@@ -29,6 +34,11 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.stage6": "حمل كثيف من القراءات",
+  "advanced.stage6Story": "تعيد لوحة العملاء قراءة البيانات نفسها باستمرار. افحص الحمل: قاعدة بيانات أكبر تستوعب استعلامات أكثر، والتخزين المؤقت يقلل العمل المتكرر. قارن التكلفة المستمرة والسعة.",
+  "advanced.stage6Lesson": "التخزين المؤقت يقلل القراءات المتكررة لا الكتابات. قد تكون قاعدة صغيرة مع تخزين مؤقت أقل تكلفة من قاعدة متوسطة لهذا الحمل.",
+  "advanced.cacheRecap": "عند الإكمال: خدم التخزين المؤقت {{hits}} استعلام/ثانية، ووصل {{queries}} إلى قاعدة البيانات. التكلفة الكلية {{cost}} رصيد/فترة. يضيف التخزين المؤقت تكلفة لكنه قد يقلل السعة المطلوبة لقاعدة البيانات.",
+
   "advanced.cache": "ذاكرة التخزين المؤقت",
   "advanced.cachePurpose": "تخدم القراءات المتكررة. تظل الكتابات والقراءات غير الموجودة متجهة إلى قاعدة البيانات؛ سعة التخزين المؤقت محدودة.",
   "advanced.hitRate": "نسبة إصابات التخزين المؤقت",

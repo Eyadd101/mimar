@@ -1,4 +1,4 @@
-import { databaseBottleneckStage } from './expandedStages'
+import { databaseBottleneckStage, readHeavyStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
@@ -524,6 +524,7 @@ export const campaignStageConfigs: readonly StageConfig[] = [
   verticalScalingLimitStageConfig,
   surviveTheLaunchStageConfig,
   databaseBottleneckStage,
+  readHeavyStage,
 ]
 
 export function getCampaignStage(stageIndex: number) {
