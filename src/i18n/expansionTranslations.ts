@@ -1,4 +1,14 @@
 export const expansionEnglish = {
+  "advanced.stage10": "Recover the Data",
+  "advanced.stage10Story": "Operations has scheduled a recovery exercise. At 180 game seconds, an operator mistake will remove the live database data. Configure snapshots before the event, then restore service from a valid backup. No backup means no recovery point.",
+  "advanced.stage10Lesson": "Backup is not high availability. Snapshots restore data after a loss; restoration still takes time and recent changes may be lost.",
+  "advanced.restore": "Restore Database",
+  "advanced.recoveryGoal": "Restore the database after the announced data-loss event.",
+  "advanced.restoreProgress": "Restoring snapshot: {{seconds}} game seconds remaining.",
+  "advanced.dataLost": "Live database data was lost. Inspect the database to restore a snapshot. Without a valid backup, retry the stage and prepare one.",
+  "advanced.dataRecovered": "Database restored. The recovery snapshot restored service; backups did not prevent the outage.",
+  "advanced.recoveryWarning": "Operations notice: data-loss exercise begins in {{seconds}} game seconds. Check backup readiness.",
+
   "advanced.backups": "Database Backup",
   "advanced.backupPurpose": "Snapshots protect against data loss. They do not increase query capacity and do not keep a failed database online.",
   "advanced.enableBackups": "Enable backups",
@@ -86,6 +96,16 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.stage10": "استعد البيانات",
+  "advanced.stage10Story": "حدّد فريق العمليات تمرين استعادة. عند الثانية 180 من اللعب سيزيل خطأ تشغيلي بيانات القاعدة الحية. اضبط اللقطات قبل الحدث ثم استعد الخدمة من نسخة صالحة. دون نسخة لا توجد نقطة استعادة.",
+  "advanced.stage10Lesson": "النسخ الاحتياطي ليس توافراً عالياً. تعيد اللقطات البيانات بعد الفقد، لكن الاستعادة تستغرق وقتاً وقد تفقد التغييرات الحديثة.",
+  "advanced.restore": "استعادة قاعدة البيانات",
+  "advanced.recoveryGoal": "استعد قاعدة البيانات بعد حدث فقدان البيانات المعلن.",
+  "advanced.restoreProgress": "جارٍ استعادة اللقطة: {{seconds}} ثانية لعب متبقية.",
+  "advanced.dataLost": "فُقدت بيانات القاعدة الحية. افحص قاعدة البيانات لاستعادة لقطة. دون نسخة صالحة، أعد المرحلة وجهّز نسخة.",
+  "advanced.dataRecovered": "استُعيدت قاعدة البيانات. أعادت اللقطة الخدمة، لكنها لم تمنع الانقطاع.",
+  "advanced.recoveryWarning": "إشعار العمليات: تمرين فقدان البيانات بعد {{seconds}} ثانية لعب. تحقّق من جاهزية النسخ.",
+
   "advanced.backups": "نسخ قاعدة البيانات احتياطياً",
   "advanced.backupPurpose": "تحمي اللقطات من فقدان البيانات. لا تزيد سعة الاستعلامات ولا تبقي قاعدة متعطلة قيد العمل.",
   "advanced.enableBackups": "تفعيل النسخ الاحتياطي",

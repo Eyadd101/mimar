@@ -75,3 +75,13 @@ securityStage.unlocksControls = ['security']
 securityStage.initialSecurity = { publicDatabase: true, weakCredentials: false, excessivePermissions: true, openNetwork: true }
 securityStage.secondaryObjectives.push({ id: 'secure', type: 'secure-configuration', titleKey: 'advanced.security', descriptionKey: 'advanced.securityGoal' })
 securityStage.winCondition.requiredObjectiveIds.push('secure')
+
+export const recoveryStage = createExpandedStage({
+  id: 'recover-the-data', sequence: 10,
+  nameKey: 'advanced.stage10', storyKey: 'advanced.stage10Story', lessonKey: 'advanced.stage10Lesson',
+  durationSeconds: 420,
+  trafficProfile: { initialActiveUsers: 160, activeUserGrowthIntervalSeconds: 30, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5, backgroundJobsPerRequest: .25, uploadsPerRequest: .1, dataLossAtSecond: 180 },
+})
+recoveryStage.unlocksControls = ['backups']
+recoveryStage.secondaryObjectives.push({ id: 'recovered', type: 'recovered-data', titleKey: 'advanced.restore', descriptionKey: 'advanced.recoveryGoal' })
+recoveryStage.winCondition.requiredObjectiveIds.push('recovered')

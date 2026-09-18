@@ -1,12 +1,12 @@
 import type { SecuritySettings } from '../simulation/securitySimulation'
-import { databaseBottleneckStage, readHeavyStage, backgroundStage, uploadsStage, securityStage } from './expandedStages'
+import { databaseBottleneckStage, readHeavyStage, backgroundStage, uploadsStage, securityStage, recoveryStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
 import type { TranslationKey } from '../i18n/translations'
 
 export type StageObjectiveDefinition =
-  | { id: string; type: 'durable-storage' | 'secure-configuration'; titleKey: TranslationKey; descriptionKey: TranslationKey }
+  | { id: string; type: 'durable-storage' | 'secure-configuration' | 'recovered-data'; titleKey: TranslationKey; descriptionKey: TranslationKey }
 
   | { id: string; type: 'healthy-background'; titleKey: TranslationKey; descriptionKey: TranslationKey; maximumAgeSeconds: number }
 
@@ -65,6 +65,7 @@ export type StageFailureCondition =
     }
 
 export type StageTrafficProfile = {
+  dataLossAtSecond?: number
   uploadsPerRequest?: number
   backgroundJobsPerRequest?: number
   queriesPerRequest?: number
@@ -537,6 +538,7 @@ export const campaignStageConfigs: readonly StageConfig[] = [
   backgroundStage,
   uploadsStage,
   securityStage,
+  recoveryStage,
 ]
 
 export function getCampaignStage(stageIndex: number) {

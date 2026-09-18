@@ -88,6 +88,7 @@ export function getObjectiveProgressLabel(
           target: progress.target,
         },
       }
+    case 'recovered-data':
     case 'secure-configuration':
     case 'durable-storage':
     case 'healthy-background':
@@ -124,6 +125,7 @@ function createObjectiveProgress(
         current: 0,
         target: objective.minimumBalance,
       }
+    case 'recovered-data':
     case 'secure-configuration':
     case 'durable-storage':
     case 'healthy-background':
@@ -188,6 +190,10 @@ function evaluateObjective(
         current,
         target: objective.durationSeconds,
       }
+    }
+    case 'recovered-data': {
+      const completed = simulation.dataLossOccurred && !simulation.databaseData.dataLost && simulation.databaseRestoreCompletesAt === null
+      return { completed, current: completed ? 1 : 0, target: 1 }
     }
     case 'secure-configuration': {
       const completed = simulation.security.risks.length === 0

@@ -1,4 +1,4 @@
-import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './simulation/expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, backupConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
 import {
   Background,
@@ -63,6 +63,7 @@ type PendingInfrastructureAction =
   | { kind: 'load-balancer' }
   | { kind: 'app-server' }
   | { kind: 'database-upgrade' }
+  | { kind: 'database-restore' }
   | { kind: 'advanced'; resourceType: AdvancedResourceType }
 
 function App() {
@@ -98,6 +99,7 @@ function App() {
     startAdvancedDeployment,
     configureSecurity,
     configureBackups,
+    startDatabaseRestore,
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
@@ -213,7 +215,9 @@ function App() {
     restartCampaign()
   }
   const confirmPendingAction = () => {
-    if (pendingAction?.kind === 'advanced') {
+    if (pendingAction?.kind === 'database-restore') {
+      startDatabaseRestore()
+    } else if (pendingAction?.kind === 'advanced') {
       startAdvancedDeployment(pendingAction.resourceType)
     } else if (pendingAction?.kind === 'database-upgrade') {
       startDatabaseUpgrade()
@@ -228,7 +232,8 @@ function App() {
     setPendingAction(null)
   }
   const pendingActionDetails = pendingAction
-    ? pendingAction.kind === 'advanced' ? { title: t(advancedResourceConfigs[pendingAction.resourceType].labelKey), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
+    ? pendingAction.kind === 'database-restore' ? { title: t('advanced.restore'), description: t('advanced.backupPurpose'), cost: backupConfig.restoreCost, durationSeconds: backupConfig.restoreDurationSeconds, confirmLabel: t('advanced.restore') }
+      : pendingAction.kind === 'advanced' ? { title: t(advancedResourceConfigs[pendingAction.resourceType].labelKey), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
       : pendingAction.kind === 'database-upgrade'
       ? { title: t('advanced.upgradeDatabase'), description: t('advanced.databasePurpose'), cost: databaseUpgradeConfig.deploymentCost, durationSeconds: databaseUpgradeConfig.deploymentDurationSeconds, confirmLabel: t('action.startUpgrade') }
       : pendingAction.kind === 'server-upgrade'
@@ -399,11 +404,13 @@ function App() {
               <GuidedBuildPanel step={stageOneBuildStep} />
             </Panel>
           )}
+          {stage.trafficProfile.dataLossAtSecond !== undefined && <Panel position="top-center" className="connection-feedback-position"><aside className="connection-feedback nodrag nopan" dir={direction} role="status"><p>{t(traffic.dataLossOccurred ? traffic.databaseData.dataLost ? 'advanced.dataLost' : 'advanced.dataRecovered' : 'advanced.recoveryWarning', { seconds: Math.max(0, stage.trafficProfile.dataLossAtSecond - traffic.gameTimeSeconds) })}</p></aside></Panel>}
           {selectedNode && (
             <Panel position="top-right" className="resource-panel-position">
               <ResourceDetailsPanel
                 node={selectedNode}
                 campaign={campaign}
+                onRestoreDatabase={() => setPendingAction({ kind: 'database-restore' })}
                 onConfigureBackups={configureBackups}
                 onConfigureSecurity={configureSecurity}
                 simulation={traffic}

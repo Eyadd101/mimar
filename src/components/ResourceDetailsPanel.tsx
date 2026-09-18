@@ -24,6 +24,7 @@ import type { TranslationKey } from '../i18n/translations'
 
 type ResourceDetailsPanelProps = {
   campaign: CampaignState
+  onRestoreDatabase: () => void
   onConfigureBackups: (settings: BackupSettings) => void
   onConfigureSecurity: (key: SecurityRisk, exposed: boolean) => void
   node: InfrastructureFlowNode
@@ -56,7 +57,7 @@ const statusTranslationKeys: Record<string, TranslationKey> = {
 
 export function ResourceDetailsPanel({
   node,
-  campaign, onConfigureSecurity, onConfigureBackups,
+  campaign, onConfigureSecurity, onConfigureBackups, onRestoreDatabase,
   simulation,
   serviceStarted,
   onClose,
@@ -208,7 +209,7 @@ export function ResourceDetailsPanel({
               ['resource.costPerPeriod', t('common.credits', { value: simulation.database.costPerPeriod })],
             ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
           </dl>
-          {campaign.unlockedControls?.includes('backups') && <DatabaseBackupControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings} data={simulation.databaseData} onChange={onConfigureBackups} />}
+          {campaign.unlockedControls?.includes('backups') && <DatabaseBackupControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings} data={simulation.databaseData} balance={simulation.balance} onRestore={onRestoreDatabase} restoreRemainingSeconds={simulation.databaseRestoreCompletesAt === null ? null : Math.max(0, simulation.databaseRestoreCompletesAt - simulation.gameTimeSeconds)} onChange={onConfigureBackups} />}
           {campaign.unlockedControls?.includes('security') && <DatabaseSecurityControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings} runtime={simulation.security} onChange={onConfigureSecurity} />}
           {infrastructureDeployment?.kind === 'database-upgrade' ? <DeploymentStatus deployment={infrastructureDeployment} gameTimeSeconds={simulation.gameTimeSeconds} /> : databaseUpgradeUnlocked && simulation.database.tierId === 'small' && <button className="resource-panel__upgrade-button" disabled={!!infrastructureDeployment || simulation.balance < databaseUpgradeConfig.deploymentCost} onClick={onUpgradeDatabase}>{t('advanced.upgradeDatabase')} · {databaseUpgradeConfig.deploymentCost}</button>}
         </>

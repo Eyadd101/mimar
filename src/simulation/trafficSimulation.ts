@@ -1,6 +1,6 @@
-import { advanceBackups, defaultBackupSettings, initialDatabaseData, getBackupCost, type BackupSettings, type DatabaseData } from './backupSimulation'
+import { advanceBackups, restoreDatabase, defaultBackupSettings, initialDatabaseData, getBackupCost, type BackupSettings, type DatabaseData } from './backupSimulation'
 import { advanceSecurity, clearSecurityRuntime, secureSettings, type SecuritySettings, type SecurityRuntime } from './securitySimulation'
-import { securityConfig } from './expansionConfig'
+import { securityConfig, backupConfig } from './expansionConfig'
 import { advanceStorage, emptyStoredData, type StoredData, type StorageMetrics } from './storageSimulation'
 import { advanceQueue, emptyQueue, type QueueMetrics } from './queueSimulation'
 import { queueConfig } from './expansionConfig'
@@ -69,6 +69,8 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 export type TrafficSimulationState = CustomerSatisfactionState &
   BusinessConsequenceState &
   EconomyState & {
+  databaseRestoreCompletesAt: number | null
+  dataLossOccurred: boolean
   databaseData: DatabaseData
   security: SecurityRuntime
   storage: StorageMetrics
@@ -154,6 +156,8 @@ export function createInitialTrafficState(
     requestsPerSecond,
     gameTimeSeconds: 0,
     ...application,
+    databaseRestoreCompletesAt: null,
+    dataLossOccurred: false,
     databaseData: infrastructure.databaseData ?? initialDatabaseData,
     security: advanceSecurity(clearSecurityRuntime, infrastructure.securitySettings ?? secureSettings, 0).state,
     storage: advanceStorage(infrastructure.storedData ?? emptyStoredData, 0, infrastructure.hasObjectStorage ?? false, 0),
@@ -318,7 +322,12 @@ function advanceOneGameSecond(
     requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
   )
   const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker) ?? false)
-  const databaseData = advanceBackups(currentState.databaseData, infrastructure.backupSettings ?? defaultBackupSettings)
+  let databaseData = advanceBackups(currentState.databaseData, infrastructure.backupSettings ?? defaultBackupSettings)
+  const dataLossOccurred = currentState.dataLossOccurred || (trafficProfile.dataLossAtSecond !== undefined && gameTimeSeconds >= trafficProfile.dataLossAtSecond)
+  if (dataLossOccurred && !currentState.dataLossOccurred) databaseData = { ...databaseData, dataLost: true }
+  const restoreCompleted = currentState.databaseRestoreCompletesAt !== null && gameTimeSeconds >= currentState.databaseRestoreCompletesAt
+  if (restoreCompleted) databaseData = restoreDatabase(databaseData)
+  if (databaseData.dataLost) application.applicationLatencyMs += backupConfig.dataLossLatencyMs
   const security = advanceSecurity(currentState.security, infrastructure.securitySettings ?? secureSettings)
   application.applicationLatencyMs += storage.latencyPenaltyMs + (security.state.incidentActive ? securityConfig.incidentLatencyMs : 0)
   application.infrastructureCostPerPeriod += storage.costPerPeriod + getBackupCost(infrastructure.backupSettings ?? defaultBackupSettings)
@@ -351,6 +360,8 @@ function advanceOneGameSecond(
     storage,
     security: security.state,
     databaseData,
+    dataLossOccurred,
+    databaseRestoreCompletesAt: restoreCompleted ? null : currentState.databaseRestoreCompletesAt,
     serverDeployment: deploymentCompleted
       ? null
       : currentState.serverDeployment,

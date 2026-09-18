@@ -1,5 +1,5 @@
 import { backupConfig } from './expansionConfig'
-import type { BackupSettings } from './backupSimulation'
+import { canRestoreDatabase, type BackupSettings } from './backupSimulation'
 import { advanceSecurity, secureSettings, type SecurityRisk } from './securitySimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './expansionConfig'
 import {
@@ -189,6 +189,13 @@ export function beginServerUpgrade(
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
   })
+}
+
+export function beginDatabaseRestore(state: GameState): GameState {
+  const simulation = state.stageRuntime.simulation
+  if (state.stageRuntime.status !== 'playing' || !state.campaign.unlockedControls?.includes('backups') || simulation.databaseRestoreCompletesAt !== null || !canRestoreDatabase(simulation.databaseData) || !canAffordCost(simulation.balance, backupConfig.restoreCost)) return state
+  const nextSimulation = { ...simulation, balance: deductCost(simulation.balance, backupConfig.restoreCost), databaseRestoreCompletesAt: simulation.gameTimeSeconds + backupConfig.restoreDurationSeconds }
+  return applyImmediateFailure({ ...state, campaign: syncCampaignWithSimulation(state.campaign, nextSimulation), stageRuntime: { ...state.stageRuntime, simulation: nextSimulation } })
 }
 
 export function configureDatabaseBackups(state: GameState, settings: BackupSettings): GameState {
