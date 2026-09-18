@@ -1,3 +1,5 @@
+import { getFailedResourceIds } from './reliabilitySimulation'
+import { reliabilityConfig } from './expansionConfig'
 import { advanceBackups, restoreDatabase, defaultBackupSettings, initialDatabaseData, getBackupCost, type BackupSettings, type DatabaseData } from './backupSimulation'
 import { advanceSecurity, clearSecurityRuntime, secureSettings, type SecuritySettings, type SecurityRuntime } from './securitySimulation'
 import { securityConfig, backupConfig } from './expansionConfig'
@@ -63,6 +65,7 @@ export type TrafficInfrastructure = {
 export type AppServerRuntimeMetrics = AppServerMetrics & {
   resourceId: string
   resourceName: string
+  isAvailable: boolean
   requestsPerSecond: number
 }
 
@@ -77,6 +80,7 @@ export type TrafficSimulationState = CustomerSatisfactionState &
   queue: QueueMetrics
   cache: CacheMetrics
   database: DatabaseMetrics
+  failedResourceIds: string[]
   activeUsers: number
   requestsPerSecond: number
   gameTimeSeconds: number
@@ -161,6 +165,7 @@ export function createInitialTrafficState(
     databaseData: infrastructure.databaseData ?? initialDatabaseData,
     security: advanceSecurity(clearSecurityRuntime, infrastructure.securitySettings ?? secureSettings, 0).state,
     storage: advanceStorage(infrastructure.storedData ?? emptyStoredData, 0, infrastructure.hasObjectStorage ?? false, 0),
+    failedResourceIds: [],
     queue: emptyQueue,
     serverDeployment: null,
     ...satisfaction,
@@ -314,14 +319,16 @@ function advanceOneGameSecond(
         ),
       }
     : infrastructure
+  const failedResourceIds = getFailedResourceIds(trafficProfile.failures ?? [], gameTimeSeconds)
   const storage = advanceStorage(currentState.storage, requestsPerSecond * (trafficProfile.uploadsPerRequest ?? 0), infrastructure.hasObjectStorage ?? false)
   const application = calculateApplicationMetrics(
     requestsPerSecond,
     effectiveInfrastructure,
     trafficProfile.queriesPerRequest,
     requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
+    failedResourceIds,
   )
-  const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker) ?? false)
+  const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker && !failedResourceIds.includes('worker')) ?? false)
   let databaseData = advanceBackups(currentState.databaseData, infrastructure.backupSettings ?? defaultBackupSettings)
   const dataLossOccurred = currentState.dataLossOccurred || (trafficProfile.dataLossAtSecond !== undefined && gameTimeSeconds >= trafficProfile.dataLossAtSecond)
   if (dataLossOccurred && !currentState.dataLossOccurred) databaseData = { ...databaseData, dataLost: true }
@@ -356,6 +363,7 @@ function advanceOneGameSecond(
     requestsPerSecond,
     gameTimeSeconds,
     ...application,
+    failedResourceIds,
     queue,
     storage,
     security: security.state,
@@ -377,25 +385,19 @@ function calculateApplicationMetrics(
   infrastructure: TrafficInfrastructure,
   queriesPerRequest?: number,
   backgroundJobs = 0,
+  failedResourceIds: string[] = [],
 ) {
   const cache = calculateCacheMetrics(requestsPerSecond * (queriesPerRequest ?? databaseConfig.queriesPerRequest), infrastructure.hasCache ?? false)
   const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : cache.databaseQueries, 1, infrastructure.databaseTierId)
   const effectiveRequests = requestsPerSecond + (infrastructure.hasQueue ? 0 : backgroundJobs * queueConfig.synchronousRequestEquivalentsPerJob)
-  const shares =
-    infrastructure.distributesTraffic && infrastructure.appServers.length > 1
-      ? distributeRequestsEvenly(
-          effectiveRequests,
-          infrastructure.appServers.length,
-        )
-      : infrastructure.appServers.map((_, index) =>
-          index === 0 ? effectiveRequests : 0,
-        )
-  const appServers = infrastructure.appServers.map((resource, index) => ({
-    resourceId: resource.id,
-    resourceName: resource.name,
-    requestsPerSecond: shares[index] ?? 0,
-    ...calculateAppServerMetrics(shares[index] ?? 0, resource.tierId),
-  }))
+  const availableServers = infrastructure.appServers.filter(resource => !failedResourceIds.includes(resource.id))
+  const availableShares = infrastructure.distributesTraffic ? distributeRequestsEvenly(effectiveRequests, availableServers.length) : availableServers.map(resource => resource.id === infrastructure.appServers[0]?.id ? effectiveRequests : 0)
+  const appServers = infrastructure.appServers.map(resource => {
+    const index = availableServers.findIndex(server => server.id === resource.id)
+    const requests = availableShares[index] ?? 0
+    return { resourceId: resource.id, resourceName: resource.name, isAvailable: index >= 0,
+      requestsPerSecond: requests, ...calculateAppServerMetrics(requests, resource.tierId) }
+  })
   const weightedLatency = appServers.reduce(
     (total, server) =>
       total + server.latencyMs * server.requestsPerSecond,
@@ -419,7 +421,7 @@ function calculateApplicationMetrics(
     appServers,
     database,
     cache,
-    applicationLatencyMs: appLatencyMs + database.queryLatencyMs,
+    applicationLatencyMs: appLatencyMs + database.queryLatencyMs + (availableServers.length === 0 || (!infrastructure.distributesTraffic && failedResourceIds.includes(infrastructure.appServers[0]?.id)) || failedResourceIds.includes('database') ? reliabilityConfig.unavailableLatencyMs : 0),
     isServiceOverloaded: appServers.some((server) => server.isOverloaded) || database.status === 'overloaded',
     infrastructureCostPerPeriod,
   }

@@ -1,3 +1,4 @@
+import type { InfrastructureFailure } from '../simulation/reliabilitySimulation'
 import type { SecuritySettings } from '../simulation/securitySimulation'
 import { databaseBottleneckStage, readHeavyStage, backgroundStage, uploadsStage, securityStage, recoveryStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
@@ -65,6 +66,7 @@ export type StageFailureCondition =
     }
 
 export type StageTrafficProfile = {
+  failures?: InfrastructureFailure[]
   dataLossAtSecond?: number
   uploadsPerRequest?: number
   backgroundJobsPerRequest?: number

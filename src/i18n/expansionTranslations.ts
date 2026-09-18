@@ -1,4 +1,10 @@
 export const expansionEnglish = {
+  "advanced.reliabilityNotice": "Operations · Scheduled reliability exercise",
+  "advanced.failureUpcoming": "A controlled outage starts in {{seconds}} game seconds and lasts {{duration}} seconds. Other resources keep operating.",
+  "advanced.failureActive": "Temporarily unavailable. Automatic recovery in {{seconds}} game seconds. Watch capacity or backlog on the remaining resources.",
+  "advanced.failureRecovered": "Resource recovered. Its identity, tier, and configuration were preserved.",
+  "advanced.resourceUnavailable": "Temporarily unavailable — see the operations timeline. Resources retain their operating cost during the outage.",
+
   "advanced.stage10": "Recover the Data",
   "advanced.stage10Story": "Operations has scheduled a recovery exercise. At 180 game seconds, an operator mistake will remove the live database data. Configure snapshots before the event, then restore service from a valid backup. No backup means no recovery point.",
   "advanced.stage10Lesson": "Backup is not high availability. Snapshots restore data after a loss; restoration still takes time and recent changes may be lost.",
@@ -96,6 +102,12 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.reliabilityNotice": "العمليات · تمرين موثوقية مجدول",
+  "advanced.failureUpcoming": "يبدأ انقطاع محدد بعد {{seconds}} ثانية لعب ويستمر {{duration}} ثانية. تستمر الموارد الأخرى بالعمل.",
+  "advanced.failureActive": "غير متاح مؤقتاً. تعافٍ تلقائي خلال {{seconds}} ثانية لعب. راقب السعة أو المهام المتراكمة في الموارد المتبقية.",
+  "advanced.failureRecovered": "تعافى المورد مع الاحتفاظ بهويته وفئته وإعداداته.",
+  "advanced.resourceUnavailable": "غير متاح مؤقتاً — راجع خط العمليات الزمني. تستمر تكلفة التشغيل أثناء الانقطاع.",
+
   "advanced.stage10": "استعد البيانات",
   "advanced.stage10Story": "حدّد فريق العمليات تمرين استعادة. عند الثانية 180 من اللعب سيزيل خطأ تشغيلي بيانات القاعدة الحية. اضبط اللقطات قبل الحدث ثم استعد الخدمة من نسخة صالحة. دون نسخة لا توجد نقطة استعادة.",
   "advanced.stage10Lesson": "النسخ الاحتياطي ليس توافراً عالياً. تعيد اللقطات البيانات بعد الفقد، لكن الاستعادة تستغرق وقتاً وقد تفقد التغييرات الحديثة.",

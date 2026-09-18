@@ -127,6 +127,7 @@ export function ResourceDetailsPanel({
         </button>
       </div>
 
+      {simulation.failedResourceIds.includes(node.id) && <p role="alert">{t('advanced.resourceUnavailable')}</p>}
       {isAppServer && appServer ? (
         <dl className="resource-panel__details">
           <div>

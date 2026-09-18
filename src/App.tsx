@@ -1,3 +1,4 @@
+import { ReliabilityTimeline } from './components/ReliabilityTimeline'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, backupConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
 import {
@@ -404,6 +405,7 @@ function App() {
               <GuidedBuildPanel step={stageOneBuildStep} />
             </Panel>
           )}
+          {!!stage.trafficProfile.failures?.length && <Panel position="bottom-right" className="event-timeline-position event-timeline-position--with-actions"><ReliabilityTimeline events={stage.trafficProfile.failures} gameTimeSeconds={traffic.gameTimeSeconds} /></Panel>}
           {stage.trafficProfile.dataLossAtSecond !== undefined && <Panel position="top-center" className="connection-feedback-position"><aside className="connection-feedback nodrag nopan" dir={direction} role="status"><p>{t(traffic.dataLossOccurred ? traffic.databaseData.dataLost ? 'advanced.dataLost' : 'advanced.dataRecovered' : 'advanced.recoveryWarning', { seconds: Math.max(0, stage.trafficProfile.dataLossAtSecond - traffic.gameTimeSeconds) })}</p></aside></Panel>}
           {selectedNode && (
             <Panel position="top-right" className="resource-panel-position">

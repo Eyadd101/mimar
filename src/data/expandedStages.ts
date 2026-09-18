@@ -85,3 +85,8 @@ export const recoveryStage = createExpandedStage({
 recoveryStage.unlocksControls = ['backups']
 recoveryStage.secondaryObjectives.push({ id: 'recovered', type: 'recovered-data', titleKey: 'advanced.restore', descriptionKey: 'advanced.recoveryGoal' })
 recoveryStage.winCondition.requiredObjectiveIds.push('recovered')
+
+// Scheduled exercises teach backlog recovery and redundancy without random attacks.
+backgroundStage.trafficProfile.failures = [{ id: 'worker-maintenance', resourceId: 'worker', labelKey: 'advanced.worker', startsAtSecond: 240, durationSeconds: 25 }]
+uploadsStage.trafficProfile.failures = [{ id: 'server-restart', resourceId: 'server', labelKey: 'resource.appServer', startsAtSecond: 240, durationSeconds: 20 }]
+recoveryStage.trafficProfile.failures = [{ id: 'database-maintenance', resourceId: 'database', labelKey: 'advanced.database', startsAtSecond: 300, durationSeconds: 15 }]

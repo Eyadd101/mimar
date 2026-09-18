@@ -36,3 +36,5 @@ export const storageConfig = { objectSizeGiB: .005, localCapacityGiB: 1, localPr
 export const securityConfig = { gracePeriodSeconds: 90, incidentCost: 40, incidentLatencyMs: 500 } as const
 
 export const backupConfig = { frequenciesSeconds: [60, 120], baseCostPerPeriod: 3, restoreCost: 10, restoreDurationSeconds: 20, dataLossLatencyMs: 2000 } as const
+
+export const reliabilityConfig = { unavailableLatencyMs: 2000 } as const
