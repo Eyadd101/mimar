@@ -1,3 +1,4 @@
+import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 import type { TranslationKey } from '../i18n/translations'
 
@@ -36,3 +37,9 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
     position: { x: 1010, y: 250 },
   },
 ]
+
+export function getUnlockedAdvancedResources(campaign: import('../simulation/campaignSimulation').CampaignState) {
+  return (Object.keys(advancedResourceConfigs) as AdvancedResourceType[]).filter(type =>
+    campaign.unlockedResourceTypes.includes(type) && !campaign.infrastructure.resources.some(resource => resource.type === type),
+  )
+}

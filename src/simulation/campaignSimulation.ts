@@ -18,6 +18,8 @@ import type {
   TrafficSimulationState,
 } from './trafficSimulation'
 
+export type CampaignControl = 'database-scaling' | 'security' | 'backups'
+
 export type CampaignResourceType =
   | 'users'
   | 'app-server'
@@ -74,7 +76,7 @@ export type CampaignState = {
   unlockedResourceTypes: CampaignResourceType[]
   completedStages: CampaignStageRecord[]
   seed: number
-  unlockedControls?: ('security' | 'backups')[]
+  unlockedControls?: CampaignControl[]
   databaseData?: DatabaseData
   storedData?: StoredData
 }

@@ -218,7 +218,7 @@ export function beginAdvancedResourceDeployment(state: GameState, type: Advanced
 }
 
 export function beginDatabaseUpgrade(state: GameState): GameState {
-  if (state.campaign.currentStageIndex < 4 || !state.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId !== 'medium')) return state
+  if (!state.campaign.unlockedControls?.includes('database-scaling') || !state.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId !== 'medium')) return state
   return beginInfrastructureDeployment(state, 'database-upgrade', databaseUpgradeConfig.deploymentCost, databaseUpgradeConfig.deploymentDurationSeconds)
 }
 

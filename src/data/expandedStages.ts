@@ -40,6 +40,8 @@ export const databaseBottleneckStage = createExpandedStage({
   trafficProfile: { initialActiveUsers: 120, activeUserGrowthIntervalSeconds: 10, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5 },
 })
 
+databaseBottleneckStage.unlocksControls = ['database-scaling']
+
 export const readHeavyStage = createExpandedStage({
   id: 'read-heavy-traffic', sequence: 6,
   nameKey: 'advanced.stage6', storyKey: 'advanced.stage6Story', lessonKey: 'advanced.stage6Lesson',

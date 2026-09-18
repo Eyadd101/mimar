@@ -1,4 +1,7 @@
 export const expansionEnglish = {
+  "advanced.currentResources": "{{count}} resources deployed",
+  "advanced.inspectDatabaseControls": "Select Managed Database to inspect unlocked scaling, security, or backup controls.",
+
   "advanced.whyChanging": "Why these metrics change",
   "advanced.databaseCause": "{{queries}} queries/sec compete for {{capacity}} queries/sec of capacity. {{connections}} connections also consume memory. Query time is {{latency}} ms; it adds to the application response.",
   "advanced.cacheCause": "{{hits}}% of eligible reads are hits, avoiding {{saved}} database queries/sec. {{remaining}} queries/sec still reach the database, including writes and misses.",
@@ -112,6 +115,9 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.currentResources": "{{count}} موارد منشورة",
+  "advanced.inspectDatabaseControls": "اختر قاعدة البيانات المُدارة لفحص عناصر التحكم المتاحة للتوسع والأمان والنسخ الاحتياطي.",
+
   "advanced.whyChanging": "لماذا تتغير هذه المقاييس؟",
   "advanced.databaseCause": "يتنافس {{queries}} استعلام/ثانية على سعة {{capacity}} استعلام/ثانية. تستهلك {{connections}} اتصالات ذاكرة أيضاً. زمن الاستعلام {{latency}} مللي ثانية ويُضاف إلى زمن استجابة التطبيق.",
   "advanced.cacheCause": "تصيب {{hits}}٪ من القراءات المؤهلة التخزين المؤقت فتتجنب {{saved}} استعلام/ثانية. يصل {{remaining}} استعلام/ثانية إلى القاعدة، بما فيه الكتابات والقراءات غير الموجودة.",

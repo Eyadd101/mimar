@@ -2,7 +2,7 @@ import type { InfrastructureFailure } from '../simulation/reliabilitySimulation'
 import type { SecuritySettings } from '../simulation/securitySimulation'
 import { databaseBottleneckStage, readHeavyStage, backgroundStage, uploadsStage, securityStage, recoveryStage } from './expandedStages'
 import { gameStateConfig } from '../simulation/config'
-import type { CampaignResourceType } from '../simulation/campaignSimulation'
+import type { CampaignResourceType, CampaignControl } from '../simulation/campaignSimulation'
 import type { ServerTierId } from '../simulation/config'
 import type { TranslationKey } from '../i18n/translations'
 
@@ -145,7 +145,7 @@ export type TrafficEventDefinition = {
 }
 
 export type StageConfig = {
-  unlocksControls?: ('security' | 'backups')[]
+  unlocksControls?: CampaignControl[]
   initialSecurity?: SecuritySettings
   id: string
   sequence: number

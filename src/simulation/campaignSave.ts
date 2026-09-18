@@ -127,7 +127,7 @@ function isValidCampaign(value: unknown): value is CampaignState {
   }
 
   if (value.storedData !== undefined && (!isRecord(value.storedData) || !['localObjects', 'storedObjects'].every(key => typeof value.storedData === 'object' && value.storedData !== null && typeof (value.storedData as Record<string, unknown>)[key] === 'number' && Number.isFinite((value.storedData as Record<string, unknown>)[key]) && Number((value.storedData as Record<string, unknown>)[key]) >= 0))) return false
-  if (value.unlockedControls !== undefined && (!Array.isArray(value.unlockedControls) || !value.unlockedControls.every(key => key === 'security' || key === 'backups'))) return false
+  if (value.unlockedControls !== undefined && (!Array.isArray(value.unlockedControls) || !value.unlockedControls.every(key => key === 'database-scaling' || key === 'security' || key === 'backups'))) return false
   if (value.databaseData !== undefined) {
     const data = value.databaseData
     if (!isRecord(data) || typeof data.dataLost !== 'boolean' || !['revision', 'secondsSinceBackup'].every(key => typeof data[key] === 'number' && Number.isFinite(data[key]) && Number(data[key]) >= 0) || (data.backupRevision !== null && (typeof data.backupRevision !== 'number' || !Number.isFinite(data.backupRevision) || data.backupRevision < 1 || data.backupRevision > Number(data.revision)))) return false

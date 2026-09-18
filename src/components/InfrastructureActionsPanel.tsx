@@ -1,3 +1,4 @@
+import { getUnlockedAdvancedResources } from '../data/resourcePalette'
 import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type { CampaignState } from '../simulation/campaignSimulation'
 import {
@@ -42,8 +43,8 @@ export function InfrastructureActionsPanel({
   return (
     <aside className="infrastructure-actions nodrag nopan" aria-label={t('build.title')} dir={direction}>
       <div className="infrastructure-actions__heading">
-        <span>{t('build.title')}</span>
-        <strong>{t('build.horizontalScaling')}</strong>
+        <span>{t('palette.title')}</span>
+        <strong>{t('palette.available')}</strong>
       </div>
 
       {deployment ? (
@@ -53,7 +54,7 @@ export function InfrastructureActionsPanel({
         />
       ) : hasLoadBalancer && hasAdditionalServer ? (
         <p className="infrastructure-actions__ready">
-          {t('build.ready')}
+          {t('advanced.currentResources', { count: campaign.infrastructure.resources.length })}
         </p>
       ) : (
         <div className="infrastructure-actions__options">
@@ -93,10 +94,11 @@ export function InfrastructureActionsPanel({
           )}
         </div>
       )}
-      {!deployment && <div className="infrastructure-actions__options">{(Object.keys(advancedResourceConfigs) as AdvancedResourceType[]).filter(type => campaign.unlockedResourceTypes.includes(type) && !campaign.infrastructure.resources.some(r => r.type === type)).map(type => {
+      {!deployment && <div className="infrastructure-actions__options">{getUnlockedAdvancedResources(campaign).map(type => {
         const definition = advancedResourceConfigs[type]
         return <BuildOption key={type} titleKey={definition.labelKey} awsReference={definition.awsReference} cost={definition.deploymentCost} duration={definition.deploymentDurationSeconds} disabled={simulation.balance < definition.deploymentCost} onDeploy={() => onDeployAdvanced(type)} />
       })}</div>}
+      {!!campaign.unlockedControls?.length && <p className="infrastructure-actions__ready">{t('advanced.inspectDatabaseControls')}</p>}
     </aside>
   )
 }

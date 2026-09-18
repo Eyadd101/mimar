@@ -417,7 +417,7 @@ function App() {
                 onConfigureSecurity={configureSecurity}
                 simulation={traffic}
                 serviceStarted={serviceStarted}
-                databaseUpgradeUnlocked={stage.sequence >= 5}
+                databaseUpgradeUnlocked={campaign.unlockedControls?.includes('database-scaling') ?? false}
                 infrastructureDeployment={infrastructureDeployment}
                 onUpgradeDatabase={() => setPendingAction({ kind: 'database-upgrade' })}
                 onClose={() => setSelectedNodeId(null)}
