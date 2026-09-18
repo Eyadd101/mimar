@@ -15,6 +15,10 @@ export function getContextualHint(
     return { key: 'hint.buildPath' }
   }
 
+  if (simulation.database.utilization > 1 && !appServer.isOverloaded) {
+    return { key: 'advanced.databaseHint' }
+  }
+
   if (
     badLatencyDurationSeconds >=
     customerSatisfactionConfig.sustainedBadLatencySeconds

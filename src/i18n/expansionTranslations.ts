@@ -1,4 +1,15 @@
 export const expansionEnglish = {
+  "advanced.objective": "Keep the company operating",
+  "advanced.objectiveDescription": "Survive the workload and resolve the bottleneck before finishing.",
+  "advanced.responsive": "Restore responsive service",
+  "advanced.responsiveDescription": "Keep response time at or below 350 ms for the final 60 seconds.",
+  "advanced.satisfactionGoal": "Finish with at least 40% satisfaction.",
+  "advanced.solvent": "Finish with a positive balance.",
+  "advanced.stage5": "Database Bottleneck",
+  "advanced.stage5Story": "Customers report slow operations while application servers have spare capacity. Each request now performs five database queries. Inspect both layers and find where work is accumulating.",
+  "advanced.stage5Lesson": "Database bottlenecks: scaling application compute does not increase database query capacity.",
+  "advanced.databaseHint": "Application servers still have spare capacity, but database query time is increasing.",
+
   'advanced.database': 'Managed Database',
   'advanced.databasePurpose': 'Stores application data. Requests create queries; slow queries add to customer response time.',
   'advanced.queryLoad': 'Query Load',
@@ -8,6 +19,17 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.objective": "حافظ على تشغيل الشركة",
+  "advanced.objectiveDescription": "تحمّل حمل العمل وعالج الاختناق قبل إنهاء المرحلة.",
+  "advanced.responsive": "استعد سرعة الخدمة",
+  "advanced.responsiveDescription": "حافظ على زمن استجابة لا يتجاوز 350 مللي ثانية خلال آخر 60 ثانية.",
+  "advanced.satisfactionGoal": "أنهِ المرحلة برضا لا يقل عن 40٪.",
+  "advanced.solvent": "أنهِ المرحلة برصيد موجب.",
+  "advanced.stage5": "اختناق قاعدة البيانات",
+  "advanced.stage5Story": "يشكو العملاء من بطء العمليات رغم وجود سعة متاحة في خوادم التطبيق. كل طلب ينفّذ الآن خمسة استعلامات. افحص الطبقتين لتكتشف أين يتراكم العمل.",
+  "advanced.stage5Lesson": "اختناق قاعدة البيانات: زيادة قدرة التطبيق لا تزيد سعة استعلامات قاعدة البيانات.",
+  "advanced.databaseHint": "توجد سعة متاحة في خوادم التطبيق، لكن زمن استعلام قاعدة البيانات يرتفع.",
+
   'advanced.database': 'قاعدة البيانات المُدارة',
   'advanced.databasePurpose': 'تحفظ بيانات التطبيق. الطلبات تولّد استعلامات، وبطؤها يزيد زمن استجابة الخدمة.',
   'advanced.queryLoad': 'حمل الاستعلامات',

@@ -104,7 +104,7 @@ export function calculateRequestsPerSecond(
 export function createInitialTrafficState(
   options: InitialTrafficStateOptions = {},
 ): TrafficSimulationState {
-  const trafficProfile = options.trafficProfile ?? trafficSimulationConfig
+  const trafficProfile: StageTrafficProfile = options.trafficProfile ?? trafficSimulationConfig
   const infrastructure = options.infrastructure ?? defaultInfrastructure
   const activeUsers = options.serviceActive === false
     ? 0
@@ -116,6 +116,7 @@ export function createInitialTrafficState(
   const application = calculateApplicationMetrics(
     requestsPerSecond,
     infrastructure,
+    trafficProfile.queriesPerRequest,
   )
   const activeInfrastructureCost =
     options.serviceActive === false
