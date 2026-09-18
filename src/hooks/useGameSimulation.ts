@@ -18,7 +18,7 @@ import {
   beginDatabaseRestore,
   beginAdvancedResourceDeployment,
   continueToNextStage,
-  connectStageOneResources,
+  connectInfrastructure,
   createInitialGameState,
   dismissStageBriefing,
   getCurrentStage,
@@ -145,7 +145,7 @@ export function useGameSimulation() {
 
   const connectResources = useCallback((sourceId: string, targetId: string) => {
     setGameState((currentState) =>
-      connectStageOneResources(currentState, sourceId, targetId),
+      connectInfrastructure(currentState, sourceId, targetId),
     )
   }, [])
 

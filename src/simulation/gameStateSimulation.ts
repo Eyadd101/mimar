@@ -12,6 +12,7 @@ import {
   addAdvancedResource,
   addLoadBalancerResource,
   addStageOneConnection,
+  connectCampaignResources,
   addStageOneResource,
   applyResourceUnlocks,
   createInitialCampaignState,
@@ -314,6 +315,13 @@ export function placeStageOneResource(
       statistics: createInitialStageStatistics(simulation),
     },
   }
+}
+
+export function connectInfrastructure(state: GameState, sourceId: string, targetId: string): GameState {
+  if (state.stageRuntime.status !== 'playing') return state
+  if (state.campaign.currentStageIndex === 0) return connectStageOneResources(state, sourceId, targetId)
+  const campaign = connectCampaignResources(state.campaign, sourceId, targetId)
+  return campaign === state.campaign ? state : { ...state, campaign }
 }
 
 export function connectStageOneResources(

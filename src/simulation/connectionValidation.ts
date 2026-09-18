@@ -22,6 +22,25 @@ const stageOneConnectionRules: readonly ConnectionRule[] = [
   { sourceType: 'app-server', targetType: 'database' },
 ]
 
+export const campaignConnectionRules: readonly ConnectionRule[] = [
+  ...stageOneConnectionRules,
+  { sourceType: 'users', targetType: 'load-balancer' },
+  { sourceType: 'load-balancer', targetType: 'app-server' },
+  { sourceType: 'app-server', targetType: 'cache' },
+  { sourceType: 'cache', targetType: 'database' },
+  { sourceType: 'app-server', targetType: 'queue' },
+  { sourceType: 'queue', targetType: 'worker' },
+  { sourceType: 'app-server', targetType: 'object-storage' },
+]
+
+export function isConnectionTypeAllowed(sourceType: CampaignResourceType, targetType: CampaignResourceType) {
+  return campaignConnectionRules.some(rule => rule.sourceType === sourceType && rule.targetType === targetType)
+}
+
+export function validateCampaignConnection(infrastructure: CampaignInfrastructureState, sourceId: string, targetId: string): ConnectionValidationResult {
+  return validateConnection(infrastructure, sourceId, targetId, campaignConnectionRules, 'advanced.connectionDirection')
+}
+
 const validExplanation: ConnectionExplanation = {
   key: 'connection.valid',
 }
@@ -48,6 +67,10 @@ export function validateStageOneConnection(
   sourceId: string,
   targetId: string,
 ): ConnectionValidationResult {
+  return validateConnection(infrastructure, sourceId, targetId, stageOneConnectionRules, 'connection.invalidStageOne')
+}
+
+function validateConnection(infrastructure: CampaignInfrastructureState, sourceId: string, targetId: string, rules: readonly ConnectionRule[], fallbackKey: TranslationKey): ConnectionValidationResult {
   const source = infrastructure.resources.find(
     (resource) => resource.id === sourceId,
   )
@@ -86,7 +109,7 @@ export function validateStageOneConnection(
     }
   }
 
-  const valid = stageOneConnectionRules.some(
+  const valid = rules.some(
     (rule) =>
       rule.sourceType === source.type && rule.targetType === target.type,
   )
@@ -98,7 +121,7 @@ export function validateStageOneConnection(
     valid: false,
     explanation:
       invalidPairExplanations[`${source.type}->${target.type}`] ?? {
-        key: 'connection.invalidStageOne',
+        key: fallbackKey,
       },
   }
 }

@@ -1,3 +1,4 @@
+import { isConnectionTypeAllowed } from './connectionValidation'
 import { backupConfig } from './expansionConfig'
 import { securityRiskKeys } from './securitySimulation'
 import { campaignStageConfigs } from '../data/stages'
@@ -260,34 +261,20 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
     )
   }
 
-  const cache = resources.find(resource => resource.type === 'cache')
-  const databaseTargetId = cache?.id ?? databases[0].id
-  const expectedConnections = loadBalancers[0]
-    ? [
-        `${users[0].id}->${loadBalancers[0].id}`,
-        ...appServers.flatMap((server) => [
-          `${loadBalancers[0].id}->${server.id}`,
-          `${server.id}->${databaseTargetId}`,
-        ]),
-      ]
-    : [
-        `${users[0].id}->${appServers[0].id}`,
-        `${appServers[0].id}->${databaseTargetId}`,
-      ]
-
-  const storage = resources.find(r => r.type === 'object-storage')
-  if (storage) for (const server of appServers) expectedConnections.push(`${server.id}->${storage.id}`)
-  const queue = resources.find(r => r.type === 'queue')
-  const worker = resources.find(r => r.type === 'worker')
-  if (queue) for (const server of appServers) expectedConnections.push(`${server.id}->${queue.id}`)
-  if (queue && worker) expectedConnections.push(`${queue.id}->${worker.id}`)
-  if (['queue', 'worker', 'object-storage'].some(type => resources.filter(r => r.type === type).length > 1)) return false
-  if (cache) expectedConnections.push(`${cache.id}->${databases[0].id}`)
-  if (resources.filter(r => r.type === 'cache').length > 1) return false
-  return (
-    connectionPairs.size === expectedConnections.length &&
-    expectedConnections.every((connection) => connectionPairs.has(connection))
-  )
+  if (['cache', 'queue', 'worker', 'object-storage'].some(type => resources.filter(r => r.type === type).length > 1)) return false
+  if (!value.connections.every(connection => {
+    const source = resources.find(r => r.id === connection.sourceId)
+    const target = resources.find(r => r.id === connection.targetId)
+    return source && target && isConnectionTypeAllowed(source.type, target.type)
+  })) return false
+  const linked = (source: string, target: string) => connectionPairs.has(`${source}->${target}`)
+  const cache = resources.find(r => r.type === 'cache')
+  // Save valid alternative architectures, while requiring the core service path.
+  return appServers.every(server => {
+    const incoming = linked(users[0].id, server.id) || (loadBalancers[0] && linked(users[0].id, loadBalancers[0].id) && linked(loadBalancers[0].id, server.id))
+    const dataPath = linked(server.id, databases[0].id) || (cache && linked(server.id, cache.id) && linked(cache.id, databases[0].id))
+    return incoming && dataPath
+  })
 }
 
 function infrastructureContainsResource(

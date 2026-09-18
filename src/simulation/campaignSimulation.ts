@@ -11,7 +11,7 @@ import {
   type ServerTierId,
 } from './config'
 import { stageOneResourcePalette } from '../data/resourcePalette'
-import { validateStageOneConnection } from './connectionValidation'
+import { validateStageOneConnection, validateCampaignConnection } from './connectionValidation'
 import type { StageRating } from './starRatingSimulation'
 import type {
   TrafficInfrastructure,
@@ -206,6 +206,30 @@ export function addStageOneConnection(
   }
 }
 
+export function connectCampaignResources(campaign: CampaignState, sourceId: string, targetId: string): CampaignState {
+  if (!validateCampaignConnection(campaign.infrastructure, sourceId, targetId).valid) return campaign
+  return { ...campaign, infrastructure: { ...campaign.infrastructure, connections: [...campaign.infrastructure.connections, { id: `${sourceId}-${targetId}`, sourceId, targetId }] } }
+}
+
+/** Advanced services affect workload only when their necessary graph links exist. */
+export function isAdvancedResourceConnected(campaign: CampaignState, type: AdvancedResourceType) {
+  const resources = campaign.infrastructure.resources
+  const resource = resources.find(r => r.type === type)
+  if (!resource) return false
+  const linked = (sourceId: string, targetId: string) => campaign.infrastructure.connections.some(c => c.sourceId === sourceId && c.targetId === targetId)
+  if (type === 'worker') {
+    const queue = resources.find(r => r.type === 'queue')
+    return !!queue && linked(queue.id, resource.id)
+  }
+  const servers = getAppServers(campaign)
+  if (!servers.length || !servers.every(server => linked(server.id, resource.id))) return false
+  if (type === 'cache') {
+    const database = resources.find(r => r.type === 'database')
+    return !!database && linked(resource.id, database.id)
+  }
+  return true
+}
+
 export function getPrimaryAppServer(campaign: CampaignState) {
   const appServer = campaign.infrastructure.resources.find(
     (resource) => resource.type === 'app-server',
@@ -372,11 +396,11 @@ export function createTrafficInfrastructure(
     backupSettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings,
     databaseData: campaign.databaseData ?? initialDatabaseData,
     securitySettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings,
-    hasObjectStorage: campaign.infrastructure.resources.some(resource => resource.type === 'object-storage'),
+    hasObjectStorage: isAdvancedResourceConnected(campaign, 'object-storage'),
     storedData: campaign.storedData ?? emptyStoredData,
-    hasQueue: campaign.infrastructure.resources.some(resource => resource.type === 'queue'),
-    hasWorker: campaign.infrastructure.resources.some(resource => resource.type === 'worker'),
-    hasCache: campaign.infrastructure.resources.some(resource => resource.type === 'cache'),
+    hasQueue: isAdvancedResourceConnected(campaign, 'queue'),
+    hasWorker: isAdvancedResourceConnected(campaign, 'worker'),
+    hasCache: isAdvancedResourceConnected(campaign, 'cache'),
     advancedCostPerPeriod: campaign.infrastructure.resources.reduce((sum, resource) => sum + (resource.type !== 'object-storage' && resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].costPerPeriod : 0), 0),
     databaseTierId: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.databaseTierId ?? 'small',
     hasDatabase: campaign.infrastructure.resources.some(resource => resource.type === 'database'),
@@ -495,6 +519,10 @@ function rebuildInfrastructure(campaign: CampaignState): CampaignState {
 
   return {
     ...campaign,
-    infrastructure: { resources, connections },
+    infrastructure: { resources, connections: [
+      ...connections.filter(connection => !resources.some(r => r.type === 'cache') || !appServers.some(server => server.id === connection.sourceId && connection.targetId === database.id)),
+      ...campaign.infrastructure.connections.filter(connection => resources.some(r => r.id === connection.sourceId && r.type in advancedResourceConfigs) || resources.some(r => r.id === connection.targetId && r.type in advancedResourceConfigs)),
+      ...appServers.flatMap(server => resources.filter(r => ['cache', 'queue', 'object-storage'].includes(r.type) && !campaign.infrastructure.connections.some(c => c.sourceId === server.id && c.targetId === r.id)).map(r => ({ id: `${server.id}-${r.id}`, sourceId: server.id, targetId: r.id }))),
+    ] },
   }
 }

@@ -1,4 +1,6 @@
 export const expansionEnglish = {
+  "advanced.connectionDirection": "This direction does not match resource responsibilities. Users enter through application compute or a load balancer. Applications call databases, caches, queues, or object storage; queues feed workers and caches call databases.",
+
   "advanced.currentResources": "{{count}} resources deployed",
   "advanced.inspectDatabaseControls": "Select Managed Database to inspect unlocked scaling, security, or backup controls.",
 
@@ -115,6 +117,8 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.connectionDirection": "هذا الاتجاه لا يناسب مسؤوليات الموارد. يدخل المستخدمون عبر التطبيق أو موزّع الحمل. يتصل التطبيق بقواعد البيانات والتخزين المؤقت والطوابير وتخزين الكائنات؛ تغذّي الطوابير العمال ويتصل التخزين المؤقت بقاعدة البيانات.",
+
   "advanced.currentResources": "{{count}} موارد منشورة",
   "advanced.inspectDatabaseControls": "اختر قاعدة البيانات المُدارة لفحص عناصر التحكم المتاحة للتوسع والأمان والنسخ الاحتياطي.",
 

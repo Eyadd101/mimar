@@ -48,6 +48,7 @@ import { getMostLoadedAppServer } from './simulation/trafficSimulation'
 import { evaluateStageLearningSteps } from './simulation/stageLearningSimulation'
 import {
   validateStageOneConnection,
+  validateCampaignConnection,
   type ConnectionExplanation,
 } from './simulation/connectionValidation'
 import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
@@ -133,7 +134,7 @@ function App() {
       selected: node.id === selectedNodeId,
       data: {
         ...node.data,
-        canConnect: stage.sequence === 1 && !serviceStarted,
+        canConnect: gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted),
         databaseMetrics: node.data.kind === 'database' ? traffic.database : undefined,
         appServerMetrics:
           node.data.kind === 'server'
@@ -150,6 +151,7 @@ function App() {
     )
   }, [
     flowNodeRuntime,
+    gameStatus,
     nodes,
     selectedNodeId,
     serviceStarted,
@@ -276,7 +278,7 @@ function App() {
       return
     }
 
-    const result = validateStageOneConnection(
+    const result = (stage.sequence === 1 ? validateStageOneConnection : validateCampaignConnection)(
       campaign.infrastructure,
       connection.source,
       connection.target,
@@ -348,7 +350,7 @@ function App() {
           fitViewOptions={fitViewOptions}
           minZoom={0.25}
           maxZoom={1.6}
-          nodesConnectable={stage.sequence === 1 && !serviceStarted}
+          nodesConnectable={gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted)}
           edgesReconnectable={false}
           edgesFocusable={false}
           deleteKeyCode={null}
@@ -381,7 +383,7 @@ function App() {
               />
             </Panel>
           )}
-          {connectionFeedback && !serviceStarted && (
+          {connectionFeedback && (
             <Panel position="top-center" className="connection-feedback-position">
               <aside
                 className="connection-feedback nodrag nopan"
