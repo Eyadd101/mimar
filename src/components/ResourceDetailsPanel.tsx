@@ -155,6 +155,24 @@ export function ResourceDetailsPanel({
             <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
           </div>
         </dl>
+      ) : node.data.kind === 'database' ? (
+        <>
+          <p><TechnicalTerm translationKey="advanced.database" /> — RDS</p>
+          <p>{t('advanced.databasePurpose')}</p>
+          <dl className="resource-panel__details">
+            {([
+              ['metric.cpuUsage', `${simulation.database.cpuUsage.toFixed(1)}%`],
+              ['metric.memoryUsage', `${simulation.database.memoryUsage.toFixed(1)}%`],
+              ['advanced.queryLoad', `${simulation.database.queryLoad.toFixed(1)}/s`],
+              ['advanced.queryCapacity', `${simulation.database.capacity}/s`],
+              ['advanced.connections', simulation.database.activeConnections],
+              ['advanced.connectionCapacity', simulation.database.connectionCapacity],
+              ['advanced.queryLatency', `${simulation.database.queryLatencyMs} ms`],
+              ['metric.status', t(statusTranslationKeys[simulation.database.status])],
+              ['resource.costPerPeriod', t('common.credits', { value: simulation.database.costPerPeriod })],
+            ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
+          </dl>
+        </>
       ) : isLoadBalancer ? (
         <dl className="resource-panel__details">
           <div>

@@ -1,3 +1,4 @@
+import { calculateDatabaseMetrics, type DatabaseMetrics } from './databaseSimulation'
 import type { StageTrafficProfile } from '../data/stages'
 import {
   appServerResourceConfig,
@@ -36,6 +37,7 @@ export type TrafficAppServerResource = {
 export type TrafficInfrastructure = {
   appServers: TrafficAppServerResource[]
   distributesTraffic: boolean
+  hasDatabase?: boolean
   loadBalancerCostPerPeriod: number
 }
 
@@ -48,6 +50,7 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 export type TrafficSimulationState = CustomerSatisfactionState &
   BusinessConsequenceState &
   EconomyState & {
+  database: DatabaseMetrics
   activeUsers: number
   requestsPerSecond: number
   gameTimeSeconds: number
@@ -281,6 +284,7 @@ function advanceOneGameSecond(
   const application = calculateApplicationMetrics(
     requestsPerSecond,
     effectiveInfrastructure,
+    trafficProfile.queriesPerRequest,
   )
   const economyPeriodIsDue =
     gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
@@ -320,7 +324,9 @@ function advanceOneGameSecond(
 function calculateApplicationMetrics(
   requestsPerSecond: number,
   infrastructure: TrafficInfrastructure,
+  queriesPerRequest?: number,
 ) {
+  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : requestsPerSecond, queriesPerRequest)
   const shares =
     infrastructure.distributesTraffic && infrastructure.appServers.length > 1
       ? distributeRequestsEvenly(
@@ -341,7 +347,7 @@ function calculateApplicationMetrics(
       total + server.latencyMs * server.requestsPerSecond,
     0,
   )
-  const applicationLatencyMs =
+  const appLatencyMs =
     appServers.length === 0
       ? 0
       : requestsPerSecond > 0
@@ -352,13 +358,14 @@ function calculateApplicationMetrics(
           )
   const infrastructureCostPerPeriod = appServers.reduce(
     (total, server) => total + server.costPerPeriod,
-    infrastructure.loadBalancerCostPerPeriod,
+    infrastructure.loadBalancerCostPerPeriod + (infrastructure.hasDatabase === false ? 0 : database.costPerPeriod),
   )
 
   return {
     appServers,
-    applicationLatencyMs,
-    isServiceOverloaded: appServers.some((server) => server.isOverloaded),
+    database,
+    applicationLatencyMs: appLatencyMs + database.queryLatencyMs,
+    isServiceOverloaded: appServers.some((server) => server.isOverloaded) || database.status === 'overloaded',
     infrastructureCostPerPeriod,
   }
 }

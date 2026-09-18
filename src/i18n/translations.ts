@@ -1,8 +1,10 @@
+import { expansionEnglish, expansionArabic } from './expansionTranslations'
 export type Language = 'en' | 'ar'
 
 export const languagePreferenceKey = 'cloud-game-language'
 
 const english = {
+  ...expansionEnglish,
   'language.english': 'English',
   'language.arabic': 'العربية',
   'language.selector': 'Interface language',
@@ -351,6 +353,7 @@ export type TranslationVariables = Record<string, string | number>
 export type TranslationMessage = { key: TranslationKey; variables?: TranslationVariables }
 
 const arabic: Record<TranslationKey, string> = {
+  ...expansionArabic,
   'language.english': 'English',
   'language.arabic': 'العربية',
   'language.selector': 'لغة الواجهة',

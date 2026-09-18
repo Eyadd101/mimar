@@ -332,6 +332,7 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    hasDatabase: campaign.infrastructure.resources.some(resource => resource.type === 'database'),
     distributesTraffic: hasLoadBalancer(campaign),
     loadBalancerCostPerPeriod: hasLoadBalancer(campaign)
       ? loadBalancerResourceConfig.costPerPeriod

@@ -5,6 +5,7 @@ import {
   type Node,
   type NodeChange,
 } from '@xyflow/react'
+import type { DatabaseMetrics } from '../simulation/databaseSimulation'
 import type { AppServerMetrics } from '../simulation/appServerSimulation'
 import type {
   CampaignInfrastructureState,
@@ -17,6 +18,7 @@ export type InfrastructureNodeData = {
   kind: 'users' | 'server' | 'database' | 'load-balancer'
   descriptionKey: TranslationKey
   number: string
+  databaseMetrics?: DatabaseMetrics
   appServerMetrics?: AppServerMetrics
   canConnect?: boolean
 }

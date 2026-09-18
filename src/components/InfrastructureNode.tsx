@@ -86,7 +86,7 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
     <div
       className="infrastructure-node"
       data-kind={data.kind}
-      data-status={data.appServerMetrics?.status}
+      data-status={data.appServerMetrics?.status ?? data.databaseMetrics?.status}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       {(data.canConnect || data.kind !== 'users') && (
@@ -137,6 +137,10 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
           </span>
         </div>
       )}
+      {data.databaseMetrics && <div className="server-cpu" data-status={data.databaseMetrics.status}>
+        <div className="server-cpu__summary"><TechnicalTerm translationKey="advanced.queryLoad" /><strong>{data.databaseMetrics.queryLoad.toFixed(1)} / {data.databaseMetrics.capacity}</strong></div>
+        <span>{data.databaseMetrics.queryLatencyMs} ms · {t(statusLabelKeys[data.databaseMetrics.status])}</span>
+      </div>}
       <div className="node-footer">
         <span>{t(roleLabelKeys[data.kind])}</span>
         <svg

@@ -124,6 +124,7 @@ function App() {
       data: {
         ...node.data,
         canConnect: stage.sequence === 1 && !serviceStarted,
+        databaseMetrics: node.data.kind === 'database' ? traffic.database : undefined,
         appServerMetrics:
           node.data.kind === 'server'
             ? traffic.appServers.find(
@@ -144,6 +145,7 @@ function App() {
     serviceStarted,
     stage.sequence,
     traffic.appServers,
+    traffic.database,
   ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const mostLoadedAppServer = getMostLoadedAppServer(traffic)
