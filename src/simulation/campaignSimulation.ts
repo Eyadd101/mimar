@@ -1,3 +1,4 @@
+import type { DatabaseTierId } from './expansionConfig'
 import {
   additionalAppServerConfig,
   appServerResourceConfig,
@@ -33,7 +34,11 @@ type CampaignResourceBase = {
 
 export type CampaignResource =
   | (CampaignResourceBase & {
-      type: 'users' | 'database' | 'load-balancer'
+      type: 'users' | 'load-balancer'
+    })
+  | (CampaignResourceBase & {
+      type: 'database'
+      databaseTierId?: DatabaseTierId
     })
   | (CampaignResourceBase & {
       type: 'app-server'
@@ -332,6 +337,7 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    databaseTierId: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.databaseTierId ?? 'small',
     hasDatabase: campaign.infrastructure.resources.some(resource => resource.type === 'database'),
     distributesTraffic: hasLoadBalancer(campaign),
     loadBalancerCostPerPeriod: hasLoadBalancer(campaign)

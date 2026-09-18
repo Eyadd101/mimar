@@ -12,3 +12,10 @@ export const databaseConfig = {
   overloadLatencyMs: 700,
   costPerPeriod: 3,
 } as const
+
+export const databaseTierConfigs = {
+  small: { queryCapacity: 60, connectionCapacity: 80, memoryGiB: 2, costPerPeriod: 3 },
+  medium: { queryCapacity: 180, connectionCapacity: 160, memoryGiB: 4, costPerPeriod: 12 },
+} as const
+export type DatabaseTierId = keyof typeof databaseTierConfigs
+export const databaseUpgradeConfig = { deploymentCost: 90, deploymentDurationSeconds: 30 } as const

@@ -7,7 +7,7 @@ import {
 import { serverTierConfigs } from './config'
 
 export const campaignSaveKey = 'cloud-game-campaign'
-export const campaignSaveVersion = 1
+export const campaignSaveVersion = 2
 
 type CampaignSaveEnvelope = {
   version: typeof campaignSaveVersion
@@ -108,7 +108,7 @@ function getBrowserStorage() {
 }
 
 function isValidSaveEnvelope(value: unknown): value is CampaignSaveEnvelope {
-  if (!isRecord(value) || value.version !== campaignSaveVersion) {
+  if (!isRecord(value) || (value.version !== campaignSaveVersion && value.version !== 1)) {
     return false
   }
 
@@ -296,6 +296,7 @@ function isValidResource(value: unknown): value is CampaignResource {
     return false
   }
 
+  if (value.type === 'database' && value.databaseTierId !== undefined && value.databaseTierId !== 'small' && value.databaseTierId !== 'medium') return false
   return value.type !== 'app-server' || isServerTierId(value.tierId)
 }
 

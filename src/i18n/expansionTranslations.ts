@@ -1,4 +1,9 @@
 export const expansionEnglish = {
+  "advanced.smallDatabase": "Small Managed Database",
+  "advanced.mediumDatabase": "Medium Managed Database",
+  "advanced.upgradeDatabase": "Upgrade Managed Database",
+  "advanced.memorySize": "Memory Size",
+
   "advanced.objective": "Keep the company operating",
   "advanced.objectiveDescription": "Survive the workload and resolve the bottleneck before finishing.",
   "advanced.responsive": "Restore responsive service",
@@ -19,6 +24,11 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.smallDatabase": "قاعدة بيانات مُدارة صغيرة",
+  "advanced.mediumDatabase": "قاعدة بيانات مُدارة متوسطة",
+  "advanced.upgradeDatabase": "ترقية قاعدة البيانات المُدارة",
+  "advanced.memorySize": "حجم الذاكرة",
+
   "advanced.objective": "حافظ على تشغيل الشركة",
   "advanced.objectiveDescription": "تحمّل حمل العمل وعالج الاختناق قبل إنهاء المرحلة.",
   "advanced.responsive": "استعد سرعة الخدمة",

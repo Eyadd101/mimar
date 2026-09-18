@@ -1,3 +1,4 @@
+import { databaseUpgradeConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
 import {
   Background,
@@ -61,6 +62,7 @@ type PendingInfrastructureAction =
   | { kind: 'server-upgrade'; resourceId: string }
   | { kind: 'load-balancer' }
   | { kind: 'app-server' }
+  | { kind: 'database-upgrade' }
 
 function App() {
   const { direction, t } = useLanguage()
@@ -91,6 +93,7 @@ function App() {
     gameSpeed,
     setGameSpeed,
     startServerUpgrade,
+    startDatabaseUpgrade,
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
@@ -206,7 +209,9 @@ function App() {
     restartCampaign()
   }
   const confirmPendingAction = () => {
-    if (pendingAction?.kind === 'server-upgrade') {
+    if (pendingAction?.kind === 'database-upgrade') {
+      startDatabaseUpgrade()
+    } else if (pendingAction?.kind === 'server-upgrade') {
       startServerUpgrade(pendingAction.resourceId)
     } else if (pendingAction?.kind === 'load-balancer') {
       startLoadBalancerDeployment()
@@ -217,7 +222,9 @@ function App() {
     setPendingAction(null)
   }
   const pendingActionDetails = pendingAction
-    ? pendingAction.kind === 'server-upgrade'
+    ? pendingAction.kind === 'database-upgrade'
+      ? { title: t('advanced.upgradeDatabase'), description: t('advanced.databasePurpose'), cost: databaseUpgradeConfig.deploymentCost, durationSeconds: databaseUpgradeConfig.deploymentDurationSeconds, confirmLabel: t('action.startUpgrade') }
+      : pendingAction.kind === 'server-upgrade'
       ? {
           title: t('resource.upgradeMedium'),
           description: t('action.upgradeDescription'),
@@ -391,6 +398,9 @@ function App() {
                 node={selectedNode}
                 simulation={traffic}
                 serviceStarted={serviceStarted}
+                databaseUpgradeUnlocked={stage.sequence >= 5}
+                infrastructureDeployment={infrastructureDeployment}
+                onUpgradeDatabase={() => setPendingAction({ kind: 'database-upgrade' })}
                 onClose={() => setSelectedNodeId(null)}
                 onStartUpgrade={(resourceId) =>
                   setPendingAction({ kind: 'server-upgrade', resourceId })

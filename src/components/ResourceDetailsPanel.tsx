@@ -1,3 +1,6 @@
+import { databaseUpgradeConfig } from '../simulation/expansionConfig'
+import type { InfrastructureDeployment } from '../simulation/gameStateSimulation'
+import { DeploymentStatus } from './InfrastructureActionsPanel'
 import type { InfrastructureFlowNode } from '../data/infrastructure'
 import {
   appServerResourceConfig,
@@ -18,6 +21,9 @@ type ResourceDetailsPanelProps = {
   node: InfrastructureFlowNode
   simulation: TrafficSimulationState
   serviceStarted: boolean
+  databaseUpgradeUnlocked: boolean
+  infrastructureDeployment: InfrastructureDeployment | null
+  onUpgradeDatabase: () => void
   onClose: () => void
   onStartUpgrade: (resourceId: string) => void
 }
@@ -41,6 +47,7 @@ export function ResourceDetailsPanel({
   simulation,
   serviceStarted,
   onClose,
+  databaseUpgradeUnlocked, infrastructureDeployment, onUpgradeDatabase,
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
   const { language, t } = useLanguage()
@@ -161,6 +168,8 @@ export function ResourceDetailsPanel({
           <p>{t('advanced.databasePurpose')}</p>
           <dl className="resource-panel__details">
             {([
+              ['metric.currentTier', t(simulation.database.tierId === 'small' ? 'advanced.smallDatabase' : 'advanced.mediumDatabase')],
+              ['advanced.memorySize', `${simulation.database.memoryGiB} GiB`],
               ['metric.cpuUsage', `${simulation.database.cpuUsage.toFixed(1)}%`],
               ['metric.memoryUsage', `${simulation.database.memoryUsage.toFixed(1)}%`],
               ['advanced.queryLoad', `${simulation.database.queryLoad.toFixed(1)}/s`],
@@ -172,6 +181,7 @@ export function ResourceDetailsPanel({
               ['resource.costPerPeriod', t('common.credits', { value: simulation.database.costPerPeriod })],
             ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
           </dl>
+          {infrastructureDeployment?.kind === 'database-upgrade' ? <DeploymentStatus deployment={infrastructureDeployment} gameTimeSeconds={simulation.gameTimeSeconds} /> : databaseUpgradeUnlocked && simulation.database.tierId === 'small' && <button className="resource-panel__upgrade-button" disabled={!!infrastructureDeployment || simulation.balance < databaseUpgradeConfig.deploymentCost} onClick={onUpgradeDatabase}>{t('advanced.upgradeDatabase')} · {databaseUpgradeConfig.deploymentCost}</button>}
         </>
       ) : isLoadBalancer ? (
         <dl className="resource-panel__details">

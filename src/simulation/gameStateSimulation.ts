@@ -1,3 +1,4 @@
+import { databaseUpgradeConfig } from './expansionConfig'
 import {
   campaignStageConfigs,
   getCampaignStage,
@@ -75,7 +76,7 @@ export type StageRuntimeState = {
 }
 
 export type InfrastructureDeployment = {
-  kind: 'load-balancer' | 'app-server'
+  kind: 'load-balancer' | 'app-server' | 'database-upgrade'
   startedAtGameTimeSeconds: number
   completesAtGameTimeSeconds: number
   cost: number
@@ -180,6 +181,11 @@ export function beginServerUpgrade(
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
   })
+}
+
+export function beginDatabaseUpgrade(state: GameState): GameState {
+  if (state.campaign.currentStageIndex < 4 || !state.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId !== 'medium')) return state
+  return beginInfrastructureDeployment(state, 'database-upgrade', databaseUpgradeConfig.deploymentCost, databaseUpgradeConfig.deploymentDurationSeconds)
 }
 
 export function beginLoadBalancerDeployment(
@@ -477,13 +483,15 @@ function beginInfrastructureDeployment(
 ) {
   const simulation = currentState.stageRuntime.simulation
   const resourceAlreadyExists =
-    kind === 'load-balancer'
+    kind === 'database-upgrade'
+      ? currentState.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId === 'medium')
+      : kind === 'load-balancer'
       ? hasLoadBalancer(currentState.campaign)
       : currentState.campaign.infrastructure.resources.some(
           (resource) => resource.id === additionalAppServerConfig.id,
         )
   const resourceIsUnlocked =
-    kind === 'app-server' ||
+    kind === 'database-upgrade' || kind === 'app-server' ||
     currentState.campaign.unlockedResourceTypes.includes('load-balancer')
 
   if (
@@ -535,7 +543,9 @@ function advanceInfrastructureDeployment(
 
   return {
     campaign:
-      deployment.kind === 'load-balancer'
+      deployment.kind === 'database-upgrade'
+        ? { ...campaign, infrastructure: { ...campaign.infrastructure, resources: campaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, databaseTierId: 'medium' as const } : resource) } }
+        : deployment.kind === 'load-balancer'
         ? addLoadBalancerResource(campaign)
         : addAdditionalAppServerResource(campaign),
     deployment: null,

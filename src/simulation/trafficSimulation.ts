@@ -1,3 +1,4 @@
+import type { DatabaseTierId } from './expansionConfig'
 import { calculateDatabaseMetrics, type DatabaseMetrics } from './databaseSimulation'
 import type { StageTrafficProfile } from '../data/stages'
 import {
@@ -37,6 +38,7 @@ export type TrafficAppServerResource = {
 export type TrafficInfrastructure = {
   appServers: TrafficAppServerResource[]
   distributesTraffic: boolean
+  databaseTierId?: DatabaseTierId
   hasDatabase?: boolean
   loadBalancerCostPerPeriod: number
 }
@@ -327,7 +329,7 @@ function calculateApplicationMetrics(
   infrastructure: TrafficInfrastructure,
   queriesPerRequest?: number,
 ) {
-  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : requestsPerSecond, queriesPerRequest)
+  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : requestsPerSecond, queriesPerRequest, infrastructure.databaseTierId)
   const shares =
     infrastructure.distributesTraffic && infrastructure.appServers.length > 1
       ? distributeRequestsEvenly(

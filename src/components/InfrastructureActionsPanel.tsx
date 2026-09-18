@@ -129,7 +129,7 @@ function BuildOption({
   )
 }
 
-function DeploymentStatus({
+export function DeploymentStatus({
   deployment,
   gameTimeSeconds,
 }: {
@@ -147,7 +147,7 @@ function DeploymentStatus({
     0,
   )
   const resourceKey: TranslationKey =
-    deployment.kind === 'load-balancer'
+    deployment.kind === 'database-upgrade' ? 'advanced.mediumDatabase' : deployment.kind === 'load-balancer'
       ? 'resource.loadBalancer'
       : 'resource.appServerB'
   const resourceName = t(resourceKey)
