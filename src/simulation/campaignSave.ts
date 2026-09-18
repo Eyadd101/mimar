@@ -28,6 +28,8 @@ const resourceTypes: readonly CampaignResourceType[] = [
   'database',
   'load-balancer',
   'cache',
+  'queue',
+  'worker',
 ]
 
 export function loadCampaignSave(
@@ -264,6 +266,11 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
         `${appServers[0].id}->${databaseTargetId}`,
       ]
 
+  const queue = resources.find(r => r.type === 'queue')
+  const worker = resources.find(r => r.type === 'worker')
+  if (queue) for (const server of appServers) expectedConnections.push(`${server.id}->${queue.id}`)
+  if (queue && worker) expectedConnections.push(`${queue.id}->${worker.id}`)
+  if (['queue', 'worker'].some(type => resources.filter(r => r.type === type).length > 1)) return false
   if (cache) expectedConnections.push(`${cache.id}->${databases[0].id}`)
   if (resources.filter(r => r.type === 'cache').length > 1) return false
   return (

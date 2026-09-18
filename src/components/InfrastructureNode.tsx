@@ -11,6 +11,8 @@ import {
 import { TechnicalTerm } from './TechnicalTerm'
 
 const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  queue: 'advanced.queue',
+  worker: 'advanced.worker',
   cache: 'advanced.cache',
   users: 'node.entryPoint',
   server: 'node.compute',
@@ -19,6 +21,8 @@ const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
 }
 
 const resourceLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  queue: 'advanced.queue',
+  worker: 'advanced.worker',
   cache: 'advanced.cache',
   users: 'resource.users',
   server: 'resource.appServer',
@@ -52,7 +56,7 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
           <path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2" />
         </>
       )}
-      {kind === 'server' && (
+      {(kind === 'server' || kind === 'worker' || kind === 'queue') && (
         <>
           <rect x="3" y="3" width="18" height="7" rx="2" />
           <rect x="3" y="14" width="18" height="7" rx="2" />

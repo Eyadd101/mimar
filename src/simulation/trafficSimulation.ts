@@ -1,3 +1,5 @@
+import { advanceQueue, emptyQueue, type QueueMetrics } from './queueSimulation'
+import { queueConfig } from './expansionConfig'
 import { calculateCacheMetrics, type CacheMetrics } from './cacheSimulation'
 import { databaseConfig } from './expansionConfig'
 import type { DatabaseTierId } from './expansionConfig'
@@ -41,6 +43,8 @@ export type TrafficInfrastructure = {
   appServers: TrafficAppServerResource[]
   distributesTraffic: boolean
   databaseTierId?: DatabaseTierId
+  hasQueue?: boolean
+  hasWorker?: boolean
   hasCache?: boolean
   advancedCostPerPeriod?: number
   hasDatabase?: boolean
@@ -56,6 +60,7 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 export type TrafficSimulationState = CustomerSatisfactionState &
   BusinessConsequenceState &
   EconomyState & {
+  queue: QueueMetrics
   cache: CacheMetrics
   database: DatabaseMetrics
   activeUsers: number
@@ -137,6 +142,7 @@ export function createInitialTrafficState(
     requestsPerSecond,
     gameTimeSeconds: 0,
     ...application,
+    queue: emptyQueue,
     serverDeployment: null,
     ...satisfaction,
     ...consequences,
@@ -293,7 +299,9 @@ function advanceOneGameSecond(
     requestsPerSecond,
     effectiveInfrastructure,
     trafficProfile.queriesPerRequest,
+    requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
   )
+  const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker) ?? false)
   const economyPeriodIsDue =
     gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
   const satisfaction = advanceCustomerSatisfaction(
@@ -319,6 +327,7 @@ function advanceOneGameSecond(
     requestsPerSecond,
     gameTimeSeconds,
     ...application,
+    queue,
     serverDeployment: deploymentCompleted
       ? null
       : currentState.serverDeployment,
@@ -333,17 +342,19 @@ function calculateApplicationMetrics(
   requestsPerSecond: number,
   infrastructure: TrafficInfrastructure,
   queriesPerRequest?: number,
+  backgroundJobs = 0,
 ) {
   const cache = calculateCacheMetrics(requestsPerSecond * (queriesPerRequest ?? databaseConfig.queriesPerRequest), infrastructure.hasCache ?? false)
   const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : cache.databaseQueries, 1, infrastructure.databaseTierId)
+  const effectiveRequests = requestsPerSecond + (infrastructure.hasQueue ? 0 : backgroundJobs * queueConfig.synchronousRequestEquivalentsPerJob)
   const shares =
     infrastructure.distributesTraffic && infrastructure.appServers.length > 1
       ? distributeRequestsEvenly(
-          requestsPerSecond,
+          effectiveRequests,
           infrastructure.appServers.length,
         )
       : infrastructure.appServers.map((_, index) =>
-          index === 0 ? requestsPerSecond : 0,
+          index === 0 ? effectiveRequests : 0,
         )
   const appServers = infrastructure.appServers.map((resource, index) => ({
     resourceId: resource.id,
@@ -360,7 +371,7 @@ function calculateApplicationMetrics(
     appServers.length === 0
       ? 0
       : requestsPerSecond > 0
-        ? Math.round(weightedLatency / requestsPerSecond)
+        ? Math.round(weightedLatency / effectiveRequests)
         : Math.round(
             appServers.reduce((total, server) => total + server.latencyMs, 0) /
               appServers.length,

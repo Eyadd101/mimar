@@ -1,4 +1,13 @@
 export const expansionEnglish = {
+  "advanced.queue": "Message Queue",
+  "advanced.worker": "Worker",
+  "advanced.queuePurpose": "Buffers background jobs so user requests can finish promptly. A queue stores work; a worker must process it.",
+  "advanced.workerPurpose": "Processes queued jobs independently of user-facing application servers.",
+  "advanced.queueDepth": "Queue Depth",
+  "advanced.enqueueRate": "Enqueue Rate",
+  "advanced.processingRate": "Processing Rate",
+  "advanced.oldestAge": "Estimated Oldest Message Age",
+
   "advanced.stage6": "Read Heavy Traffic",
   "advanced.stage6Story": "The popular dashboard repeatedly reads the same data. Inspect the database workload. A larger database can handle more queries; a cache can avoid repeated read work. Compare ongoing cost and capacity.",
   "advanced.stage6Lesson": "Caching reduces repeated reads, not writes. Small Database plus Cache can cost less than Medium Database for a read-heavy workload.",
@@ -34,6 +43,15 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.queue": "طابور الرسائل",
+  "advanced.worker": "عامل المعالجة",
+  "advanced.queuePurpose": "يحتفظ بالمهام الخلفية لتستجيب الخدمة بسرعة. الطابور يخزن العمل ويحتاج إلى عامل لمعالجته.",
+  "advanced.workerPurpose": "يعالج المهام في الطابور مستقلاً عن خوادم طلبات المستخدمين.",
+  "advanced.queueDepth": "عمق الطابور",
+  "advanced.enqueueRate": "معدل إضافة المهام",
+  "advanced.processingRate": "معدل المعالجة",
+  "advanced.oldestAge": "عمر أقدم رسالة التقديري",
+
   "advanced.stage6": "حمل كثيف من القراءات",
   "advanced.stage6Story": "تعيد لوحة العملاء قراءة البيانات نفسها باستمرار. افحص الحمل: قاعدة بيانات أكبر تستوعب استعلامات أكثر، والتخزين المؤقت يقلل العمل المتكرر. قارن التكلفة المستمرة والسعة.",
   "advanced.stage6Lesson": "التخزين المؤقت يقلل القراءات المتكررة لا الكتابات. قد تكون قاعدة صغيرة مع تخزين مؤقت أقل تكلفة من قاعدة متوسطة لهذا الحمل.",

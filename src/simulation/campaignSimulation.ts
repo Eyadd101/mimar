@@ -302,6 +302,8 @@ export function addAdvancedResource(campaign: CampaignState, type: AdvancedResou
     connections = connections.filter(c => !getAppServers(campaign).some(s => s.id === c.sourceId && c.targetId === database.id))
     connections = [...connections, ...getAppServers(campaign).map(s => ({ id: `${s.id}-cache`, sourceId: s.id, targetId: 'cache' })), { id: 'cache-database', sourceId: 'cache', targetId: database.id }]
   }
+  if (type === 'queue') connections = [...connections, ...getAppServers(campaign).map(server => ({ id: `${server.id}-queue`, sourceId: server.id, targetId: 'queue' }))]
+  if ((type === 'queue' || type === 'worker') && resources.some(r => r.type === 'queue') && resources.some(r => r.type === 'worker')) connections = [...connections, { id: 'queue-worker', sourceId: 'queue', targetId: 'worker' }]
   return { ...campaign, infrastructure: { resources, connections } }
 }
 
@@ -352,6 +354,8 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    hasQueue: campaign.infrastructure.resources.some(resource => resource.type === 'queue'),
+    hasWorker: campaign.infrastructure.resources.some(resource => resource.type === 'worker'),
     hasCache: campaign.infrastructure.resources.some(resource => resource.type === 'cache'),
     advancedCostPerPeriod: campaign.infrastructure.resources.reduce((sum, resource) => sum + (resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].costPerPeriod : 0), 0),
     databaseTierId: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.databaseTierId ?? 'small',

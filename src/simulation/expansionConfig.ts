@@ -21,7 +21,11 @@ export type DatabaseTierId = keyof typeof databaseTierConfigs
 export const databaseUpgradeConfig = { deploymentCost: 90, deploymentDurationSeconds: 30 } as const
 
 export const advancedResourceConfigs = {
+  queue: { name: 'Message Queue', labelKey: 'advanced.queue', purposeKey: 'advanced.queuePurpose', awsReference: 'SQS', costPerPeriod: 2, deploymentCost: 35, deploymentDurationSeconds: 20, position: { x: 720, y: 280 } },
+  worker: { name: 'Worker', labelKey: 'advanced.worker', purposeKey: 'advanced.workerPurpose', awsReference: 'EC2', costPerPeriod: 5, deploymentCost: 45, deploymentDurationSeconds: 25, position: { x: 1020, y: 280 } },
   cache: { name: 'Cache', labelKey: 'advanced.cache', purposeKey: 'advanced.cachePurpose', awsReference: 'ElastiCache', costPerPeriod: 4, deploymentCost: 55, deploymentDurationSeconds: 25, position: { x: 720, y: -260 } },
 } as const
 export type AdvancedResourceType = keyof typeof advancedResourceConfigs
 export const cacheConfig = { readFraction: .8, repeatReadFraction: .75, capacity: 220 } as const
+
+export const queueConfig = { workerCapacity: 6, synchronousRequestEquivalentsPerJob: 6, healthyBacklogSeconds: 30 } as const
