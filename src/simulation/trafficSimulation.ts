@@ -1,3 +1,5 @@
+import { advanceSecurity, clearSecurityRuntime, secureSettings, type SecuritySettings, type SecurityRuntime } from './securitySimulation'
+import { securityConfig } from './expansionConfig'
 import { advanceStorage, emptyStoredData, type StoredData, type StorageMetrics } from './storageSimulation'
 import { advanceQueue, emptyQueue, type QueueMetrics } from './queueSimulation'
 import { queueConfig } from './expansionConfig'
@@ -44,6 +46,7 @@ export type TrafficInfrastructure = {
   appServers: TrafficAppServerResource[]
   distributesTraffic: boolean
   databaseTierId?: DatabaseTierId
+  securitySettings?: SecuritySettings
   hasObjectStorage?: boolean
   storedData?: StoredData
   hasQueue?: boolean
@@ -63,6 +66,7 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 export type TrafficSimulationState = CustomerSatisfactionState &
   BusinessConsequenceState &
   EconomyState & {
+  security: SecurityRuntime
   storage: StorageMetrics
   queue: QueueMetrics
   cache: CacheMetrics
@@ -146,6 +150,7 @@ export function createInitialTrafficState(
     requestsPerSecond,
     gameTimeSeconds: 0,
     ...application,
+    security: advanceSecurity(clearSecurityRuntime, infrastructure.securitySettings ?? secureSettings, 0).state,
     storage: advanceStorage(infrastructure.storedData ?? emptyStoredData, 0, infrastructure.hasObjectStorage ?? false, 0),
     queue: emptyQueue,
     serverDeployment: null,
@@ -308,7 +313,8 @@ function advanceOneGameSecond(
     requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
   )
   const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker) ?? false)
-  application.applicationLatencyMs += storage.latencyPenaltyMs
+  const security = advanceSecurity(currentState.security, infrastructure.securitySettings ?? secureSettings)
+  application.applicationLatencyMs += storage.latencyPenaltyMs + (security.state.incidentActive ? securityConfig.incidentLatencyMs : 0)
   application.infrastructureCostPerPeriod += storage.costPerPeriod
   const economyPeriodIsDue =
     gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
@@ -337,12 +343,13 @@ function advanceOneGameSecond(
     ...application,
     queue,
     storage,
+    security: security.state,
     serverDeployment: deploymentCompleted
       ? null
       : currentState.serverDeployment,
     ...satisfaction,
     ...economy,
-    balance: consequences.balance,
+    balance: Math.max(0, consequences.balance - security.penalty),
     ...consequences.consequenceState,
   }
 }

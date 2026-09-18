@@ -1,3 +1,4 @@
+import type { SecurityRisk } from '../simulation/securitySimulation'
 import type { AdvancedResourceType } from '../simulation/expansionConfig'
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -11,6 +12,7 @@ import {
   beginLoadBalancerDeployment,
   beginServerUpgrade,
   beginDatabaseUpgrade,
+  configureDatabaseSecurity,
   beginAdvancedResourceDeployment,
   continueToNextStage,
   connectStageOneResources,
@@ -168,6 +170,7 @@ export function useGameSimulation() {
     gameSpeed,
     setGameSpeed,
     startAdvancedDeployment: (type: AdvancedResourceType) => setGameState(state => beginAdvancedResourceDeployment(state, type)),
+    configureSecurity: (key: SecurityRisk, exposed: boolean) => setGameState(state => configureDatabaseSecurity(state, key, exposed)),
     startDatabaseUpgrade: () => setGameState(beginDatabaseUpgrade),
     startServerUpgrade: upgradeServer,
     startLoadBalancerDeployment: deployLoadBalancer,

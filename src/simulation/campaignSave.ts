@@ -1,3 +1,4 @@
+import { securityRiskKeys } from './securitySimulation'
 import { campaignStageConfigs } from '../data/stages'
 import {
   type CampaignResource,
@@ -125,6 +126,7 @@ function isValidCampaign(value: unknown): value is CampaignState {
   }
 
   if (value.storedData !== undefined && (!isRecord(value.storedData) || !['localObjects', 'storedObjects'].every(key => typeof value.storedData === 'object' && value.storedData !== null && typeof (value.storedData as Record<string, unknown>)[key] === 'number' && Number.isFinite((value.storedData as Record<string, unknown>)[key]) && Number((value.storedData as Record<string, unknown>)[key]) >= 0))) return false
+  if (value.unlockedControls !== undefined && (!Array.isArray(value.unlockedControls) || !value.unlockedControls.every(key => key === 'security' || key === 'backups'))) return false
   const stageIndexIsValid =
     Number.isInteger(value.currentStageIndex) &&
     Number(value.currentStageIndex) >= 0 &&
@@ -312,6 +314,7 @@ function isValidResource(value: unknown): value is CampaignResource {
     return false
   }
 
+  if (value.type === 'database' && value.security !== undefined && (!isRecord(value.security) || !securityRiskKeys.every(key => isRecord(value.security) && typeof value.security[key] === 'boolean'))) return false
   if (value.type === 'database' && value.databaseTierId !== undefined && value.databaseTierId !== 'small' && value.databaseTierId !== 'medium') return false
   return value.type !== 'app-server' || isServerTierId(value.tierId)
 }

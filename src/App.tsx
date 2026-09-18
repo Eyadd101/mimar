@@ -96,6 +96,7 @@ function App() {
     startServerUpgrade,
     startDatabaseUpgrade,
     startAdvancedDeployment,
+    configureSecurity,
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
@@ -401,6 +402,8 @@ function App() {
             <Panel position="top-right" className="resource-panel-position">
               <ResourceDetailsPanel
                 node={selectedNode}
+                campaign={campaign}
+                onConfigureSecurity={configureSecurity}
                 simulation={traffic}
                 serviceStarted={serviceStarted}
                 databaseUpgradeUnlocked={stage.sequence >= 5}

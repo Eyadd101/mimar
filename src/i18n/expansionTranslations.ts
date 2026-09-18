@@ -1,4 +1,14 @@
 export const expansionEnglish = {
+  "advanced.security": "Security Configuration",
+  "advanced.securityPurpose": "Checked settings expose the service. Limit access to what the application needs. There are no random unavoidable attacks.",
+  "advanced.publicDatabase": "Public Database",
+  "advanced.weakCredentials": "Weak Credentials",
+  "advanced.excessivePermissions": "Excessive Permissions",
+  "advanced.openNetwork": "Open Network Access",
+  "advanced.securityWarning": "Exposure detected. Fix the configuration within {{seconds}} game seconds to prevent an incident.",
+  "advanced.securityIncident": "Security incident: exposure continued beyond the grace period. A response cost was charged and service is degraded until the settings are fixed.",
+  "advanced.securityClear": "No configuration risks detected.",
+
   "advanced.stage8": "Growing Uploads",
   "advanced.stage8Story": "Customers now upload files regularly. The application is keeping them on its local disk. Watch storage pressure and consider what happens when that machine is replaced. Separate compute from persistent data.",
   "advanced.stage8Lesson": "Object Storage holds shared, durable files independently of application compute. A server replacement should not erase customer uploads.",
@@ -62,6 +72,16 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.security": "إعدادات الأمان",
+  "advanced.securityPurpose": "الإعدادات المحددة تعرّض الخدمة للخطر. امنح فقط الوصول الذي يحتاجه التطبيق. لا توجد هجمات عشوائية لا يمكن تجنبها.",
+  "advanced.publicDatabase": "قاعدة بيانات عامة",
+  "advanced.weakCredentials": "بيانات اعتماد ضعيفة",
+  "advanced.excessivePermissions": "صلاحيات زائدة",
+  "advanced.openNetwork": "وصول شبكي مفتوح",
+  "advanced.securityWarning": "تم اكتشاف تعرض للخطر. أصلح الإعدادات خلال {{seconds}} ثانية لعب لمنع الحادث.",
+  "advanced.securityIncident": "حادث أمني: استمر التعرض بعد فترة السماح. خُصمت تكلفة الاستجابة وتبقى الخدمة متأثرة حتى إصلاح الإعدادات.",
+  "advanced.securityClear": "لم تُكتشف مخاطر في الإعدادات.",
+
   "advanced.stage8": "تزايد الملفات المرفوعة",
   "advanced.stage8Story": "يرفع العملاء ملفات بانتظام ويحفظها التطبيق على قرصه المحلي. راقب ضغط التخزين وفكّر فيما يحدث عند استبدال الجهاز. افصل الحوسبة عن البيانات الدائمة.",
   "advanced.stage8Lesson": "يحفظ تخزين الكائنات الملفات بصورة مشتركة ودائمة بعيداً عن حوسبة التطبيق. استبدال خادم يجب ألا يمحو ملفات العملاء.",

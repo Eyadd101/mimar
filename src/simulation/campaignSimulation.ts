@@ -1,3 +1,4 @@
+import { secureSettings, type SecuritySettings } from './securitySimulation'
 import { emptyStoredData, type StoredData } from './storageSimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, type DatabaseTierId } from './expansionConfig'
 import {
@@ -41,6 +42,7 @@ export type CampaignResource =
   | (CampaignResourceBase & {
       type: 'database'
       databaseTierId?: DatabaseTierId
+      security?: SecuritySettings
     })
   | (CampaignResourceBase & {
       type: 'app-server'
@@ -70,6 +72,7 @@ export type CampaignState = {
   unlockedResourceTypes: CampaignResourceType[]
   completedStages: CampaignStageRecord[]
   seed: number
+  unlockedControls?: ('security' | 'backups')[]
   storedData?: StoredData
 }
 
@@ -359,6 +362,7 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    securitySettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings,
     hasObjectStorage: campaign.infrastructure.resources.some(resource => resource.type === 'object-storage'),
     storedData: campaign.storedData ?? emptyStoredData,
     hasQueue: campaign.infrastructure.resources.some(resource => resource.type === 'queue'),

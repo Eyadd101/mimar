@@ -1,3 +1,4 @@
+import { advanceSecurity, secureSettings, type SecurityRisk } from './securitySimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './expansionConfig'
 import {
   campaignStageConfigs,
@@ -182,6 +183,13 @@ export function beginServerUpgrade(
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
   })
+}
+
+export function configureDatabaseSecurity(state: GameState, key: SecurityRisk, exposed: boolean): GameState {
+  if (state.stageRuntime.status !== 'playing' || !state.campaign.unlockedControls?.includes('security')) return state
+  const resources = state.campaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, security: { ...(resource.security ?? secureSettings), [key]: exposed } } : resource)
+  const settings = resources.find(resource => resource.type === 'database')?.security ?? secureSettings
+  return { ...state, campaign: { ...state.campaign, infrastructure: { ...state.campaign.infrastructure, resources } }, stageRuntime: { ...state.stageRuntime, simulation: { ...state.stageRuntime.simulation, security: advanceSecurity(state.stageRuntime.simulation.security, settings, 0).state } } }
 }
 
 export function beginAdvancedResourceDeployment(state: GameState, type: AdvancedResourceType): GameState {

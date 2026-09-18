@@ -32,3 +32,5 @@ export const cacheConfig = { readFraction: .8, repeatReadFraction: .75, capacity
 export const queueConfig = { workerCapacity: 6, synchronousRequestEquivalentsPerJob: 6, healthyBacklogSeconds: 30 } as const
 
 export const storageConfig = { objectSizeGiB: .005, localCapacityGiB: 1, localPressureLatencyMs: 500, baseCostPerPeriod: 1, costPerGiB: .15, costPerRequestRate: .1 } as const
+
+export const securityConfig = { gracePeriodSeconds: 90, incidentCost: 40, incidentLatencyMs: 500 } as const
