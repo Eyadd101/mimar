@@ -1,3 +1,4 @@
+import { backupConfig } from './expansionConfig'
 import { securityRiskKeys } from './securitySimulation'
 import { campaignStageConfigs } from '../data/stages'
 import {
@@ -127,6 +128,10 @@ function isValidCampaign(value: unknown): value is CampaignState {
 
   if (value.storedData !== undefined && (!isRecord(value.storedData) || !['localObjects', 'storedObjects'].every(key => typeof value.storedData === 'object' && value.storedData !== null && typeof (value.storedData as Record<string, unknown>)[key] === 'number' && Number.isFinite((value.storedData as Record<string, unknown>)[key]) && Number((value.storedData as Record<string, unknown>)[key]) >= 0))) return false
   if (value.unlockedControls !== undefined && (!Array.isArray(value.unlockedControls) || !value.unlockedControls.every(key => key === 'security' || key === 'backups'))) return false
+  if (value.databaseData !== undefined) {
+    const data = value.databaseData
+    if (!isRecord(data) || typeof data.dataLost !== 'boolean' || !['revision', 'secondsSinceBackup'].every(key => typeof data[key] === 'number' && Number.isFinite(data[key]) && Number(data[key]) >= 0) || (data.backupRevision !== null && (typeof data.backupRevision !== 'number' || !Number.isFinite(data.backupRevision) || data.backupRevision < 1 || data.backupRevision > Number(data.revision)))) return false
+  }
   const stageIndexIsValid =
     Number.isInteger(value.currentStageIndex) &&
     Number(value.currentStageIndex) >= 0 &&
@@ -314,6 +319,7 @@ function isValidResource(value: unknown): value is CampaignResource {
     return false
   }
 
+  if (value.type === 'database' && value.backups !== undefined && (!isRecord(value.backups) || typeof value.backups.enabled !== 'boolean' || !(backupConfig.frequenciesSeconds as readonly unknown[]).includes(value.backups.frequencySeconds))) return false
   if (value.type === 'database' && value.security !== undefined && (!isRecord(value.security) || !securityRiskKeys.every(key => isRecord(value.security) && typeof value.security[key] === 'boolean'))) return false
   if (value.type === 'database' && value.databaseTierId !== undefined && value.databaseTierId !== 'small' && value.databaseTierId !== 'medium') return false
   return value.type !== 'app-server' || isServerTierId(value.tierId)

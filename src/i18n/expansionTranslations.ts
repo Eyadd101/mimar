@@ -1,4 +1,12 @@
 export const expansionEnglish = {
+  "advanced.backups": "Database Backup",
+  "advanced.backupPurpose": "Snapshots protect against data loss. They do not increase query capacity and do not keep a failed database online.",
+  "advanced.enableBackups": "Enable backups",
+  "advanced.backupFrequency": "Backup frequency",
+  "advanced.noBackup": "No valid backup yet",
+  "advanced.backupReady": "A recovery snapshot is available",
+  "advanced.backupDue": "Next snapshot in {{seconds}} game seconds.",
+
   "advanced.stage9": "Too Public",
   "advanced.stage9Story": "An integration change left the existing database publicly accessible, with open network access and excessive permissions. A security review has flagged the configuration. Inspect database settings before exposure becomes an incident.",
   "advanced.stage9Lesson": "Private access and least privilege reduce exposure. Give each component only the network access and permissions it needs.",
@@ -78,6 +86,14 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.backups": "نسخ قاعدة البيانات احتياطياً",
+  "advanced.backupPurpose": "تحمي اللقطات من فقدان البيانات. لا تزيد سعة الاستعلامات ولا تبقي قاعدة متعطلة قيد العمل.",
+  "advanced.enableBackups": "تفعيل النسخ الاحتياطي",
+  "advanced.backupFrequency": "تكرار النسخ الاحتياطي",
+  "advanced.noBackup": "لا توجد نسخة صالحة بعد",
+  "advanced.backupReady": "توجد لقطة متاحة للاستعادة",
+  "advanced.backupDue": "اللقطة التالية خلال {{seconds}} ثانية لعب.",
+
   "advanced.stage9": "مكشوفة أكثر من اللازم",
   "advanced.stage9Story": "ترك تغيير في التكامل قاعدة البيانات الحالية متاحة للعامة مع شبكة مفتوحة وصلاحيات زائدة. أبلغت المراجعة الأمنية عن الإعدادات. افحصها قبل تحوّل التعرض إلى حادث.",
   "advanced.stage9Lesson": "الوصول الخاص وأقل قدر من الصلاحيات يقللان التعرض. امنح كل مكوّن الوصول والصلاحيات اللازمة فقط.",

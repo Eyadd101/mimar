@@ -97,6 +97,7 @@ function App() {
     startDatabaseUpgrade,
     startAdvancedDeployment,
     configureSecurity,
+    configureBackups,
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
@@ -403,6 +404,7 @@ function App() {
               <ResourceDetailsPanel
                 node={selectedNode}
                 campaign={campaign}
+                onConfigureBackups={configureBackups}
                 onConfigureSecurity={configureSecurity}
                 simulation={traffic}
                 serviceStarted={serviceStarted}

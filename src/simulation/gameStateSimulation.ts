@@ -1,3 +1,5 @@
+import { backupConfig } from './expansionConfig'
+import type { BackupSettings } from './backupSimulation'
 import { advanceSecurity, secureSettings, type SecurityRisk } from './securitySimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './expansionConfig'
 import {
@@ -187,6 +189,12 @@ export function beginServerUpgrade(
     campaign: syncCampaignWithSimulation(currentState.campaign, simulation),
     stageRuntime: { ...currentState.stageRuntime, simulation },
   })
+}
+
+export function configureDatabaseBackups(state: GameState, settings: BackupSettings): GameState {
+  if (state.stageRuntime.status !== 'playing' || !state.campaign.unlockedControls?.includes('backups') || !(backupConfig.frequenciesSeconds as readonly number[]).includes(settings.frequencySeconds)) return state
+  const resources = state.campaign.infrastructure.resources.map(resource => resource.type === 'database' ? { ...resource, backups: { ...settings } } : resource)
+  return { ...state, campaign: { ...state.campaign, infrastructure: { ...state.campaign.infrastructure, resources } } }
 }
 
 export function configureDatabaseSecurity(state: GameState, key: SecurityRisk, exposed: boolean): GameState {

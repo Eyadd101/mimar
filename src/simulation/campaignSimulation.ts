@@ -1,3 +1,4 @@
+import { defaultBackupSettings, initialDatabaseData, type BackupSettings, type DatabaseData } from './backupSimulation'
 import { secureSettings, type SecuritySettings } from './securitySimulation'
 import { emptyStoredData, type StoredData } from './storageSimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, type DatabaseTierId } from './expansionConfig'
@@ -43,6 +44,7 @@ export type CampaignResource =
       type: 'database'
       databaseTierId?: DatabaseTierId
       security?: SecuritySettings
+      backups?: BackupSettings
     })
   | (CampaignResourceBase & {
       type: 'app-server'
@@ -73,6 +75,7 @@ export type CampaignState = {
   completedStages: CampaignStageRecord[]
   seed: number
   unlockedControls?: ('security' | 'backups')[]
+  databaseData?: DatabaseData
   storedData?: StoredData
 }
 
@@ -325,13 +328,15 @@ export function syncCampaignWithSimulation(
     return runtime && runtime.tierId !== resource.tierId
   })
 
+  const databaseDataChanged = campaign.databaseData !== simulation.databaseData
   const dataChanged = campaign.storedData?.storedObjects !== simulation.storage.storedObjects || campaign.storedData?.localObjects !== simulation.storage.localObjects
-  if (!balanceChanged && !tierChanged && !dataChanged) {
+  if (!balanceChanged && !tierChanged && !dataChanged && !databaseDataChanged) {
     return campaign
   }
 
   return {
     ...campaign,
+    databaseData: simulation.databaseData,
     storedData: { storedObjects: simulation.storage.storedObjects, localObjects: simulation.storage.localObjects },
     balance: simulation.balance,
     infrastructure: tierChanged
@@ -362,6 +367,8 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    backupSettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings,
+    databaseData: campaign.databaseData ?? initialDatabaseData,
     securitySettings: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings,
     hasObjectStorage: campaign.infrastructure.resources.some(resource => resource.type === 'object-storage'),
     storedData: campaign.storedData ?? emptyStoredData,

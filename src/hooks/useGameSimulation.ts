@@ -1,3 +1,4 @@
+import type { BackupSettings } from '../simulation/backupSimulation'
 import type { SecurityRisk } from '../simulation/securitySimulation'
 import type { AdvancedResourceType } from '../simulation/expansionConfig'
 import { useCallback, useEffect, useState } from 'react'
@@ -13,6 +14,7 @@ import {
   beginServerUpgrade,
   beginDatabaseUpgrade,
   configureDatabaseSecurity,
+  configureDatabaseBackups,
   beginAdvancedResourceDeployment,
   continueToNextStage,
   connectStageOneResources,
@@ -170,6 +172,7 @@ export function useGameSimulation() {
     gameSpeed,
     setGameSpeed,
     startAdvancedDeployment: (type: AdvancedResourceType) => setGameState(state => beginAdvancedResourceDeployment(state, type)),
+    configureBackups: (settings: BackupSettings) => setGameState(state => configureDatabaseBackups(state, settings)),
     configureSecurity: (key: SecurityRisk, exposed: boolean) => setGameState(state => configureDatabaseSecurity(state, key, exposed)),
     startDatabaseUpgrade: () => setGameState(beginDatabaseUpgrade),
     startServerUpgrade: upgradeServer,
