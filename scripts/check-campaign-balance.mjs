@@ -42,14 +42,17 @@ function runCampaign(seed, cacheStrategy) {
 }
 
 let failures = 0
-for (const seed of [47291, 1, 42, 12345]) {
+const sweep = process.argv.includes('--sweep')
+const seeds = sweep ? Array.from({ length: 100 }, (_, index) => index + 1) : [47291, 1, 42, 12345]
+for (const seed of seeds) {
   for (const cacheStrategy of [false, true]) {
     const rows = runCampaign(seed, cacheStrategy)
-    console.log(`Seed ${seed} · ${cacheStrategy ? 'Cache + Small DB' : 'Medium DB'}`)
-    console.table(rows)
+    if (!sweep) console.log(`Seed ${seed} · ${cacheStrategy ? 'Cache + Small DB' : 'Medium DB'}`)
+    if (!sweep) console.table(rows)
     if (rows.length !== 10 || rows.some(row => row.outcome !== 'stage-won')) failures++
   }
 }
+console.log(`${seeds.length * 2} campaign playthroughs, ${failures} failures.`)
 if (failures) {
   console.error(`${failures} campaign strategies failed.`)
   process.exitCode = 1

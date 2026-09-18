@@ -1,4 +1,8 @@
 export const expansionEnglish = {
+  "advanced.productTeam": "Product Team",
+  "advanced.featureAdoption": "Feature adoption is growing",
+  "advanced.featureAdoptionStory": "More customers will begin using this feature shortly. Watch application and database metrics together; the forecast is an estimate.",
+
   "advanced.downsize": "Resize to Small Database",
   "advanced.downsizeWarning": "Reduces query capacity and operating cost. Check current query load first: a cache only avoids repeated reads. Resizing takes game time and preserves data.",
 
@@ -120,6 +124,10 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.productTeam": "فريق المنتج",
+  "advanced.featureAdoption": "يتزايد استخدام الميزة",
+  "advanced.featureAdoptionStory": "سيبدأ مزيد من العملاء استخدام الميزة قريباً. راقب مقاييس التطبيق وقاعدة البيانات معاً؛ التوقع تقديري.",
+
   "advanced.downsize": "تغيير الحجم إلى قاعدة صغيرة",
   "advanced.downsizeWarning": "يقلل سعة الاستعلامات وتكلفة التشغيل. افحص الحمل أولاً: التخزين المؤقت يتجنب القراءات المتكررة فقط. يستغرق التغيير وقت لعب ويحفظ البيانات.",
 

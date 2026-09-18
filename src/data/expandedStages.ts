@@ -93,3 +93,16 @@ recoveryStage.winCondition.requiredObjectiveIds.push('recovered')
 backgroundStage.trafficProfile.failures = [{ id: 'worker-maintenance', resourceId: 'worker', labelKey: 'advanced.worker', startsAtSecond: 240, durationSeconds: 25 }]
 uploadsStage.trafficProfile.failures = [{ id: 'server-restart', resourceId: 'server', labelKey: 'resource.appServer', startsAtSecond: 240, durationSeconds: 20 }]
 recoveryStage.trafficProfile.failures = [{ id: 'database-maintenance', resourceId: 'database', labelKey: 'advanced.database', startsAtSecond: 300, durationSeconds: 15 }]
+
+/** Small, forecasted traffic lifts provide a second observation point after deployment. */
+function workloadEvent(id: string, durationSeconds: number, range: readonly [number, number]): StageConfig['trafficEvents'][number] {
+  return {
+    id, type: 'traffic-multiplier', senderKey: 'advanced.productTeam', titleKey: 'advanced.featureAdoption', messageKey: 'advanced.featureAdoptionStory',
+    startsAtSecond: 90, durationSeconds,
+    forecastMinimumMultiplier: range[0], forecastMaximumMultiplier: range[1],
+    outcomeProfile: { typicalProbability: 1, moderatelyLowerProbability: 0, moderatelyHigherProbability: 0, tailProbability: 0,
+      typicalRange: range, moderatelyLowerRange: range, moderatelyHigherRange: range, tailRange: range, tailExplanationKey: 'advanced.featureAdoptionStory' },
+  }
+}
+databaseBottleneckStage.trafficEvents = [workloadEvent('database-adoption', 150, [1.1, 1.2])]
+readHeavyStage.trafficEvents = [workloadEvent('dashboard-adoption', 180, [1.08, 1.12])]

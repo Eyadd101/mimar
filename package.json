@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "node tests/simulation.test.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:balance": "node scripts/check-campaign-balance.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",
