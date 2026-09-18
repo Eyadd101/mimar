@@ -776,3 +776,39 @@ test('position batches preserve every stage topology', () => {
     )
   }
 })
+
+
+test('continuity audit preserves all stage transitions and resets temporary state', () => {
+  let campaign = createBuiltCampaign()
+  campaign.infrastructure.resources[1].tierId = 'medium'
+  campaign = campaignSimulation.updateResourcePositions(campaign, [
+    { id: 'users', position: { x: -123, y: 87 } },
+    { id: 'server', position: { x: 412, y: -56 } },
+  ])
+  const positions = campaign.infrastructure.resources.map(({ id, position }) => ({ id, position }))
+  campaign = campaignSimulation.addLoadBalancerResource(campaign)
+  campaign = campaignSimulation.addAdditionalAppServerResource(campaign)
+  for (const expected of positions) {
+    assert.deepEqual(campaign.infrastructure.resources.find(r => r.id === expected.id).position, expected.position)
+  }
+  campaign = campaignSimulation.applyResourceUnlocks(campaign, ['load-balancer'])
+  for (let index = 0; index < 3; index++) {
+    const initial = gameStateSimulation.createInitialGameState({ ...campaign, currentStageIndex: index, balance: 300 })
+    const won = { ...initial, stageRuntime: { ...initial.stageRuntime,
+      status: 'stage-won', stageRating: { stars: 2, reasons: [] },
+      zeroSatisfactionDurationSeconds: 12,
+    } }
+    const next = gameStateSimulation.continueToNextStage(won)
+    assert.equal(next.campaign.currentStageIndex, index + 1)
+    assert.deepEqual(next.campaign.infrastructure, initial.campaign.infrastructure)
+    assert.deepEqual(next.campaign.unlockedResourceTypes, initial.campaign.unlockedResourceTypes)
+    assert.equal(next.campaign.balance, 240)
+    assert.equal(next.stageRuntime.simulation.gameTimeSeconds, 0)
+    assert.equal(next.stageRuntime.zeroSatisfactionDurationSeconds, 0)
+    assert.equal(next.stageRuntime.infrastructureDeployment, null)
+    assert.deepEqual(next.stageRuntime.trafficEvents, gameStateSimulation.createInitialGameState(next.campaign).stageRuntime.trafficEvents)
+    const moved = gameStateSimulation.moveCampaignResources(next, [{ id: 'server-b', position: { x: 10, y: 20 } }])
+    assert.deepEqual(gameStateSimulation.restartStage(moved).campaign, next.stageStartSnapshot)
+    campaign = next.campaign
+  }
+})

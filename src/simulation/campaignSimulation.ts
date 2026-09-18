@@ -399,33 +399,9 @@ export function createNextCampaignState(
 }
 
 function rebuildInfrastructure(campaign: CampaignState): CampaignState {
-  const hasBalancer = hasLoadBalancer(campaign)
   const appServers = getAppServers(campaign)
-  const resources = campaign.infrastructure.resources.map((resource) => {
-    if (resource.type === 'users') {
-      return { ...resource, position: { x: 0, y: 0 } }
-    }
-
-    if (resource.type === 'load-balancer') {
-      return { ...resource, position: { x: 300, y: 0 } }
-    }
-
-    if (resource.type === 'app-server') {
-      const serverIndex = appServers.findIndex(
-        (server) => server.id === resource.id,
-      )
-      const y = appServers.length > 1 ? (serverIndex === 0 ? -140 : 140) : 0
-      return {
-        ...resource,
-        position: { x: hasBalancer ? 600 : 340, y },
-      }
-    }
-
-    return {
-      ...resource,
-      position: { x: hasBalancer ? 950 : 680, y: 0 },
-    }
-  })
+  // Existing positions belong to the player. Deployment changes topology only.
+  const resources = campaign.infrastructure.resources
   const database = resources.find((resource) => resource.type === 'database')
   const users = resources.find((resource) => resource.type === 'users')
   const loadBalancer = resources.find(
