@@ -1,4 +1,14 @@
 export const expansionEnglish = {
+  "advanced.whyChanging": "Why these metrics change",
+  "advanced.databaseCause": "{{queries}} queries/sec compete for {{capacity}} queries/sec of capacity. {{connections}} connections also consume memory. Query time is {{latency}} ms; it adds to the application response.",
+  "advanced.cacheCause": "{{hits}}% of eligible reads are hits, avoiding {{saved}} database queries/sec. {{remaining}} queries/sec still reach the database, including writes and misses.",
+  "advanced.queueCause": "Incoming work: {{incoming}} jobs/sec. Completed: {{processed}} jobs/sec. When arrivals exceed processing, the backlog grows; {{depth}} jobs are waiting.",
+  "advanced.workerCause": "This worker completed {{processed}} jobs/sec. The oldest queued work is about {{age}} seconds old. Capacity and outages affect whether the worker can keep up.",
+  "advanced.storageCause": "{{size}} GiB of durable objects and {{rate}} requests/sec cost {{cost}} credits per period. More uploads increase stored data; application CPU does not determine storage durability.",
+  "advanced.workerCapacity": "Worker Capacity",
+  "advanced.unavailable": "Unavailable",
+  "advanced.disconnected": "Not connected",
+
   "advanced.reliabilityNotice": "Operations · Scheduled reliability exercise",
   "advanced.failureUpcoming": "A controlled outage starts in {{seconds}} game seconds and lasts {{duration}} seconds. Other resources keep operating.",
   "advanced.failureActive": "Temporarily unavailable. Automatic recovery in {{seconds}} game seconds. Watch capacity or backlog on the remaining resources.",
@@ -102,6 +112,16 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.whyChanging": "لماذا تتغير هذه المقاييس؟",
+  "advanced.databaseCause": "يتنافس {{queries}} استعلام/ثانية على سعة {{capacity}} استعلام/ثانية. تستهلك {{connections}} اتصالات ذاكرة أيضاً. زمن الاستعلام {{latency}} مللي ثانية ويُضاف إلى زمن استجابة التطبيق.",
+  "advanced.cacheCause": "تصيب {{hits}}٪ من القراءات المؤهلة التخزين المؤقت فتتجنب {{saved}} استعلام/ثانية. يصل {{remaining}} استعلام/ثانية إلى القاعدة، بما فيه الكتابات والقراءات غير الموجودة.",
+  "advanced.queueCause": "العمل الوارد {{incoming}} مهمة/ثانية والمكتمل {{processed}}. عندما يتجاوز الوارد المعالجة يتراكم العمل؛ تنتظر {{depth}} مهمة.",
+  "advanced.workerCause": "أكمل العامل {{processed}} مهمة/ثانية. عمر أقدم مهمة نحو {{age}} ثانية. تؤثر السعة والانقطاعات في قدرته على مواكبة العمل.",
+  "advanced.storageCause": "تستهلك الكائنات الدائمة {{size}} GiB مع {{rate}} طلب/ثانية بتكلفة {{cost}} رصيد للفترة. تزيد الملفات المرفوعة حجم البيانات؛ معالج التطبيق لا يحدد ديمومة التخزين.",
+  "advanced.workerCapacity": "سعة عامل المعالجة",
+  "advanced.unavailable": "غير متاح",
+  "advanced.disconnected": "غير متصل",
+
   "advanced.reliabilityNotice": "العمليات · تمرين موثوقية مجدول",
   "advanced.failureUpcoming": "يبدأ انقطاع محدد بعد {{seconds}} ثانية لعب ويستمر {{duration}} ثانية. تستمر الموارد الأخرى بالعمل.",
   "advanced.failureActive": "غير متاح مؤقتاً. تعافٍ تلقائي خلال {{seconds}} ثانية لعب. راقب السعة أو المهام المتراكمة في الموارد المتبقية.",

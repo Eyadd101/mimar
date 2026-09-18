@@ -2235,3 +2235,7 @@
 
 .security-setting { display: flex; align-items: center; gap: .65rem; margin-block: .65rem; font-size: .8rem; }
 .security-setting input { accent-color: #72d8b4; }
+.resource-panel__education { margin-block: 1rem; padding: .85rem; background: #142821; border-inline-start: 2px solid #6fb89d; border-radius: 6px; }
+.resource-panel__education h3 { margin: 0 0 .5rem; font-size: .8rem; color: #a4dcc5; }
+.resource-panel__education p { font-size: .78rem; line-height: 1.65; margin: 0; color: #c0cbc6; }
+.resource-panel select { background: #15241f; color: #e0eae4; border: 1px solid #406153; padding: .25rem; border-radius: 4px; }

@@ -1,3 +1,5 @@
+import { AdvancedResourceEducation } from './AdvancedResourceEducation'
+import { queueConfig } from '../simulation/expansionConfig'
 import { DatabaseBackupControls } from './DatabaseBackupControls'
 import { defaultBackupSettings, type BackupSettings } from '../simulation/backupSimulation'
 import { DatabaseSecurityControls } from './DatabaseSecurityControls'
@@ -248,6 +250,8 @@ export function ResourceDetailsPanel({
         </div>
       )}
 
+      <AdvancedResourceEducation type={node.data.kind === 'server' ? 'app-server' : node.data.kind} simulation={simulation} />
+      {node.data.kind === 'worker' && <dl className="resource-panel__details"><div><dt><TechnicalTerm translationKey="advanced.workerCapacity" /></dt><dd>{queueConfig.workerCapacity}/s</dd></div><div><dt><TechnicalTerm translationKey="metric.status" /></dt><dd>{t(simulation.failedResourceIds.includes(node.id) ? 'advanced.unavailable' : simulation.queue.workerConnected ? 'status.normal' : 'advanced.disconnected')}</dd></div></dl>}
       {isAppServer && simulation.storage.localObjects > 0 && <p role="status">{t('advanced.localStorageWarning', { size: simulation.storage.localUsageGiB.toFixed(2) })}</p>}
       {isAppServer && appServer && (
         <div className="resource-panel__upgrade">
