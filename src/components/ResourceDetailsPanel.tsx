@@ -29,6 +29,7 @@ type ResourceDetailsPanelProps = {
 }
 
 const placeholderTypeKeys: Record<InfrastructureFlowNode['data']['kind'], TranslationKey> = {
+  'object-storage': 'advanced.storage',
   queue: 'advanced.queue',
   worker: 'advanced.worker',
   cache: 'advanced.cache',
@@ -165,7 +166,11 @@ export function ResourceDetailsPanel({
             <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
           </div>
         </dl>
-      ) : node.data.kind === 'queue' || node.data.kind === 'worker' ? (
+      ) : node.data.kind === 'object-storage' ? (
+        <><p>S3</p><p>{t('advanced.storagePurpose')}</p><dl className="resource-panel__details">{([
+          ['advanced.storedObjects', simulation.storage.storedObjects.toFixed(0)], ['advanced.storageUsed', `${simulation.storage.storageUsedGiB.toFixed(2)} GiB`], ['metric.currentTraffic', `${simulation.storage.requestRate.toFixed(1)}/s`], ['resource.costPerPeriod', simulation.storage.costPerPeriod.toFixed(2)],
+        ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}</dl></>
+      ) : node.data.kind === 'queue'  || node.data.kind === 'worker' ? (
         <><p>{advancedResourceConfigs[node.data.kind].awsReference}</p><p>{t(advancedResourceConfigs[node.data.kind].purposeKey)}</p>
           <dl className="resource-panel__details">{([
             ['advanced.queueDepth', simulation.queue.depth.toFixed(1)], ['advanced.enqueueRate', `${simulation.queue.enqueueRate.toFixed(1)}/s`], ['advanced.processingRate', `${simulation.queue.processingRate.toFixed(1)}/s`], ['advanced.oldestAge', `${simulation.queue.oldestMessageAge.toFixed(1)}s`], ['resource.costPerPeriod', advancedResourceConfigs[node.data.kind].costPerPeriod],
@@ -230,6 +235,7 @@ export function ResourceDetailsPanel({
         </div>
       )}
 
+      {isAppServer && simulation.storage.localObjects > 0 && <p role="status">{t('advanced.localStorageWarning', { size: simulation.storage.localUsageGiB.toFixed(2) })}</p>}
       {isAppServer && appServer && (
         <div className="resource-panel__upgrade">
           {deployment ? (

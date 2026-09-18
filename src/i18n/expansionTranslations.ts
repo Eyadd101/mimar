@@ -1,4 +1,10 @@
 export const expansionEnglish = {
+  "advanced.storage": "Object Storage",
+  "advanced.storagePurpose": "Durable, shared storage for uploads. Application local disk is tied to a machine and is at risk during replacement.",
+  "advanced.storedObjects": "Stored Objects",
+  "advanced.storageUsed": "Storage Used",
+  "advanced.localStorageWarning": "Local files: {{size}} GiB. Local disk is not shared or durable storage. Replacing a server risks these uploads; storage pressure adds latency.",
+
   "advanced.stage7": "Too Much Work",
   "advanced.stage7Story": "The reporting feature now performs expensive exports inside normal user requests. Slow background work is blocking interactive traffic. Investigate which work must finish before a response can return.",
   "advanced.stage7Lesson": "Asynchronous processing separates long-running jobs from the interactive request path. A queue buffers jobs; workers process them.",
@@ -50,6 +56,12 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.storage": "تخزين الكائنات",
+  "advanced.storagePurpose": "تخزين دائم ومشترك للملفات. القرص المحلي مرتبط بجهاز واحد وتتعرض ملفاته للخطر عند استبداله.",
+  "advanced.storedObjects": "الكائنات المخزنة",
+  "advanced.storageUsed": "مساحة التخزين المستخدمة",
+  "advanced.localStorageWarning": "ملفات محلية: {{size}} GiB. القرص المحلي ليس تخزيناً دائماً أو مشتركاً. استبدال الخادم يعرض الملفات للخطر، وامتلاؤه يزيد زمن الاستجابة.",
+
   "advanced.stage7": "عمل أكثر من اللازم",
   "advanced.stage7Story": "تنفّذ ميزة التقارير عمليات تصدير مكلفة ضمن طلبات المستخدمين. هذا العمل الخلفي يعطل الطلبات التفاعلية. افحص العمل الذي يجب إنهاؤه فعلاً قبل إرسال الاستجابة.",
   "advanced.stage7Lesson": "المعالجة غير المتزامنة تفصل المهام الطويلة عن مسار الطلب. يحتفظ الطابور بالمهام ويعالجها العمال.",

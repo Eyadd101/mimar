@@ -30,6 +30,7 @@ const resourceTypes: readonly CampaignResourceType[] = [
   'cache',
   'queue',
   'worker',
+  'object-storage',
 ]
 
 export function loadCampaignSave(
@@ -123,6 +124,7 @@ function isValidCampaign(value: unknown): value is CampaignState {
     return false
   }
 
+  if (value.storedData !== undefined && (!isRecord(value.storedData) || !['localObjects', 'storedObjects'].every(key => typeof value.storedData === 'object' && value.storedData !== null && typeof (value.storedData as Record<string, unknown>)[key] === 'number' && Number.isFinite((value.storedData as Record<string, unknown>)[key]) && Number((value.storedData as Record<string, unknown>)[key]) >= 0))) return false
   const stageIndexIsValid =
     Number.isInteger(value.currentStageIndex) &&
     Number(value.currentStageIndex) >= 0 &&
@@ -266,11 +268,13 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
         `${appServers[0].id}->${databaseTargetId}`,
       ]
 
+  const storage = resources.find(r => r.type === 'object-storage')
+  if (storage) for (const server of appServers) expectedConnections.push(`${server.id}->${storage.id}`)
   const queue = resources.find(r => r.type === 'queue')
   const worker = resources.find(r => r.type === 'worker')
   if (queue) for (const server of appServers) expectedConnections.push(`${server.id}->${queue.id}`)
   if (queue && worker) expectedConnections.push(`${queue.id}->${worker.id}`)
-  if (['queue', 'worker'].some(type => resources.filter(r => r.type === type).length > 1)) return false
+  if (['queue', 'worker', 'object-storage'].some(type => resources.filter(r => r.type === type).length > 1)) return false
   if (cache) expectedConnections.push(`${cache.id}->${databases[0].id}`)
   if (resources.filter(r => r.type === 'cache').length > 1) return false
   return (

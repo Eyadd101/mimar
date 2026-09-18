@@ -1,3 +1,4 @@
+import { advanceStorage, emptyStoredData, type StoredData, type StorageMetrics } from './storageSimulation'
 import { advanceQueue, emptyQueue, type QueueMetrics } from './queueSimulation'
 import { queueConfig } from './expansionConfig'
 import { calculateCacheMetrics, type CacheMetrics } from './cacheSimulation'
@@ -43,6 +44,8 @@ export type TrafficInfrastructure = {
   appServers: TrafficAppServerResource[]
   distributesTraffic: boolean
   databaseTierId?: DatabaseTierId
+  hasObjectStorage?: boolean
+  storedData?: StoredData
   hasQueue?: boolean
   hasWorker?: boolean
   hasCache?: boolean
@@ -60,6 +63,7 @@ export type AppServerRuntimeMetrics = AppServerMetrics & {
 export type TrafficSimulationState = CustomerSatisfactionState &
   BusinessConsequenceState &
   EconomyState & {
+  storage: StorageMetrics
   queue: QueueMetrics
   cache: CacheMetrics
   database: DatabaseMetrics
@@ -142,6 +146,7 @@ export function createInitialTrafficState(
     requestsPerSecond,
     gameTimeSeconds: 0,
     ...application,
+    storage: advanceStorage(infrastructure.storedData ?? emptyStoredData, 0, infrastructure.hasObjectStorage ?? false, 0),
     queue: emptyQueue,
     serverDeployment: null,
     ...satisfaction,
@@ -295,6 +300,7 @@ function advanceOneGameSecond(
         ),
       }
     : infrastructure
+  const storage = advanceStorage(currentState.storage, requestsPerSecond * (trafficProfile.uploadsPerRequest ?? 0), infrastructure.hasObjectStorage ?? false)
   const application = calculateApplicationMetrics(
     requestsPerSecond,
     effectiveInfrastructure,
@@ -302,6 +308,8 @@ function advanceOneGameSecond(
     requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0),
   )
   const queue = advanceQueue(currentState.queue, requestsPerSecond * (trafficProfile.backgroundJobsPerRequest ?? 0), infrastructure.hasQueue ?? false, (infrastructure.hasQueue && infrastructure.hasWorker) ?? false)
+  application.applicationLatencyMs += storage.latencyPenaltyMs
+  application.infrastructureCostPerPeriod += storage.costPerPeriod
   const economyPeriodIsDue =
     gameTimeSeconds % appServerResourceConfig.costPeriodSeconds === 0
   const satisfaction = advanceCustomerSatisfaction(
@@ -328,6 +336,7 @@ function advanceOneGameSecond(
     gameTimeSeconds,
     ...application,
     queue,
+    storage,
     serverDeployment: deploymentCompleted
       ? null
       : currentState.serverDeployment,

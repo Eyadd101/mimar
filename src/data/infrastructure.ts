@@ -40,6 +40,7 @@ const resourcePresentation: Record<
   CampaignResource['type'],
   Pick<InfrastructureNodeData, 'kind' | 'descriptionKey'>
 > = {
+  'object-storage': { kind: 'object-storage', descriptionKey: 'advanced.storagePurpose' },
   queue: { kind: 'queue', descriptionKey: 'advanced.queuePurpose' },
   worker: { kind: 'worker', descriptionKey: 'advanced.workerPurpose' },
   cache: { kind: 'cache', descriptionKey: 'advanced.cachePurpose' },

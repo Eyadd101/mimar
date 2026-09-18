@@ -62,6 +62,7 @@ export type StageFailureCondition =
     }
 
 export type StageTrafficProfile = {
+  uploadsPerRequest?: number
   backgroundJobsPerRequest?: number
   queriesPerRequest?: number
   initialActiveUsers: number

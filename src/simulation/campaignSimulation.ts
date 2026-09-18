@@ -1,3 +1,4 @@
+import { emptyStoredData, type StoredData } from './storageSimulation'
 import { advancedResourceConfigs, type AdvancedResourceType, type DatabaseTierId } from './expansionConfig'
 import {
   additionalAppServerConfig,
@@ -69,6 +70,7 @@ export type CampaignState = {
   unlockedResourceTypes: CampaignResourceType[]
   completedStages: CampaignStageRecord[]
   seed: number
+  storedData?: StoredData
 }
 
 export function createInitialCampaignState(
@@ -302,6 +304,7 @@ export function addAdvancedResource(campaign: CampaignState, type: AdvancedResou
     connections = connections.filter(c => !getAppServers(campaign).some(s => s.id === c.sourceId && c.targetId === database.id))
     connections = [...connections, ...getAppServers(campaign).map(s => ({ id: `${s.id}-cache`, sourceId: s.id, targetId: 'cache' })), { id: 'cache-database', sourceId: 'cache', targetId: database.id }]
   }
+  if (type === 'object-storage') connections = [...connections, ...getAppServers(campaign).map(server => ({ id: `${server.id}-object-storage`, sourceId: server.id, targetId: 'object-storage' }))]
   if (type === 'queue') connections = [...connections, ...getAppServers(campaign).map(server => ({ id: `${server.id}-queue`, sourceId: server.id, targetId: 'queue' }))]
   if ((type === 'queue' || type === 'worker') && resources.some(r => r.type === 'queue') && resources.some(r => r.type === 'worker')) connections = [...connections, { id: 'queue-worker', sourceId: 'queue', targetId: 'worker' }]
   return { ...campaign, infrastructure: { resources, connections } }
@@ -319,12 +322,14 @@ export function syncCampaignWithSimulation(
     return runtime && runtime.tierId !== resource.tierId
   })
 
-  if (!balanceChanged && !tierChanged) {
+  const dataChanged = campaign.storedData?.storedObjects !== simulation.storage.storedObjects || campaign.storedData?.localObjects !== simulation.storage.localObjects
+  if (!balanceChanged && !tierChanged && !dataChanged) {
     return campaign
   }
 
   return {
     ...campaign,
+    storedData: { storedObjects: simulation.storage.storedObjects, localObjects: simulation.storage.localObjects },
     balance: simulation.balance,
     infrastructure: tierChanged
       ? {
@@ -354,10 +359,12 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    hasObjectStorage: campaign.infrastructure.resources.some(resource => resource.type === 'object-storage'),
+    storedData: campaign.storedData ?? emptyStoredData,
     hasQueue: campaign.infrastructure.resources.some(resource => resource.type === 'queue'),
     hasWorker: campaign.infrastructure.resources.some(resource => resource.type === 'worker'),
     hasCache: campaign.infrastructure.resources.some(resource => resource.type === 'cache'),
-    advancedCostPerPeriod: campaign.infrastructure.resources.reduce((sum, resource) => sum + (resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].costPerPeriod : 0), 0),
+    advancedCostPerPeriod: campaign.infrastructure.resources.reduce((sum, resource) => sum + (resource.type !== 'object-storage' && resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].costPerPeriod : 0), 0),
     databaseTierId: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.databaseTierId ?? 'small',
     hasDatabase: campaign.infrastructure.resources.some(resource => resource.type === 'database'),
     distributesTraffic: hasLoadBalancer(campaign),
