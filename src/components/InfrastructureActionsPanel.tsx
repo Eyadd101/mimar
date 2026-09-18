@@ -1,3 +1,4 @@
+import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type { CampaignState } from '../simulation/campaignSimulation'
 import {
   additionalAppServerConfig,
@@ -17,6 +18,7 @@ type InfrastructureActionsPanelProps = {
   campaign: CampaignState
   simulation: TrafficSimulationState
   deployment: InfrastructureDeployment | null
+  onDeployAdvanced: (type: AdvancedResourceType) => void
   onDeployLoadBalancer: () => void
   onDeployAppServer: () => void
 }
@@ -25,6 +27,7 @@ export function InfrastructureActionsPanel({
   campaign,
   simulation,
   deployment,
+  onDeployAdvanced,
   onDeployLoadBalancer,
   onDeployAppServer,
 }: InfrastructureActionsPanelProps) {
@@ -90,6 +93,10 @@ export function InfrastructureActionsPanel({
           )}
         </div>
       )}
+      {!deployment && <div className="infrastructure-actions__options">{(Object.keys(advancedResourceConfigs) as AdvancedResourceType[]).filter(type => campaign.unlockedResourceTypes.includes(type) && !campaign.infrastructure.resources.some(r => r.type === type)).map(type => {
+        const definition = advancedResourceConfigs[type]
+        return <BuildOption key={type} titleKey={definition.labelKey} awsReference={definition.awsReference} cost={definition.deploymentCost} duration={definition.deploymentDurationSeconds} disabled={simulation.balance < definition.deploymentCost} onDeploy={() => onDeployAdvanced(type)} />
+      })}</div>}
     </aside>
   )
 }
@@ -147,7 +154,7 @@ export function DeploymentStatus({
     0,
   )
   const resourceKey: TranslationKey =
-    deployment.kind === 'database-upgrade' ? 'advanced.mediumDatabase' : deployment.kind === 'load-balancer'
+    deployment.kind in advancedResourceConfigs ? advancedResourceConfigs[deployment.kind as AdvancedResourceType].labelKey : deployment.kind === 'database-upgrade' ? 'advanced.mediumDatabase' : deployment.kind === 'load-balancer'
       ? 'resource.loadBalancer'
       : 'resource.appServerB'
   const resourceName = t(resourceKey)

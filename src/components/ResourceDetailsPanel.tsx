@@ -1,4 +1,4 @@
-import { databaseUpgradeConfig } from '../simulation/expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from '../simulation/expansionConfig'
 import type { InfrastructureDeployment } from '../simulation/gameStateSimulation'
 import { DeploymentStatus } from './InfrastructureActionsPanel'
 import type { InfrastructureFlowNode } from '../data/infrastructure'
@@ -29,6 +29,7 @@ type ResourceDetailsPanelProps = {
 }
 
 const placeholderTypeKeys: Record<InfrastructureFlowNode['data']['kind'], TranslationKey> = {
+  cache: 'advanced.cache',
   users: 'resource.trafficSource',
   server: 'resource.appServer',
   database: 'resource.database',
@@ -78,7 +79,7 @@ export function ResourceDetailsPanel({
   const anotherUpgradeIsDeploying =
     simulation.serverDeployment !== null && deployment === null
   const resourceNameKey: TranslationKey =
-    node.id === 'server-b'
+    node.data.kind in advancedResourceConfigs ? advancedResourceConfigs[node.data.kind as AdvancedResourceType].labelKey : node.id === 'server-b'
       ? 'resource.appServerB'
       : node.data.kind === 'server'
         ? 'resource.appServer'
@@ -162,7 +163,12 @@ export function ResourceDetailsPanel({
             <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
           </div>
         </dl>
-      ) : node.data.kind === 'database' ? (
+      ) : node.data.kind === 'cache' ? (
+        <><p><TechnicalTerm translationKey="advanced.cache" /> — ElastiCache</p><p>{t('advanced.cachePurpose')}</p>
+          <dl className="resource-panel__details">
+            {([['advanced.hitRate', `${simulation.cache.hitRate.toFixed(1)}%`], ['advanced.served', `${simulation.cache.requestsServed.toFixed(1)}/s`], ['advanced.queryCapacity', `${simulation.cache.capacity}/s`], ['metric.status', t(statusTranslationKeys[simulation.cache.status])], ['resource.costPerPeriod', advancedResourceConfigs.cache.costPerPeriod]] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
+          </dl></>
+      ) : node.data.kind === 'database'  ? (
         <>
           <p><TechnicalTerm translationKey="advanced.database" /> — RDS</p>
           <p>{t('advanced.databasePurpose')}</p>

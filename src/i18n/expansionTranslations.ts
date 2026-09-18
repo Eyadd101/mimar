@@ -1,4 +1,9 @@
 export const expansionEnglish = {
+  "advanced.cache": "Cache",
+  "advanced.cachePurpose": "Serves repeated reads. Writes and misses still reach the database; cache capacity is finite.",
+  "advanced.hitRate": "Cache Hit Rate",
+  "advanced.served": "Requests Served",
+
   "advanced.smallDatabase": "Small Managed Database",
   "advanced.mediumDatabase": "Medium Managed Database",
   "advanced.upgradeDatabase": "Upgrade Managed Database",
@@ -24,6 +29,11 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  "advanced.cache": "ذاكرة التخزين المؤقت",
+  "advanced.cachePurpose": "تخدم القراءات المتكررة. تظل الكتابات والقراءات غير الموجودة متجهة إلى قاعدة البيانات؛ سعة التخزين المؤقت محدودة.",
+  "advanced.hitRate": "نسبة إصابات التخزين المؤقت",
+  "advanced.served": "الطلبات المخدومة",
+
   "advanced.smallDatabase": "قاعدة بيانات مُدارة صغيرة",
   "advanced.mediumDatabase": "قاعدة بيانات مُدارة متوسطة",
   "advanced.upgradeDatabase": "ترقية قاعدة البيانات المُدارة",

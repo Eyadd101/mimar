@@ -11,6 +11,7 @@ import {
 import { TechnicalTerm } from './TechnicalTerm'
 
 const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  cache: 'advanced.cache',
   users: 'node.entryPoint',
   server: 'node.compute',
   database: 'node.storage',
@@ -18,6 +19,7 @@ const roleLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
 }
 
 const resourceLabelKeys: Record<InfrastructureNodeData['kind'], TranslationKey> = {
+  cache: 'advanced.cache',
   users: 'resource.users',
   server: 'resource.appServer',
   database: 'resource.database',
@@ -57,7 +59,7 @@ function NodeIcon({ kind }: Pick<InfrastructureNodeData, 'kind'>) {
           <path d="M7 6.5h.01M7 17.5h.01M15 6.5h3M15 17.5h3" />
         </>
       )}
-      {kind === 'database' && (
+      {(kind === 'database' || kind === 'cache') && (
         <>
           <ellipse cx="12" cy="5" rx="8" ry="3" />
           <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />

@@ -1,3 +1,4 @@
+import type { AdvancedResourceType } from '../simulation/expansionConfig'
 import {
   applyNodeChanges,
   MarkerType,
@@ -15,7 +16,7 @@ import type { TranslationKey } from '../i18n/translations'
 
 export type InfrastructureNodeData = {
   label: string
-  kind: 'users' | 'server' | 'database' | 'load-balancer'
+  kind: 'users' | 'server' | 'database' | 'load-balancer' | AdvancedResourceType
   descriptionKey: TranslationKey
   number: string
   databaseMetrics?: DatabaseMetrics
@@ -39,6 +40,7 @@ const resourcePresentation: Record<
   CampaignResource['type'],
   Pick<InfrastructureNodeData, 'kind' | 'descriptionKey'>
 > = {
+  cache: { kind: 'cache', descriptionKey: 'advanced.cachePurpose' },
   users: {
     kind: 'users',
     descriptionKey: 'resource.node.usersDescription',

@@ -19,3 +19,9 @@ export const databaseTierConfigs = {
 } as const
 export type DatabaseTierId = keyof typeof databaseTierConfigs
 export const databaseUpgradeConfig = { deploymentCost: 90, deploymentDurationSeconds: 30 } as const
+
+export const advancedResourceConfigs = {
+  cache: { name: 'Cache', labelKey: 'advanced.cache', purposeKey: 'advanced.cachePurpose', awsReference: 'ElastiCache', costPerPeriod: 4, deploymentCost: 55, deploymentDurationSeconds: 25, position: { x: 720, y: -260 } },
+} as const
+export type AdvancedResourceType = keyof typeof advancedResourceConfigs
+export const cacheConfig = { readFraction: .8, repeatReadFraction: .75, capacity: 220 } as const

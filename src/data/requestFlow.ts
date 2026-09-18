@@ -1,3 +1,4 @@
+import type { CampaignResourceType } from '../simulation/campaignSimulation'
 export const requestFlowVisualConfig = {
   fullIntensityRequestsPerSecond: 14,
   slowestDurationSeconds: 2.4,
@@ -11,7 +12,7 @@ export const requestFlowVisualConfig = {
 
 type RequestFlowResource = {
   id: string
-  type: 'users' | 'app-server' | 'database' | 'load-balancer'
+  type: CampaignResourceType
 }
 
 type RequestFlowServerRuntime = {
@@ -27,6 +28,8 @@ export function getConnectionRequestRate(
   totalRequestsPerSecond: number,
 ) {
   const source = resources.find((resource) => resource.id === sourceId)
+
+  if (source?.type === 'cache') return totalRequestsPerSecond
 
   if (source?.type === 'users') {
     return totalRequestsPerSecond

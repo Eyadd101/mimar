@@ -1,4 +1,4 @@
-import type { DatabaseTierId } from './expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, type DatabaseTierId } from './expansionConfig'
 import {
   additionalAppServerConfig,
   appServerResourceConfig,
@@ -20,6 +20,7 @@ export type CampaignResourceType =
   | 'app-server'
   | 'database'
   | 'load-balancer'
+  | AdvancedResourceType
 
 export type ResourcePosition = {
   x: number
@@ -34,7 +35,7 @@ type CampaignResourceBase = {
 
 export type CampaignResource =
   | (CampaignResourceBase & {
-      type: 'users' | 'load-balancer'
+      type: 'users' | 'load-balancer' | AdvancedResourceType
     })
   | (CampaignResourceBase & {
       type: 'database'
@@ -290,6 +291,20 @@ export function addAdditionalAppServerResource(
   })
 }
 
+export function addAdvancedResource(campaign: CampaignState, type: AdvancedResourceType): CampaignState {
+  if (campaign.infrastructure.resources.some(resource => resource.type === type)) return campaign
+  const definition = advancedResourceConfigs[type]
+  const resource: CampaignResource = { id: type, type, name: definition.name, position: { ...definition.position } }
+  const resources = [...campaign.infrastructure.resources, resource]
+  let connections = campaign.infrastructure.connections
+  const database = resources.find(r => r.type === 'database')
+  if (type === 'cache' && database) {
+    connections = connections.filter(c => !getAppServers(campaign).some(s => s.id === c.sourceId && c.targetId === database.id))
+    connections = [...connections, ...getAppServers(campaign).map(s => ({ id: `${s.id}-cache`, sourceId: s.id, targetId: 'cache' })), { id: 'cache-database', sourceId: 'cache', targetId: database.id }]
+  }
+  return { ...campaign, infrastructure: { resources, connections } }
+}
+
 export function syncCampaignWithSimulation(
   campaign: CampaignState,
   simulation: TrafficSimulationState,
@@ -337,6 +352,8 @@ export function createTrafficInfrastructure(
       name: server.name,
       tierId: server.tierId,
     })),
+    hasCache: campaign.infrastructure.resources.some(resource => resource.type === 'cache'),
+    advancedCostPerPeriod: campaign.infrastructure.resources.reduce((sum, resource) => sum + (resource.type in advancedResourceConfigs ? advancedResourceConfigs[resource.type as AdvancedResourceType].costPerPeriod : 0), 0),
     databaseTierId: campaign.infrastructure.resources.find(resource => resource.type === 'database')?.databaseTierId ?? 'small',
     hasDatabase: campaign.infrastructure.resources.some(resource => resource.type === 'database'),
     distributesTraffic: hasLoadBalancer(campaign),

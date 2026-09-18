@@ -27,6 +27,7 @@ const resourceTypes: readonly CampaignResourceType[] = [
   'app-server',
   'database',
   'load-balancer',
+  'cache',
 ]
 
 export function loadCampaignSave(
@@ -248,19 +249,23 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
     )
   }
 
+  const cache = resources.find(resource => resource.type === 'cache')
+  const databaseTargetId = cache?.id ?? databases[0].id
   const expectedConnections = loadBalancers[0]
     ? [
         `${users[0].id}->${loadBalancers[0].id}`,
         ...appServers.flatMap((server) => [
           `${loadBalancers[0].id}->${server.id}`,
-          `${server.id}->${databases[0].id}`,
+          `${server.id}->${databaseTargetId}`,
         ]),
       ]
     : [
         `${users[0].id}->${appServers[0].id}`,
-        `${appServers[0].id}->${databases[0].id}`,
+        `${appServers[0].id}->${databaseTargetId}`,
       ]
 
+  if (cache) expectedConnections.push(`${cache.id}->${databases[0].id}`)
+  if (resources.filter(r => r.type === 'cache').length > 1) return false
   return (
     connectionPairs.size === expectedConnections.length &&
     expectedConnections.every((connection) => connectionPairs.has(connection))

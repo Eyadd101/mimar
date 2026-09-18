@@ -1,3 +1,4 @@
+import type { AdvancedResourceType } from '../simulation/expansionConfig'
 import { useCallback, useEffect, useState } from 'react'
 import {
   defaultSimulationSpeed,
@@ -10,6 +11,7 @@ import {
   beginLoadBalancerDeployment,
   beginServerUpgrade,
   beginDatabaseUpgrade,
+  beginAdvancedResourceDeployment,
   continueToNextStage,
   connectStageOneResources,
   createInitialGameState,
@@ -165,6 +167,7 @@ export function useGameSimulation() {
     isSimulationRunning: effectiveGameSpeed > 0,
     gameSpeed,
     setGameSpeed,
+    startAdvancedDeployment: (type: AdvancedResourceType) => setGameState(state => beginAdvancedResourceDeployment(state, type)),
     startDatabaseUpgrade: () => setGameState(beginDatabaseUpgrade),
     startServerUpgrade: upgradeServer,
     startLoadBalancerDeployment: deployLoadBalancer,

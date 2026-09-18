@@ -1,4 +1,4 @@
-import { databaseUpgradeConfig } from './simulation/expansionConfig'
+import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
 import {
   Background,
@@ -63,6 +63,7 @@ type PendingInfrastructureAction =
   | { kind: 'load-balancer' }
   | { kind: 'app-server' }
   | { kind: 'database-upgrade' }
+  | { kind: 'advanced'; resourceType: AdvancedResourceType }
 
 function App() {
   const { direction, t } = useLanguage()
@@ -94,6 +95,7 @@ function App() {
     setGameSpeed,
     startServerUpgrade,
     startDatabaseUpgrade,
+    startAdvancedDeployment,
     startLoadBalancerDeployment,
     startAdditionalAppServerDeployment,
     restartStage,
@@ -209,7 +211,9 @@ function App() {
     restartCampaign()
   }
   const confirmPendingAction = () => {
-    if (pendingAction?.kind === 'database-upgrade') {
+    if (pendingAction?.kind === 'advanced') {
+      startAdvancedDeployment(pendingAction.resourceType)
+    } else if (pendingAction?.kind === 'database-upgrade') {
       startDatabaseUpgrade()
     } else if (pendingAction?.kind === 'server-upgrade') {
       startServerUpgrade(pendingAction.resourceId)
@@ -222,7 +226,8 @@ function App() {
     setPendingAction(null)
   }
   const pendingActionDetails = pendingAction
-    ? pendingAction.kind === 'database-upgrade'
+    ? pendingAction.kind === 'advanced' ? { title: t(advancedResourceConfigs[pendingAction.resourceType].labelKey), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
+      : pendingAction.kind === 'database-upgrade'
       ? { title: t('advanced.upgradeDatabase'), description: t('advanced.databasePurpose'), cost: databaseUpgradeConfig.deploymentCost, durationSeconds: databaseUpgradeConfig.deploymentDurationSeconds, confirmLabel: t('action.startUpgrade') }
       : pendingAction.kind === 'server-upgrade'
       ? {
@@ -433,6 +438,7 @@ function App() {
                 campaign={campaign}
                 simulation={traffic}
                 deployment={infrastructureDeployment}
+                onDeployAdvanced={resourceType => setPendingAction({ kind: 'advanced', resourceType })}
                 onDeployLoadBalancer={() =>
                   setPendingAction({ kind: 'load-balancer' })
                 }

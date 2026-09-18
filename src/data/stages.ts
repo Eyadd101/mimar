@@ -109,7 +109,7 @@ export type StageLearningStepDefinition =
       titleKey: TranslationKey
     }
 
-export type StageResourceUnlock = 'load-balancer'
+export type StageResourceUnlock = CampaignResourceType
 
 export type TrafficEventDefinition = {
   id: string
