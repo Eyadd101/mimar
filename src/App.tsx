@@ -1,3 +1,5 @@
+import { getAdvancedNodeSummary } from './data/advancedNodePresentation'
+import { ExpansionAlerts } from './components/ExpansionAlerts'
 import { ReliabilityTimeline } from './components/ReliabilityTimeline'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, databaseDownsizeConfig, backupConfig } from './simulation/expansionConfig'
 import { useMemo, useState } from 'react'
@@ -137,6 +139,8 @@ function App() {
       data: {
         ...node.data,
         canConnect: gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted),
+        isAvailable: !traffic.failedResourceIds.includes(node.id) && !(node.data.kind === 'database' && traffic.databaseData.dataLost),
+        metricSummary: getAdvancedNodeSummary(node.data.kind, traffic),
         databaseMetrics: node.data.kind === 'database' ? traffic.database : undefined,
         appServerMetrics:
           node.data.kind === 'server'
@@ -158,8 +162,7 @@ function App() {
     selectedNodeId,
     serviceStarted,
     stage.sequence,
-    traffic.appServers,
-    traffic.database,
+    traffic,
   ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
   const mostLoadedAppServer = getMostLoadedAppServer(traffic)
@@ -191,6 +194,7 @@ function App() {
             campaign.infrastructure.resources,
             traffic.appServers,
             traffic.requestsPerSecond,
+            traffic,
           ),
           isPaused: !isSimulationRunning,
         },
@@ -199,8 +203,7 @@ function App() {
       campaign.infrastructure.resources,
       campaignEdges,
       isSimulationRunning,
-      traffic.appServers,
-      traffic.requestsPerSecond,
+      traffic,
     ],
   )
   const handleRestartStage = () => {
@@ -371,12 +374,12 @@ function App() {
           </Panel>
           {(stage.sequence !== 1 || serviceStarted) && (
             <Panel position="top-left" className="stage-objectives-position">
-              <StageObjectivePanel
+              <details className="objective-disclosure" open><summary>{t('advanced.objectives')}</summary><StageObjectivePanel
                 stage={stage}
                 progress={objectiveProgress}
                 learningProgress={learningProgress}
                 serviceStarted={serviceStarted}
-              />
+              /></details>
             </Panel>
           )}
           {stage.sequence === 1 && !serviceStarted && (
@@ -412,8 +415,6 @@ function App() {
               <GuidedBuildPanel step={stageOneBuildStep} />
             </Panel>
           )}
-          {!!stage.trafficProfile.failures?.length && <Panel position="bottom-right" className="event-timeline-position event-timeline-position--with-actions"><ReliabilityTimeline events={stage.trafficProfile.failures} gameTimeSeconds={traffic.gameTimeSeconds} /></Panel>}
-          {stage.trafficProfile.dataLossAtSecond !== undefined && <Panel position="top-center" className="connection-feedback-position"><aside className="connection-feedback nodrag nopan" dir={direction} role="status"><p>{t(traffic.dataLossOccurred ? traffic.databaseData.dataLost ? 'advanced.dataLost' : 'advanced.dataRecovered' : 'advanced.recoveryWarning', { seconds: Math.max(0, stage.trafficProfile.dataLossAtSecond - traffic.gameTimeSeconds) })}</p></aside></Panel>}
           {selectedNode && (
             <Panel position="top-right" className="resource-panel-position">
               <ResourceDetailsPanel
@@ -435,41 +436,19 @@ function App() {
               />
             </Panel>
           )}
-          {stage.trafficEvents.length > 0 && (
-            <Panel
-              position="bottom-right"
-              className={`event-timeline-position${
-                campaign.unlockedResourceTypes.includes('load-balancer')
-                  ? ' event-timeline-position--with-actions'
-                  : ''
-              }`}
-            >
-              <EventTimelinePanel
-                events={stage.trafficEvents}
-                runtime={trafficEvents}
-                gameTimeSeconds={traffic.gameTimeSeconds}
-              />
-            </Panel>
-          )}
-          {campaign.unlockedResourceTypes.includes('load-balancer') && (
-            <Panel
-              position="bottom-right"
-              className="infrastructure-actions-position"
-            >
-              <InfrastructureActionsPanel
-                campaign={campaign}
-                simulation={traffic}
-                deployment={infrastructureDeployment}
+          {!selectedNode && stage.sequence > 1 && <Panel position="top-right" className="operations-dock">
+            <div className="operations-dock__contents" dir={direction}>
+              <ExpansionAlerts stage={stage} simulation={traffic} />
+              {stage.trafficEvents.length > 0 && <details open className="operations-section"><summary>{t('event.timeline')}</summary><EventTimelinePanel events={stage.trafficEvents} runtime={trafficEvents} gameTimeSeconds={traffic.gameTimeSeconds} /></details>}
+              {!!stage.trafficProfile.failures?.length && <details open className="operations-section"><summary>{t('advanced.reliabilityNotice')}</summary><ReliabilityTimeline events={stage.trafficProfile.failures} gameTimeSeconds={traffic.gameTimeSeconds} /></details>}
+              {campaign.unlockedResourceTypes.includes('load-balancer') && <details open className="operations-section"><summary>{t('palette.title')}</summary><InfrastructureActionsPanel
+                campaign={campaign} simulation={traffic} deployment={infrastructureDeployment}
                 onDeployAdvanced={resourceType => setPendingAction({ kind: 'advanced', resourceType })}
-                onDeployLoadBalancer={() =>
-                  setPendingAction({ kind: 'load-balancer' })
-                }
-                onDeployAppServer={() =>
-                  setPendingAction({ kind: 'app-server' })
-                }
-              />
-            </Panel>
-          )}
+                onDeployLoadBalancer={() => setPendingAction({ kind: 'load-balancer' })}
+                onDeployAppServer={() => setPendingAction({ kind: 'app-server' })}
+              /></details>}
+            </div>
+          </Panel>}
           <Controls showInteractive={false} orientation="horizontal" fitViewOptions={fitViewOptions} />
         </ReactFlow>
       </section>

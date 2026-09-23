@@ -94,6 +94,7 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
     <div
       className="infrastructure-node"
       data-kind={data.kind}
+      data-available={data.isAvailable}
       data-status={data.appServerMetrics?.status ?? data.databaseMetrics?.status}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
@@ -149,6 +150,8 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
         <div className="server-cpu__summary"><TechnicalTerm translationKey="advanced.queryLoad" /><strong>{data.databaseMetrics.queryLoad.toFixed(1)} / {data.databaseMetrics.capacity}</strong></div>
         <span>{data.databaseMetrics.queryLatencyMs} ms · {t(statusLabelKeys[data.databaseMetrics.status])}</span>
       </div>}
+      {data.isAvailable === false && <strong className="node-incident">{t('advanced.unavailable')}</strong>}
+      {data.metricSummary && <div className="node-metric" data-warning={data.metricSummary.warning}><TechnicalTerm translationKey={data.metricSummary.labelKey} /><strong>{data.metricSummary.value}</strong></div>}
       <div className="node-footer">
         <span>{t(roleLabelKeys[data.kind])}</span>
         <svg

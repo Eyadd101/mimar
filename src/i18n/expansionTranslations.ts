@@ -1,4 +1,14 @@
 export const expansionEnglish = {
+  'advanced.requiredObjective': 'Required objective',
+  "advanced.cacheNode": "Repeated reads · ElastiCache",
+  "advanced.queueNode": "Background job buffer · SQS",
+  "advanced.workerNode": "Asynchronous processing · EC2",
+  "advanced.storageNode": "Durable uploaded files · S3",
+  "advanced.objectives": "Stage objectives",
+  "advanced.failureData": "Live database data was lost and service could not recover. A valid snapshot is required.",
+  "advanced.failureExposure": "Risky database settings remained exposed beyond the grace period and caused an incident.",
+  "advanced.failureStorage": "Uploads filled application local disk, slowing the request path.",
+
   "advanced.productTeam": "Product Team",
   "advanced.featureAdoption": "Feature adoption is growing",
   "advanced.featureAdoptionStory": "More customers will begin using this feature shortly. Watch application and database metrics together; the forecast is an estimate.",
@@ -124,6 +134,16 @@ export const expansionEnglish = {
   'advanced.connectionCapacity': 'Connection Capacity',
 } as const
 export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
+  'advanced.requiredObjective': 'هدف مطلوب',
+  "advanced.cacheNode": "قراءات متكررة · ElastiCache",
+  "advanced.queueNode": "مخزن للمهام الخلفية · SQS",
+  "advanced.workerNode": "معالجة غير متزامنة · EC2",
+  "advanced.storageNode": "ملفات دائمة · S3",
+  "advanced.objectives": "أهداف المرحلة",
+  "advanced.failureData": "فُقدت بيانات القاعدة الحية ولم تُستعد الخدمة. تتطلب الاستعادة لقطة صالحة.",
+  "advanced.failureExposure": "بقيت إعدادات قاعدة البيانات مكشوفة بعد فترة السماح فتسببت في حادث.",
+  "advanced.failureStorage": "ملأت الملفات قرص التطبيق المحلي فأبطأت مسار الطلب.",
+
   "advanced.productTeam": "فريق المنتج",
   "advanced.featureAdoption": "يتزايد استخدام الميزة",
   "advanced.featureAdoptionStory": "سيبدأ مزيد من العملاء استخدام الميزة قريباً. راقب مقاييس التطبيق وقاعدة البيانات معاً؛ التوقع تقديري.",

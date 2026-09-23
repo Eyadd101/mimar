@@ -1,3 +1,4 @@
+import type { TrafficSimulationState } from '../simulation/trafficSimulation'
 import type { CampaignResourceType } from '../simulation/campaignSimulation'
 export const requestFlowVisualConfig = {
   fullIntensityRequestsPerSecond: 14,
@@ -26,10 +27,14 @@ export function getConnectionRequestRate(
   resources: readonly RequestFlowResource[],
   appServers: readonly RequestFlowServerRuntime[],
   totalRequestsPerSecond: number,
+  simulation?: TrafficSimulationState,
 ) {
   const source = resources.find((resource) => resource.id === sourceId)
 
-  if (source?.type === 'cache') return totalRequestsPerSecond
+  const target = resources.find(resource => resource.id === targetId)
+  if (simulation?.failedResourceIds.some(id => id === sourceId || id === targetId) || (target?.type === 'database' && simulation?.databaseData.dataLost)) return 0
+  if (source?.type === 'cache') return simulation?.database.queryLoad ?? totalRequestsPerSecond
+  if (source?.type === 'queue') return simulation?.queue.processingRate ?? 0
 
   if (source?.type === 'users') {
     return totalRequestsPerSecond
@@ -43,10 +48,15 @@ export function getConnectionRequestRate(
   }
 
   if (source?.type === 'app-server') {
-    return (
-      appServers.find((server) => server.resourceId === sourceId)
-        ?.requestsPerSecond ?? 0
-    )
+    const serverRate = appServers.find(server => server.resourceId === sourceId)?.requestsPerSecond ?? 0
+    const totalWork = appServers.reduce((sum, server) => sum + server.requestsPerSecond, 0)
+    const share = totalWork > 0 ? serverRate / totalWork : 0
+    if (!simulation) return serverRate
+    if (target?.type === 'cache') return (simulation.cache.requestsServed + simulation.database.queryLoad) * share
+    if (target?.type === 'database') return simulation.cache.connected ? 0 : simulation.database.queryLoad * share
+    if (target?.type === 'queue') return simulation.queue.enqueueRate * share
+    if (target?.type === 'object-storage') return simulation.storage.requestRate * share
+    return totalRequestsPerSecond * share
   }
 
   return 0

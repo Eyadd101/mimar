@@ -85,7 +85,7 @@ export function StageObjectivePanel({
       {stage.secondaryObjectives.map((objective) => (
         <ObjectiveRow
           key={objective.id}
-          label={t('stage.optional')}
+          label={t(stage.winCondition.requiredObjectiveIds.includes(objective.id) ? 'advanced.requiredObjective' : 'stage.optional')}
           objective={objective}
           progress={progress[objective.id]}
         />

@@ -1,3 +1,4 @@
+import type { NodeMetricSummary } from './advancedNodePresentation'
 import type { AdvancedResourceType } from '../simulation/expansionConfig'
 import {
   applyNodeChanges,
@@ -15,6 +16,8 @@ import type {
 import type { TranslationKey } from '../i18n/translations'
 
 export type InfrastructureNodeData = {
+  isAvailable?: boolean
+  metricSummary?: NodeMetricSummary
   label: string
   kind: 'users' | 'server' | 'database' | 'load-balancer' | AdvancedResourceType
   descriptionKey: TranslationKey
@@ -40,10 +43,10 @@ const resourcePresentation: Record<
   CampaignResource['type'],
   Pick<InfrastructureNodeData, 'kind' | 'descriptionKey'>
 > = {
-  'object-storage': { kind: 'object-storage', descriptionKey: 'advanced.storagePurpose' },
-  queue: { kind: 'queue', descriptionKey: 'advanced.queuePurpose' },
-  worker: { kind: 'worker', descriptionKey: 'advanced.workerPurpose' },
-  cache: { kind: 'cache', descriptionKey: 'advanced.cachePurpose' },
+  'object-storage': { kind: 'object-storage', descriptionKey: 'advanced.storageNode' },
+  queue: { kind: 'queue', descriptionKey: 'advanced.queueNode' },
+  worker: { kind: 'worker', descriptionKey: 'advanced.workerNode' },
+  cache: { kind: 'cache', descriptionKey: 'advanced.cacheNode' },
   users: {
     kind: 'users',
     descriptionKey: 'resource.node.usersDescription',

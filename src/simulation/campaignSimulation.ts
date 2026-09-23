@@ -1,3 +1,4 @@
+import { findDeploymentPosition } from './resourcePlacement'
 import { defaultBackupSettings, initialDatabaseData, type BackupSettings, type DatabaseData } from './backupSimulation'
 import { secureSettings, type SecuritySettings } from './securitySimulation'
 import { emptyStoredData, type StoredData } from './storageSimulation'
@@ -284,7 +285,7 @@ export function addLoadBalancerResource(
           id: 'load-balancer',
           type: 'load-balancer',
           name: loadBalancerResourceConfig.name,
-          position: { x: 300, y: 0 },
+          position: findDeploymentPosition(campaign.infrastructure.resources, { x: 300, y: 0 }),
         },
       ],
     },
@@ -318,7 +319,7 @@ export function addAdditionalAppServerResource(
           type: 'app-server',
           name: additionalAppServerConfig.name,
           tierId: additionalAppServerConfig.initialTierId,
-          position: { x: 600, y: 140 },
+          position: findDeploymentPosition(campaign.infrastructure.resources, { x: 600, y: 140 }),
         },
       ],
     },
@@ -328,7 +329,7 @@ export function addAdditionalAppServerResource(
 export function addAdvancedResource(campaign: CampaignState, type: AdvancedResourceType): CampaignState {
   if (campaign.infrastructure.resources.some(resource => resource.type === type)) return campaign
   const definition = advancedResourceConfigs[type]
-  const resource: CampaignResource = { id: type, type, name: definition.name, position: { ...definition.position } }
+  const resource: CampaignResource = { id: type, type, name: definition.name, position: findDeploymentPosition(campaign.infrastructure.resources, definition.position) }
   const resources = [...campaign.infrastructure.resources, resource]
   let connections = campaign.infrastructure.connections
   const database = resources.find(r => r.type === 'database')

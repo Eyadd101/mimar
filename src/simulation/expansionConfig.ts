@@ -38,3 +38,4 @@ export const reliabilityConfig = { unavailableLatencyMs: 2000 } as const
 
 export const expansionEconomyConfig = { maximumRevenuePerPeriod: 110 } as const
 export const databaseDownsizeConfig = { deploymentCost: 20, deploymentDurationSeconds: 20 } as const
+export const resourcePlacementConfig = { minimumHorizontalGap: 300, minimumVerticalGap: 300, gridStep: 340 } as const

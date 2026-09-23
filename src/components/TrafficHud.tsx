@@ -115,7 +115,7 @@ export function TrafficHud(props: TrafficHudProps) {
     {
       id: 'infrastructure-cost',
       labelKey: 'metric.infrastructureCost',
-      value: `${infrastructureCost} / ${costPeriodSeconds}s`,
+      value: `${formatCredits(infrastructureCost)} / ${costPeriodSeconds}s`,
     },
     {
       id: 'net-cash-flow',

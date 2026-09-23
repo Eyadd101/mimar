@@ -164,6 +164,7 @@ export function createInitialTrafficState(
     requestsPerSecond,
     gameTimeSeconds: 0,
     ...application,
+    applicationLatencyMs: options.serviceActive === false ? 0 : application.applicationLatencyMs,
     databaseRestoreCompletesAt: null,
     dataLossOccurred: false,
     databaseData: infrastructure.databaseData ?? initialDatabaseData,
