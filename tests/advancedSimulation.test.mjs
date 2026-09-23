@@ -1,0 +1,311 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { runnerImport } from 'vite'
+const { module: s } = await runnerImport(new URL('./simulationHarness.ts', import.meta.url).pathname, { root: process.cwd(), logLevel: 'silent' })
+const { gameStateSimulation: game, campaignSimulation: campaign, campaignSave: saves, databaseSimulation: db, cacheSimulation: cache, queueSimulation: queue, storageSimulation: storage, securitySimulation: security, backupSimulation: backup, expansionConfig: config, stages, trafficSimulation: traffic } = s
+
+function memoryStorage() {
+  const values = new Map()
+  return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) }
+}
+function builtCampaign(stageIndex = 0) {
+  let state = game.createInitialGameState()
+  for (const type of ['users', 'app-server', 'database']) state = game.placeStageOneResource(state, type)
+  state = game.connectStageOneResources(state, 'users', 'server')
+  state = game.connectStageOneResources(state, 'server', 'database')
+  let result = { ...state.campaign, currentStageIndex: stageIndex, balance: 500 }
+  for (let i = 0; i <= stageIndex; i++) result = campaign.applyResourceUnlocks(result, stages.campaignStageConfigs[i].unlocksResourceTypes)
+  return result
+}
+function ready(stageIndex = 0) {
+  return game.dismissStageBriefing(game.createInitialGameState(builtCampaign(stageIndex)))
+}
+function expandedCampaign(stageIndex = 9) {
+  let result = builtCampaign(stageIndex)
+  result = { ...result, infrastructure: { ...result.infrastructure, resources: result.infrastructure.resources.map(r => r.type === 'app-server' ? { ...r, tierId: 'medium' } : r) } }
+  result = campaign.addAdditionalAppServerResource(campaign.addLoadBalancerResource(result))
+  for (const type of ['cache', 'queue', 'worker', 'object-storage']) result = campaign.addAdvancedResource(result, type)
+  return result
+}
+function roundTrip(state, speed = 0) {
+  const store = memoryStorage()
+  assert.equal(saves.saveGameCheckpoint(state, speed, store), true)
+  const loaded = saves.loadCampaignSave(store)
+  assert.equal(loaded.status, 'ready')
+  assert.deepEqual(loaded.gameState, state)
+  assert.equal(loaded.gameSpeed, speed)
+  return loaded.gameState
+}
+
+test('database CPU and memory stay bounded while overload remains observable', () => {
+  for (const tier of ['small', 'medium']) for (const rate of [-10, 0, 1, 30, 60, 180, 10000]) {
+    const metrics = db.calculateDatabaseMetrics(rate, 1, tier)
+    assert.ok(metrics.cpuUsage >= 0 && metrics.cpuUsage <= 100)
+    assert.ok(metrics.memoryUsage >= 0 && metrics.memoryUsage <= 100)
+    assert.ok(metrics.queryLoad >= 0 && metrics.activeConnections >= 0)
+    assert.ok(metrics.queryLatencyMs >= config.databaseConfig.baseLatencyMs)
+  }
+  assert.equal(db.calculateDatabaseMetrics(1000).status, 'overloaded')
+})
+test('database latency rises with query or connection pressure and improves with scaling', () => {
+  const low = db.calculateDatabaseMetrics(10)
+  const high = db.calculateDatabaseMetrics(50, 5, 'small', 20)
+  assert.ok(high.queryLatencyMs > low.queryLatencyMs)
+  assert.ok(db.calculateDatabaseMetrics(50, 5, 'medium', 20).queryLatencyMs < high.queryLatencyMs)
+  assert.equal(high.activeConnections, 40, 'queries do not each allocate a connection')
+  assert.ok(db.calculateDatabaseMetrics(1, 1, 'small', 100).utilization > 1)
+})
+test('database upgrade costs once, takes game time, and preserves data and position', () => {
+  let state = ready(4)
+  const original = state.campaign.infrastructure.resources.find(r => r.type === 'database')
+  state = game.beginDatabaseUpgrade(state)
+  assert.equal(state.campaign.balance, 500 - config.databaseUpgradeConfig.deploymentCost)
+  assert.equal(game.beginDatabaseUpgrade(state), state)
+  assert.equal(game.advanceGameState(state, 0), state)
+  state = game.advanceGameState(state, config.databaseUpgradeConfig.deploymentDurationSeconds - 1)
+  assert.equal(state.stageRuntime.simulation.database.tierId, 'small')
+  state = game.advanceGameState(state)
+  assert.equal(state.stageRuntime.simulation.database.tierId, 'medium')
+  assert.deepEqual(state.campaign.infrastructure.resources.find(r => r.type === 'database').position, original.position)
+  assert.ok(state.campaign.databaseData.revision > 1)
+})
+test('cache bounds hits and preserves writes, including saturation and disconnected state', () => {
+  for (const queries of [-5, 0, 1, 120, 10000]) for (const reads of [0, .8, 1]) {
+    const metrics = cache.calculateCacheMetrics(queries, true, reads)
+    assert.ok(metrics.hitRate >= 0 && metrics.hitRate <= 100)
+    assert.ok(metrics.requestsServed <= config.cacheConfig.capacity)
+    assert.ok(metrics.databaseQueries >= Math.max(0, queries) * (1 - reads) - 1e-9)
+    assert.equal(metrics.databaseQueries + metrics.requestsServed, Math.max(0, queries))
+  }
+  assert.equal(cache.calculateCacheMetrics(100, false).databaseQueries, 100)
+  assert.equal(cache.calculateCacheMetrics(100, true).databaseQueries, 40)
+})
+test('queue processing is bounded and never makes depth negative', () => {
+  let state = queue.emptyQueue
+  for (const arrivals of [20, 20, 0, 0, 2, 0]) {
+    state = queue.advanceQueue(state, arrivals, true, true)
+    assert.ok(state.depth >= 0)
+    assert.ok(state.processingRate <= config.queueConfig.workerCapacity)
+  }
+  for (let i = 0; i < 20; i++) state = queue.advanceQueue(state, 0, true, true)
+  assert.equal(state.depth, 0)
+  assert.equal(state.oldestMessageAge, 0)
+})
+test('worker outage accumulates backlog; pause preserves queue state', () => {
+  const stopped = queue.advanceQueue(queue.emptyQueue, 4, true, false, 10)
+  assert.equal(stopped.depth, 40)
+  assert.equal(stopped.processingRate, 0)
+  assert.equal(queue.advanceQueue(stopped, 4, true, true, 0), stopped)
+  assert.equal(queue.advanceQueue(stopped, 4, true, true, 10).depth, 20)
+})
+test('object storage charges capacity and requests and migrates local data without loss', () => {
+  const local = storage.advanceStorage(storage.emptyStoredData, 10, false, 30)
+  assert.equal(local.localObjects, 300)
+  assert.ok(local.latencyPenaltyMs > 0)
+  const migrated = storage.advanceStorage(local, 10, true, 1)
+  assert.equal(migrated.localObjects, 0)
+  assert.equal(migrated.storedObjects, 310)
+  assert.equal(migrated.latencyPenaltyMs, 0)
+  assert.equal(migrated.costPerPeriod, 1 + 310 * .005 * .15 + 10 * .1)
+  assert.equal(storage.calculateStorageCost(-10, -10), config.storageConfig.baseCostPerPeriod)
+})
+test('security incidents respect grace period, charge once and clear after remediation', () => {
+  const exposed = { ...security.secureSettings, publicDatabase: true }
+  const before = security.advanceSecurity(security.clearSecurityRuntime, exposed, config.securityConfig.gracePeriodSeconds - 1)
+  assert.equal(before.state.incidentActive, false)
+  assert.equal(before.penalty, 0)
+  const incident = security.advanceSecurity(before.state, exposed)
+  assert.equal(incident.penalty, config.securityConfig.incidentCost)
+  assert.equal(security.advanceSecurity(incident.state, exposed).penalty, 0)
+  const fixed = security.advanceSecurity(incident.state, security.secureSettings, 0)
+  assert.deepEqual(fixed.state, security.clearSecurityRuntime)
+})
+test('backup restore requires a valid snapshot, preserves old snapshot and charges frequency', () => {
+  const missing = { ...backup.initialDatabaseData, dataLost: true }
+  assert.equal(backup.canRestoreDatabase(missing), false)
+  assert.equal(backup.restoreDatabase(missing), missing)
+  const snapshot = backup.advanceBackups(backup.initialDatabaseData, { enabled: true, frequencySeconds: 60 }, 60)
+  assert.equal(snapshot.backupRevision, 61)
+  const lost = { ...snapshot, revision: 100, dataLost: true }
+  assert.equal(backup.canRestoreDatabase(lost), true)
+  assert.equal(backup.restoreDatabase(lost).revision, 61)
+  assert.equal(backup.restoreDatabase(lost).dataLost, false)
+  assert.equal(backup.canRestoreDatabase({ ...lost, backupRevision: 101 }), false)
+  assert.equal(backup.getBackupCost({ enabled: true, frequencySeconds: 120 }), 1.5)
+})
+test('restoring data is paid once and does not complete while paused', () => {
+  let initial = expandedCampaign()
+  initial = { ...initial, databaseData: { revision: 100, backupRevision: 60, secondsSinceBackup: 0, dataLost: true } }
+  let state = game.dismissStageBriefing(game.createInitialGameState(initial))
+  state = game.beginDatabaseRestore(state)
+  assert.equal(state.campaign.balance, 490)
+  assert.equal(game.beginDatabaseRestore(state), state)
+  assert.equal(game.advanceGameState(state, 0), state)
+  state = game.advanceGameState(state, config.backupConfig.restoreDurationSeconds)
+  assert.equal(state.stageRuntime.simulation.databaseData.dataLost, false)
+  assert.equal(state.stageRuntime.simulation.databaseRestoreCompletesAt, null)
+})
+test('resource and control unlocks arrive at the intended stages', () => {
+  const resourceUnlocks = { 'load-balancer': 3, cache: 5, queue: 6, worker: 6, 'object-storage': 7 }
+  for (const [type, index] of Object.entries(resourceUnlocks)) {
+    assert.ok(!builtCampaign(index - 1).unlockedResourceTypes.includes(type))
+    assert.ok(builtCampaign(index).unlockedResourceTypes.includes(type))
+  }
+  for (const [type, index] of [['database-scaling', 4], ['security', 8], ['backups', 9]]) {
+    assert.ok(stages.campaignStageConfigs[index].unlocksControls.includes(type))
+  }
+  assert.equal(game.beginAdvancedResourceDeployment(ready(), 'cache').campaign.infrastructure.resources.length, 3)
+})
+test('new deployments avoid existing nodes without moving existing positions', () => {
+  const initial = builtCampaign(9)
+  const expanded = expandedCampaign()
+  for (const resource of initial.infrastructure.resources) assert.deepEqual(expanded.infrastructure.resources.find(r => r.id === resource.id).position, resource.position)
+  const resources = expanded.infrastructure.resources
+  for (let i = 0; i < resources.length; i++) for (let j = i + 1; j < resources.length; j++) {
+    const a = resources[i].position, b = resources[j].position
+    assert.ok(Math.abs(a.x - b.x) >= config.resourcePlacementConfig.minimumHorizontalGap || Math.abs(a.y - b.y) >= config.resourcePlacementConfig.minimumVerticalGap)
+  }
+})
+test('dragging each advanced node repeatedly preserves infrastructure identities and connections', () => {
+  let state = game.createInitialGameState(expandedCampaign())
+  const original = structuredClone(state.campaign.infrastructure)
+  for (let repeat = 0; repeat < 5; repeat++) for (const resource of original.resources) {
+    state = game.moveCampaignResources(state, [{ id: resource.id, position: { x: repeat * 15, y: repeat * 22 } }])
+    assert.deepEqual(state.campaign.infrastructure.connections, original.connections)
+    assert.deepEqual(state.campaign.infrastructure.resources.map(({ position: _position, ...r }) => r), original.resources.map(({ position: _position, ...r }) => r))
+  }
+  assert.deepEqual(roundTrip(state).campaign.infrastructure, state.campaign.infrastructure)
+  assert.deepEqual(game.restartStage(state).campaign.infrastructure, original)
+})
+test('campaign transitions preserve advanced resources, data and positions, resetting temporary events', () => {
+  const initial = { ...expandedCampaign(8), storedData: { localObjects: 0, storedObjects: 123 }, databaseData: { revision: 100, backupRevision: 60, secondsSinceBackup: 5, dataLost: false } }
+  let state = game.createInitialGameState(initial)
+  state = { ...state, stageRuntime: { ...state.stageRuntime, status: 'stage-won', stageRating: { stars: 3, explanations: [] } } }
+  const next = game.continueToNextStage(state)
+  assert.equal(next.campaign.currentStageIndex, 9)
+  assert.deepEqual(next.campaign.infrastructure, state.campaign.infrastructure)
+  assert.deepEqual(next.campaign.storedData, initial.storedData)
+  assert.deepEqual(next.campaign.databaseData, initial.databaseData)
+  assert.equal(next.stageRuntime.simulation.gameTimeSeconds, 0)
+  assert.equal(next.stageRuntime.simulation.queue.depth, 0)
+  assert.equal(next.stageRuntime.infrastructureDeployment, null)
+  assert.equal(next.campaign.balance, 400)
+})
+test('new connection rules accept every supported pair and reject invalid direction with bilingual feedback', () => {
+  const initial = expandedCampaign().infrastructure
+  const graph = { ...initial, connections: [] }
+  for (const rule of s.connectionValidation.campaignConnectionRules) {
+    const source = graph.resources.find(r => r.type === rule.sourceType)
+    const target = graph.resources.find(r => r.type === rule.targetType)
+    assert.equal(s.connectionValidation.validateCampaignConnection(graph, source.id, target.id).valid, true)
+  }
+  const invalid = s.connectionValidation.validateCampaignConnection(graph, 'database', 'users')
+  assert.equal(invalid.valid, false)
+  for (const language of ['en', 'ar']) assert.ok(s.translations.translate(language, invalid.explanation.key).length > 10)
+  assert.equal(campaign.connectCampaignResources(expandedCampaign(), 'database', 'users').infrastructure.connections.length, initial.connections.length)
+})
+test('failed app servers stop receiving traffic and recover without resource loss', () => {
+  const infra = campaign.createTrafficInfrastructure(expandedCampaign())
+  const profile = { ...stages.campaignStageConfigs[0].trafficProfile, failures: [{ id: 'failure', resourceId: 'server', startsAtSecond: 1, durationSeconds: 2 }] }
+  let state = traffic.createInitialTrafficState({ infrastructure: infra, trafficProfile: profile })
+  state = traffic.advanceTrafficSimulation(state, 1, profile, 1, infra)
+  assert.equal(state.appServers.find(server => server.resourceId === 'server').isAvailable, false)
+  assert.equal(state.appServers.find(server => server.resourceId === 'server').requestsPerSecond, 0)
+  assert.equal(state.appServers.reduce((sum, server) => sum + server.requestsPerSecond, 0), state.requestsPerSecond)
+  state = traffic.advanceTrafficSimulation(state, 2, profile, 1, infra)
+  assert.ok(state.appServers.every(server => server.isAvailable))
+})
+test('empty guided campaign starts with zero application latency', () => {
+  assert.equal(game.createInitialGameState().stageRuntime.simulation.applicationLatencyMs, 0)
+})
+
+test('checkpoint retains paid server upgrade, pause, time and original retry snapshot', () => {
+  let state = ready()
+  state = game.advanceGameState(state, 12)
+  state = game.beginServerUpgrade(state, 'server')
+  state = game.advanceGameState(state, 8)
+  state = roundTrip(state, 0)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 20)
+  assert.equal(state.campaign.balance, 380)
+  assert.equal(game.advanceGameState(state, 0), state)
+  const completed = game.advanceGameState(state, 22)
+  assert.equal(completed.campaign.infrastructure.resources.find(r => r.id === 'server').tierId, 'medium')
+  assert.deepEqual(game.restartStage(state).campaign, state.stageStartSnapshot)
+  assert.equal(game.restartStage(state).campaign.balance, 500)
+})
+test('checkpoint retains advanced deployment across continue and charges no second cost', () => {
+  let state = game.beginAdvancedResourceDeployment(ready(5), 'cache')
+  state = game.advanceGameState(state, 10)
+  const uninterrupted = game.advanceGameState(state, 15)
+  state = roundTrip(state, 2)
+  assert.equal(state.campaign.balance, 445)
+  state = game.advanceGameState(state, 15)
+  assert.equal(state.campaign.infrastructure.resources.filter(r => r.type === 'cache').length, 1)
+  assert.deepEqual(state, uninterrupted)
+})
+test('checkpoints cover every campaign stage, seeded events and incident state', () => {
+  for (let stageIndex = 0; stageIndex < 10; stageIndex++) {
+    let state = ready(stageIndex)
+    state = game.advanceGameState(state, 140)
+    roundTrip(state, 4)
+  }
+  let state = game.dismissStageBriefing(game.createInitialGameState(expandedCampaign()))
+  state = game.configureDatabaseBackups(state, { enabled: true, frequencySeconds: 60 })
+  state = game.advanceGameState(state, 180)
+  state = game.beginDatabaseRestore(state)
+  assert.equal(state.stageRuntime.simulation.databaseData.dataLost, true)
+  roundTrip(state)
+})
+test('save preserves game over, which remains stopped on continue', () => {
+  let state = ready()
+  state = { ...state, campaign: { ...state.campaign, balance: 0 }, stageRuntime: { ...state.stageRuntime, simulation: { ...state.stageRuntime.simulation, balance: 0 } } }
+  state = game.advanceGameState(state)
+  assert.equal(state.stageRuntime.status, 'game-over')
+  const loaded = roundTrip(state)
+  assert.equal(game.advanceGameState(loaded, 100), loaded)
+})
+test('legacy schema 1 and 2 saves migrate safely without pretending to contain a checkpoint', () => {
+  for (const version of [1, 2]) {
+    const store = memoryStorage()
+    store.setItem(saves.campaignSaveKey, JSON.stringify({ version, campaign: builtCampaign() }))
+    const loaded = saves.loadCampaignSave(store)
+    assert.equal(loaded.status, 'ready')
+    assert.equal(loaded.gameState, undefined)
+    assert.ok(game.createInitialGameState(loaded.campaign))
+  }
+})
+test('corrupt runtime checkpoints are rejected without crashing or silently discarding deployment', () => {
+  const corruptions = [
+    value => { delete value.checkpoint.stageRuntime.simulation.queue },
+    value => { value.checkpoint.stageRuntime.simulation.customerSatisfaction = 101 },
+    value => { value.checkpoint.stageRuntime.simulation.balance = -1 },
+    value => { value.checkpoint.stageRuntime.simulation.appServers[0].tierId = 'huge' },
+    value => { value.checkpoint.stageRuntime.simulation.satisfactionReason = { key: 'invalid' } },
+    value => { value.checkpoint.stageStartSnapshot.currentStageIndex = 4 },
+    value => { value.checkpoint.gameSpeed = 99 },
+    value => { value.checkpoint.stageRuntime.status = 'invalid' },
+    value => { value.checkpoint.stageRuntime.simulation.serverDeployment = { cost: 0 } },
+  ]
+  for (const corrupt of corruptions) {
+    const store = memoryStorage()
+    saves.saveGameCheckpoint(ready(), 0, store)
+    const data = JSON.parse(store.getItem(saves.campaignSaveKey))
+    corrupt(data)
+    store.setItem(saves.campaignSaveKey, JSON.stringify(data))
+    assert.equal(saves.loadCampaignSave(store).status, 'corrupt')
+  }
+})
+test('storage denial is nonfatal and does not claim a successful save', () => {
+  const denied = { getItem() { throw new Error('denied') }, setItem() { throw new Error('quota') }, removeItem() { throw new Error('denied') } }
+  assert.equal(saves.saveGameCheckpoint(ready(), 1, denied), false)
+  assert.equal(saves.loadCampaignSave(denied).status, 'corrupt')
+})
+
+test('stage complete checkpoint retains results and continues with the same infrastructure', () => {
+  const won = game.advanceGameState(ready(), 270)
+  assert.equal(won.stageRuntime.status, 'stage-won')
+  const loaded = roundTrip(won)
+  const next = game.continueToNextStage(loaded)
+  assert.equal(next.campaign.currentStageIndex, 1)
+  assert.deepEqual(next.campaign.infrastructure, won.campaign.infrastructure)
+})

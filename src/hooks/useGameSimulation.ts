@@ -32,7 +32,7 @@ import {
 import {
   clearCampaignSave,
   loadCampaignSave,
-  saveCampaign,
+  saveGameCheckpoint,
 } from '../simulation/campaignSave'
 import { calculateTickGameSeconds } from '../simulation/simulationClock'
 
@@ -66,9 +66,9 @@ export function useGameSimulation() {
 
   useEffect(() => {
     if (campaignStarted) {
-      saveCampaign(gameState.campaign)
+      saveGameCheckpoint(gameState, gameSpeed)
     }
-  }, [campaignStarted, gameState.campaign])
+  }, [campaignStarted, gameState, gameSpeed])
 
   const startNewCampaign = useCallback(() => {
     clearCampaignSave()
@@ -84,9 +84,9 @@ export function useGameSimulation() {
       return
     }
 
-    setGameState(createInitialGameState(campaignSaveResult.campaign))
+    setGameState(campaignSaveResult.gameState ?? createInitialGameState(campaignSaveResult.campaign))
     setCampaignStarted(true)
-    setGameSpeed(defaultSimulationSpeed)
+    setGameSpeed(campaignSaveResult.gameSpeed ?? defaultSimulationSpeed)
   }, [campaignSaveResult])
 
   const upgradeServer = useCallback((resourceId: string) => {

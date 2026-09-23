@@ -7,14 +7,17 @@ import {
   type CampaignResourceType,
   type CampaignState,
 } from './campaignSimulation'
-import { serverTierConfigs } from './config'
+import { serverTierConfigs, type SimulationSpeed } from './config'
+import { isValidCheckpoint, type CampaignCheckpoint } from './checkpointValidation'
+import type { GameState } from './gameStateSimulation'
 
 export const campaignSaveKey = 'cloud-game-campaign'
-export const campaignSaveVersion = 2
+export const campaignSaveVersion = 3
 
 type CampaignSaveEnvelope = {
   version: typeof campaignSaveVersion
   campaign: CampaignState
+  checkpoint?: CampaignCheckpoint
 }
 
 type StorageReader = Pick<Storage, 'getItem'>
@@ -22,7 +25,7 @@ type StorageWriter = Pick<Storage, 'setItem' | 'removeItem'>
 
 export type CampaignSaveResult =
   | { status: 'empty' }
-  | { status: 'ready'; campaign: CampaignState }
+  | { status: 'ready'; campaign: CampaignState; gameState?: GameState; gameSpeed?: SimulationSpeed }
   | { status: 'corrupt'; error: 'invalid' | 'unreadable' }
 
 const resourceTypes: readonly CampaignResourceType[] = [
@@ -57,7 +60,9 @@ export function loadCampaignSave(
       }
     }
 
-    return { status: 'ready', campaign: parsed.campaign }
+    return { status: 'ready', campaign: parsed.campaign,
+      ...(parsed.checkpoint ? { gameState: { campaign: parsed.campaign, stageRuntime: parsed.checkpoint.stageRuntime, stageStartSnapshot: parsed.checkpoint.stageStartSnapshot }, gameSpeed: parsed.checkpoint.gameSpeed } : {}),
+    }
   } catch {
     return {
       status: 'corrupt',
@@ -79,6 +84,26 @@ export function saveCampaign(
     campaign,
   }
 
+  try {
+    storage.setItem(campaignSaveKey, JSON.stringify(envelope))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Persist a complete checkpoint so paid deployments and retry snapshots survive reload. */
+export function saveGameCheckpoint(
+  gameState: GameState,
+  gameSpeed: SimulationSpeed,
+  storage: StorageWriter | null = getBrowserStorage(),
+) {
+  if (!storage) return false
+  const envelope: CampaignSaveEnvelope = {
+    version: campaignSaveVersion,
+    campaign: gameState.campaign,
+    checkpoint: { stageRuntime: gameState.stageRuntime, stageStartSnapshot: gameState.stageStartSnapshot, gameSpeed },
+  }
   try {
     storage.setItem(campaignSaveKey, JSON.stringify(envelope))
     return true
@@ -115,11 +140,12 @@ function getBrowserStorage() {
 }
 
 function isValidSaveEnvelope(value: unknown): value is CampaignSaveEnvelope {
-  if (!isRecord(value) || (value.version !== campaignSaveVersion && value.version !== 1)) {
+  if (!isRecord(value) || (value.version !== campaignSaveVersion && value.version !== 2 && value.version !== 1)) {
     return false
   }
 
-  return isValidCampaign(value.campaign)
+  return isValidCampaign(value.campaign) &&
+    (value.checkpoint === undefined || isValidCheckpoint(value.checkpoint, value.campaign, isValidCampaign))
 }
 
 function isValidCampaign(value: unknown): value is CampaignState {
