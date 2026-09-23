@@ -12,6 +12,11 @@
   --border: #29352f;
   --accent: #a9e7bc;
   --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --font-meta: clamp(0.6875rem, 0.56rem + 0.16vw, 0.75rem);
+  --font-secondary: clamp(0.75rem, 0.63rem + 0.18vw, 0.875rem);
+  --font-body: clamp(0.875rem, 0.76rem + 0.18vw, 1rem);
+  --font-label: clamp(0.9375rem, 0.8rem + 0.22vw, 1.0625rem);
+  --font-heading: clamp(1.25rem, 1rem + 0.5vw, 1.75rem);
 }
 
 * {

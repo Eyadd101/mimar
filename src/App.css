@@ -2276,3 +2276,536 @@
   .resource-panel-position { height: calc(100% - 32px); }
   .operations-dock { height: 45%; }
 }
+
+/* Responsive type scale: readable at 100% zoom without scaling the canvas. */
+.technical-term {
+  gap: 3px;
+  line-height: 1.25;
+}
+
+.technical-term small,
+.node-label small,
+.guided-build__english {
+  color: #91a69a;
+  font: var(--font-secondary) var(--mono);
+  line-height: 1.25;
+}
+
+.technical-term[dir='rtl'] > span {
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: var(--font-label);
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.technical-term[dir='rtl'] > small {
+  justify-self: start;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+.campaign-start-card,
+.stage-briefing-card,
+.game-state-card {
+  width: min(560px, 100%);
+  padding: clamp(28px, 2.2vw, 42px);
+}
+
+.campaign-start-card h1,
+.stage-briefing-card h2,
+.game-state-card h2 {
+  font-size: clamp(1.75rem, 1.4rem + 0.8vw, 2.25rem);
+  line-height: 1.25;
+}
+
+.campaign-start-card > p:not(.campaign-start-card__eyebrow),
+.stage-briefing-card > p:not(.stage-briefing-card__eyebrow),
+.game-state-card__message {
+  font-size: var(--font-body);
+  line-height: 1.75;
+}
+
+.campaign-start-card__eyebrow,
+.stage-briefing-card__eyebrow,
+.game-state-card__eyebrow,
+.action-confirmation__card > p,
+.resource-panel__eyebrow,
+.failure-chain > span,
+.stage-recap span,
+.game-state-card__metrics dt,
+.stage-rating > p {
+  font-size: var(--font-meta);
+  line-height: 1.4;
+}
+
+.campaign-start-card__save-error,
+.game-state-card__campaign-end,
+.failure-chain li,
+.stage-rating li strong,
+.stage-rating li p,
+.stage-recap ul {
+  font-size: var(--font-secondary);
+  line-height: 1.55;
+}
+
+.campaign-start-card__actions button,
+.stage-briefing-card__footer button,
+.game-state-card > button,
+.game-state-card__actions button,
+.action-confirmation__card button {
+  min-height: 42px;
+  font-size: var(--font-body);
+}
+
+.game-state-card__metrics dd,
+.action-confirmation__card dd {
+  font-size: var(--font-label);
+}
+
+.stage-briefing-card[dir='rtl'] > p:not(.stage-briefing-card__eyebrow),
+.campaign-start-card[dir='rtl'] > p:not(.campaign-start-card__eyebrow),
+.game-state-card[dir='rtl'] .game-state-card__message,
+.game-state-card[dir='rtl'] .failure-chain li,
+.game-state-card[dir='rtl'] .stage-recap li {
+  font-size: clamp(0.9375rem, 0.78rem + 0.25vw, 1.0625rem);
+}
+
+.game-header {
+  grid-template-columns: minmax(220px, 1fr) minmax(0, 67vw) minmax(220px, 1fr);
+  min-height: 104px;
+  padding-inline: clamp(22px, 2vw, 40px);
+}
+
+.brand {
+  font-size: var(--font-label);
+}
+
+.header-caption {
+  font-size: var(--font-body);
+}
+
+.prototype-badge,
+.language-selector select,
+.language-selector span {
+  font-size: var(--font-meta);
+}
+
+.language-selector select {
+  min-width: 112px;
+  min-height: 34px;
+}
+
+.traffic-hud {
+  grid-template-columns: repeat(10, minmax(88px, 1fr));
+}
+
+.traffic-hud__metric {
+  min-height: 68px;
+  padding: 9px clamp(7px, 0.65vw, 13px);
+}
+
+.traffic-hud__label {
+  min-height: 29px;
+  margin-bottom: 4px;
+  font-size: var(--font-meta);
+  letter-spacing: 0.55px;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.traffic-hud__label .technical-term {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.traffic-hud__label .technical-term > span,
+.traffic-hud__label .technical-term > small {
+  max-width: 100%;
+  overflow-wrap: normal;
+}
+
+.traffic-hud__label .technical-term[dir='rtl'] > span {
+  font-size: clamp(0.8125rem, 0.69rem + 0.18vw, 0.9375rem);
+}
+
+.traffic-hud__label .technical-term > small {
+  font-size: clamp(0.6875rem, 0.59rem + 0.14vw, 0.75rem);
+  line-height: 1.15;
+}
+
+.traffic-hud__metric strong {
+  font-size: clamp(0.9375rem, 0.78rem + 0.22vw, 1.125rem);
+}
+
+.traffic-hud__cause,
+.traffic-hud__notice {
+  font-size: var(--font-meta);
+}
+
+.traffic-hud__cause {
+  max-width: 150px;
+}
+
+.metric-explanation {
+  width: min(680px, calc(100vw - 40px));
+  padding: clamp(20px, 1.7vw, 28px);
+}
+
+.metric-explanation__title > .technical-term > span {
+  font-size: clamp(1.25rem, 1.03rem + 0.35vw, 1.5rem);
+}
+
+.metric-explanation__title > .technical-term > small,
+.metric-explanation h3,
+.metric-explanation__values dt,
+.metric-explanation__formula {
+  font-size: var(--font-secondary) !important;
+}
+
+.metric-explanation p,
+.metric-explanation li,
+.metric-explanation__values dd {
+  font-size: var(--font-body);
+  line-height: 1.65;
+}
+
+.canvas-heading > p:last-child {
+  font-size: var(--font-body);
+}
+
+.guided-build {
+  width: min(540px, calc(100vw - 40px));
+  padding: clamp(17px, 1.25vw, 22px);
+}
+
+.guided-build__progress,
+.guided-build small {
+  font-size: var(--font-meta);
+}
+
+.guided-build h2 {
+  font-size: clamp(1.0625rem, 0.86rem + 0.3vw, 1.25rem);
+  line-height: 1.4;
+}
+
+.guided-build p {
+  font-size: var(--font-body);
+  line-height: 1.65;
+}
+
+.guided-build[dir='rtl'] h2,
+.guided-build[dir='rtl'] p {
+  font-size: clamp(0.9375rem, 0.8rem + 0.25vw, 1.0625rem);
+}
+
+.connection-feedback {
+  width: min(560px, calc(100vw - 40px));
+}
+
+.connection-feedback p {
+  font-size: var(--font-body);
+  line-height: 1.6;
+}
+
+.resource-palette {
+  width: clamp(300px, 19vw, 360px);
+}
+
+.resource-palette__heading span,
+.stage-objectives__heading span,
+.stage-objectives__item small,
+.stage-learning__heading,
+.stage-objectives__progress > div:first-child {
+  font-size: var(--font-meta);
+}
+
+.resource-palette__heading strong,
+.stage-objectives__heading strong {
+  font-size: var(--font-label);
+}
+
+.resource-palette__list {
+  gap: 10px;
+  padding: 12px;
+}
+
+.resource-palette__card {
+  gap: 10px;
+  padding: 13px;
+}
+
+.resource-palette__card strong,
+.resource-palette__card span {
+  font-size: var(--font-label);
+}
+
+.resource-palette__card p,
+.resource-palette__card button {
+  font-size: var(--font-body);
+  line-height: 1.55;
+}
+
+.resource-palette__card button {
+  min-height: 38px;
+}
+
+.stage-objectives {
+  width: clamp(310px, 20vw, 380px);
+}
+
+.stage-objectives__briefing,
+.stage-learning li p,
+.stage-objectives__item p,
+.stage-objectives__item div > span {
+  font-size: var(--font-secondary);
+  line-height: 1.55;
+}
+
+.stage-objectives[dir='rtl'] .stage-objectives__briefing,
+.stage-objectives[dir='rtl'] .stage-learning li p,
+.stage-objectives[dir='rtl'] .stage-objectives__item p {
+  font-size: var(--font-body);
+}
+
+.stage-objectives__item {
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  padding: 13px 16px;
+}
+
+.stage-objectives__check {
+  width: 20px;
+  height: 20px;
+  font-size: var(--font-secondary);
+}
+
+.event-timeline,
+.infrastructure-actions,
+.operations-dock {
+  width: min(370px, calc(100vw - 40px));
+}
+
+.operations-section > summary,
+.objective-disclosure > summary,
+.event-timeline__heading,
+.event-timeline__meta,
+.infrastructure-actions__heading span {
+  font-size: var(--font-meta);
+  line-height: 1.4;
+}
+
+.event-timeline__event h3,
+.infrastructure-actions__heading strong,
+.build-option strong,
+.infrastructure-actions__deployment span {
+  font-size: var(--font-label);
+}
+
+.event-timeline__event > p,
+.event-timeline__actual,
+.event-timeline__story,
+.build-option p,
+.infrastructure-actions__deployment p,
+.infrastructure-actions__ready,
+.build-option button,
+.expansion-alert {
+  font-size: var(--font-body) !important;
+  line-height: 1.6;
+}
+
+.traffic-forecast span,
+.traffic-forecast small,
+.build-option span,
+.infrastructure-actions__deployment strong {
+  font-size: var(--font-secondary);
+}
+
+.traffic-forecast strong {
+  font-size: var(--font-label);
+}
+
+.build-option button {
+  min-height: 40px;
+}
+
+.resource-panel {
+  width: min(390px, calc(100vw - 40px));
+}
+
+.resource-panel__header h2 {
+  font-size: var(--font-heading);
+  line-height: 1.3;
+}
+
+.resource-panel__details dt,
+.resource-panel__details dd,
+.resource-panel__placeholder span,
+.resource-panel__upgrade-heading,
+.resource-panel__upgrade-heading strong,
+.resource-panel__upgrade p,
+.resource-panel__upgrade-button,
+.resource-panel > p,
+.security-setting,
+.resource-panel__education h3,
+.resource-panel__education p,
+.node-metric {
+  font-size: var(--font-body);
+  line-height: 1.6;
+}
+
+.resource-panel__details > div {
+  padding-block: 10px;
+}
+
+.resource-panel__upgrade-button {
+  min-height: 42px;
+}
+
+.infrastructure-node {
+  width: 252px;
+  padding-inline: 23px;
+}
+
+.node-label {
+  font-size: clamp(1.1875rem, 1rem + 0.3vw, 1.375rem);
+  line-height: 1.3;
+}
+
+.node-description {
+  font-size: var(--font-body);
+  line-height: 1.5;
+}
+
+.server-cpu__summary,
+.server-cpu__status,
+.node-footer,
+.node-number {
+  font-size: var(--font-meta);
+}
+
+.server-cpu__summary strong {
+  font-size: var(--font-secondary);
+}
+
+.hint-button,
+.speed-controls__button,
+.game-footer,
+.graph-count {
+  font-size: var(--font-secondary);
+}
+
+.hint-button,
+.speed-controls__button {
+  min-height: 34px;
+}
+
+.hint-popover {
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px;
+}
+
+.hint-popover__header {
+  font-size: var(--font-meta);
+}
+
+.hint-popover p {
+  font-size: var(--font-body);
+  line-height: 1.65;
+}
+
+@media (min-width: 2000px) {
+  .game-header {
+    grid-template-columns: minmax(260px, 1fr) minmax(0, 68vw) minmax(240px, 1fr);
+    min-height: 116px;
+  }
+
+  .canvas-heading {
+    margin: 44px;
+  }
+
+  .stage-objectives-position {
+    margin: 170px 44px;
+  }
+
+  .resource-palette-position {
+    margin: 150px 44px 0;
+  }
+
+  .operations-dock,
+  .resource-panel-position {
+    margin: 28px 36px;
+  }
+}
+
+@media (max-width: 1599px) {
+  .game-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 220px;
+  }
+
+  .traffic-hud {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .traffic-hud__metric:nth-child(6) {
+    border-left: 0;
+  }
+
+  .traffic-hud__metric:nth-child(n + 6) {
+    border-top: 1px solid #35463c;
+  }
+}
+
+@media (max-width: 1180px) {
+  .game-header {
+    min-height: 220px;
+  }
+
+  .traffic-hud {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .resource-palette,
+  .stage-objectives,
+  .event-timeline,
+  .infrastructure-actions,
+  .operations-dock,
+  .resource-panel {
+    width: min(330px, calc(100vw - 32px));
+  }
+}
+
+@media (max-width: 640px) {
+  .game-header {
+    min-height: 360px;
+  }
+
+  .traffic-hud__metric {
+    min-height: 58px;
+    padding: 7px 5px;
+  }
+
+  .traffic-hud__label,
+  .traffic-hud__label .technical-term[dir='rtl'] > span {
+    font-size: 0.75rem;
+  }
+
+  .traffic-hud__label .technical-term > small {
+    font-size: 0.6875rem;
+  }
+
+  .traffic-hud__metric strong {
+    font-size: 0.875rem;
+  }
+
+  .resource-palette,
+  .stage-objectives,
+  .event-timeline,
+  .infrastructure-actions,
+  .operations-dock,
+  .resource-panel {
+    width: calc(100vw - 32px);
+  }
+}
