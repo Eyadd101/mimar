@@ -1,3 +1,6 @@
+import { useId } from 'react'
+import { useLanguage } from '../i18n/useLanguage'
+
 type ActionConfirmationDialogProps = {
   title: string
   description: string
@@ -18,13 +21,21 @@ export function ActionConfirmationDialog({
   onCancel,
 }: ActionConfirmationDialogProps) {
   const { direction, t } = useLanguage()
+  const titleId = useId()
+  const descriptionId = useId()
 
   return (
-    <div className="action-confirmation" role="alertdialog" aria-modal="true">
+    <div
+      className="action-confirmation"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
       <section className="action-confirmation__card" dir={direction}>
         <p>{t('action.confirmInfrastructure')}</p>
-        <h2>{title}</h2>
-        <span>{description}</span>
+        <h2 id={titleId}>{title}</h2>
+        <span id={descriptionId}>{description}</span>
         <dl>
           <div>
             <dt>{t('action.immediateCost')}</dt>
@@ -36,10 +47,10 @@ export function ActionConfirmationDialog({
           </div>
         </dl>
         <div>
-          <button type="button" onClick={onCancel}>
+          <button type="button" onClick={onCancel} autoFocus>
             {t('common.cancel')}
           </button>
-          <button type="button" onClick={onConfirm} autoFocus>
+          <button type="button" onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>
@@ -47,4 +58,3 @@ export function ActionConfirmationDialog({
     </div>
   )
 }
-import { useLanguage } from '../i18n/useLanguage'

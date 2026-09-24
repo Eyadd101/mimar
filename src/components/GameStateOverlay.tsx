@@ -1,3 +1,4 @@
+import { useId, useState } from 'react'
 import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type {
   GameOverReason,
@@ -15,6 +16,7 @@ import { createGameOverFailureChain } from '../simulation/gameOverExplanationSim
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationKey } from '../i18n/translations'
+import { CampaignResetDialog } from './CampaignResetDialog'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -44,6 +46,9 @@ export function GameStateOverlay({
   onContinueToNextStage,
 }: GameStateOverlayProps) {
   const { direction, t } = useLanguage()
+  const [isResetConfirmationOpen, setIsResetConfirmationOpen] = useState(false)
+  const titleId = useId()
+  const descriptionId = useId()
 
   if (status === 'playing') {
     return null
@@ -74,20 +79,27 @@ export function GameStateOverlay({
     })
   }
 
-  return (
-    <div className="game-state-overlay" role="dialog" aria-modal="true">
+  return <>
+    <div
+      className="game-state-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      aria-hidden={isResetConfirmationOpen || undefined}
+    >
       <section className="game-state-card" dir={direction}>
         <p className="game-state-card__eyebrow">
           {stageWon ? t('game.stageComplete') : t('game.gameOver')}
         </p>
-        <h2>
+        <h2 id={titleId}>
           {stageWon
             ? t(stage.nameKey)
             : reason?.code === 'bankruptcy'
               ? t('game.bankruptcyTitle')
               : t('game.serviceFailureTitle')}
         </h2>
-        <p className="game-state-card__message">
+        <p className="game-state-card__message" id={descriptionId}>
           {stageWon
             ? t('game.primaryComplete')
             : reason?.code === 'bankruptcy'
@@ -193,7 +205,7 @@ export function GameStateOverlay({
         )}
 
         {stageWon && hasNextStage && (
-          <button type="button" onClick={onContinueToNextStage}>
+          <button type="button" onClick={onContinueToNextStage} autoFocus>
             {t('action.continueNextStage')}
           </button>
         )}
@@ -204,17 +216,23 @@ export function GameStateOverlay({
         )}
         {!stageWon && (
           <div className="game-state-card__actions">
-            <button type="button" onClick={onRestartStage}>
+            <button type="button" onClick={onRestartStage} autoFocus>
               {t('action.retryStage')}
             </button>
-            <button type="button" onClick={onRestartCampaign}>
+            <button type="button" onClick={() => setIsResetConfirmationOpen(true)}>
               {t('action.returnCampaignStart')}
             </button>
           </div>
         )}
       </section>
     </div>
-  )
+    {isResetConfirmationOpen && (
+      <CampaignResetDialog
+        onCancel={() => setIsResetConfirmationOpen(false)}
+        onConfirm={onRestartCampaign}
+      />
+    )}
+  </>
 }
 
 function getStarTitleKey(star: 1 | 2 | 3): TranslationKey {

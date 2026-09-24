@@ -4,6 +4,23 @@ Cloud Game is a bilingual educational infrastructure management game for cloud b
 
 The campaign introduces vertical and horizontal scaling, load balancing, managed databases, caching, queues and workers, object storage, security configuration, and backup recovery. All infrastructure and AWS references are simulated; the project does not create real cloud resources or use a backend.
 
+## Core gameplay
+
+- Build and connect infrastructure on a draggable React Flow canvas.
+- Diagnose CPU, memory, latency, database, queue, storage, security, and recovery problems.
+- Balance service reliability against deployment and operating costs.
+- Carry resource choices, upgrades, graph positions, and campaign progress between stages.
+- React to forecast traffic and scheduled incidents using Pause, 1x, 2x, and 4x game speeds.
+- Learn generic cloud concepts first, with AWS service names shown as secondary references.
+
+The formulas are intentionally simplified and deterministic enough to teach cause and effect. They are educational models, not production capacity-planning guidance.
+
+## Campaign and localization
+
+The ten connected stages begin with an empty Stage 1 canvas and gradually unlock the existing resource systems. Stage progress, infrastructure, and the current simulation checkpoint are stored locally in the browser. Invalid or incompatible saves are rejected safely so the player can begin a clean campaign.
+
+English and Arabic share one localization system. Arabic explanatory text uses RTL layout while English cloud terminology remains visible as an LTR learning aid.
+
 ## Run locally
 
 Requirements: Node.js 20 or newer and npm.
@@ -35,6 +52,23 @@ For targeted balance diagnostics, run `npm run check:balance`. Add `-- --sweep` 
 - `@xyflow/react`
 - Node's built-in test runner with Vite's module runner
 
+## Project structure
+
+- `src/components`: presentation and game controls
+- `src/data`: stages, resource presentation, and educational content
+- `src/simulation`: pure simulation, campaign, topology, and persistence rules
+- `src/i18n`: English and Arabic dictionaries and language state
+- `tests`: behavior-focused simulation and campaign tests
+- `scripts`: optional balance diagnostics
+
 ## Campaign pacing
 
 The same infrastructure continues through all ten stages. Stage durations are expressed in game seconds and the Pause, 1x, 2x, and 4x controls share one simulation clock. Temporary traffic and incident state resets between stages while resources, positions, unlocks, and campaign progression carry forward.
+
+## Production build
+
+`npm run build` writes the static site to `dist`. The application uses no client-side URL routes, backend, credentials, or external runtime services, so the generated files can be served by a normal static host at the site root. Run `npm run preview` to inspect that build locally.
+
+## Project status
+
+The complete ten-stage campaign is a release candidate for owner playtesting. The current milestone focuses on a single-player browser experience and local persistence; it has no accounts, multiplayer, backend, or real cloud integration.
