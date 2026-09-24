@@ -894,8 +894,8 @@
 }
 
 .resource-palette-position {
-  margin: 132px 36px 0;
-  max-height: calc(100% - 150px);
+  height: calc(100% - 204px);
+  margin: 132px 36px 72px;
 }
 
 .guided-build-position {
@@ -2371,11 +2371,16 @@
 }
 
 .game-header {
-  grid-template-areas: 'brand metrics tools';
-  grid-template-columns: minmax(260px, 1fr) minmax(880px, 4fr) minmax(250px, 1fr);
+  grid-template-areas:
+    'brand tools'
+    'metrics metrics';
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   column-gap: clamp(16px, 1.2vw, 24px);
-  min-height: 104px;
+  min-height: 0;
+  padding-block: 8px;
   padding-inline: clamp(22px, 2vw, 40px);
+  row-gap: 8px;
 }
 
 .brand {
@@ -2416,21 +2421,24 @@
 }
 
 .traffic-hud__metric {
-  min-height: 68px;
-  padding: 9px clamp(7px, 0.65vw, 13px);
+  min-height: 64px;
+  padding: 6px clamp(5px, 0.55vw, 10px);
 }
 
 .traffic-hud__label {
-  min-height: 29px;
-  margin-bottom: 4px;
+  display: grid;
+  min-height: 32px;
+  margin-bottom: 2px;
+  place-items: center;
   font-size: var(--font-meta);
-  letter-spacing: 0.55px;
-  line-height: 1.25;
+  letter-spacing: 0.35px;
+  line-height: 1.15;
   text-transform: none;
 }
 
 .traffic-hud__label .technical-term {
   display: grid;
+  gap: 1px;
   justify-items: center;
   width: 100%;
   min-width: 0;
@@ -2448,7 +2456,7 @@
 
 .traffic-hud__label .technical-term > small {
   font-size: clamp(0.6875rem, 0.59rem + 0.14vw, 0.75rem);
-  line-height: 1.15;
+  line-height: 1.05;
 }
 
 .traffic-hud__metric strong {
@@ -2732,11 +2740,6 @@
 }
 
 @media (min-width: 2000px) {
-  .game-header {
-    grid-template-columns: minmax(280px, 1fr) minmax(980px, 4fr) minmax(270px, 1fr);
-    min-height: 116px;
-  }
-
   .canvas-heading {
     margin: 44px;
   }
@@ -2746,7 +2749,8 @@
   }
 
   .resource-palette-position {
-    margin: 150px 44px 0;
+    height: calc(100% - 222px);
+    margin: 150px 44px 72px;
   }
 
   .operations-dock,
@@ -2756,37 +2760,34 @@
 }
 
 @media (max-width: 1799px) {
-  .game-header {
-    grid-template-areas:
-      'brand tools'
-      'metrics metrics';
-    grid-template-columns: minmax(280px, 1fr) minmax(250px, auto);
-    grid-template-rows: auto auto;
-    min-height: 0;
-    padding-block: 12px;
-    row-gap: 12px;
-  }
-
-  .traffic-hud {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .traffic-hud__metric:nth-child(6) {
-    border-left: 0;
+    border-left: 1px solid #35463c;
   }
 
   .traffic-hud__metric:nth-child(n + 6) {
-    border-top: 1px solid #35463c;
+    border-top: 0;
   }
 }
 
 @media (max-width: 1180px) {
   .game-header {
-    min-height: 220px;
+    min-height: 0;
   }
 
   .traffic-hud {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(10, minmax(126px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-color: #52675b #17201c;
+    scrollbar-width: thin;
+  }
+
+  .traffic-hud__metric:nth-child(n) {
+    border-top: 0;
+  }
+
+  .traffic-hud__metric + .traffic-hud__metric {
+    border-left: 1px solid #35463c;
   }
 
   .resource-palette,
@@ -2801,7 +2802,7 @@
 
 @media (max-width: 640px) {
   .game-header {
-    min-height: 360px;
+    min-height: 0;
   }
 
   .traffic-hud__metric {
