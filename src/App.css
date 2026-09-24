@@ -2371,12 +2371,16 @@
 }
 
 .game-header {
-  grid-template-columns: minmax(220px, 1fr) minmax(0, 67vw) minmax(220px, 1fr);
+  grid-template-areas: 'brand metrics tools';
+  grid-template-columns: minmax(260px, 1fr) minmax(880px, 4fr) minmax(250px, 1fr);
+  column-gap: clamp(16px, 1.2vw, 24px);
   min-height: 104px;
   padding-inline: clamp(22px, 2vw, 40px);
 }
 
 .brand {
+  grid-area: brand;
+  max-width: 100%;
   font-size: var(--font-label);
 }
 
@@ -2395,8 +2399,20 @@
   min-height: 34px;
 }
 
+.header-tools {
+  grid-area: tools;
+  max-width: 100%;
+}
+
+.traffic-hud-shell {
+  grid-area: metrics;
+  max-width: 100%;
+}
+
 .traffic-hud {
-  grid-template-columns: repeat(10, minmax(88px, 1fr));
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
 }
 
 .traffic-hud__metric {
@@ -2717,7 +2733,7 @@
 
 @media (min-width: 2000px) {
   .game-header {
-    grid-template-columns: minmax(260px, 1fr) minmax(0, 68vw) minmax(240px, 1fr);
+    grid-template-columns: minmax(280px, 1fr) minmax(980px, 4fr) minmax(270px, 1fr);
     min-height: 116px;
   }
 
@@ -2739,10 +2755,16 @@
   }
 }
 
-@media (max-width: 1599px) {
+@media (max-width: 1799px) {
   .game-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    min-height: 220px;
+    grid-template-areas:
+      'brand tools'
+      'metrics metrics';
+    grid-template-columns: minmax(280px, 1fr) minmax(250px, auto);
+    grid-template-rows: auto auto;
+    min-height: 0;
+    padding-block: 12px;
+    row-gap: 12px;
   }
 
   .traffic-hud {
