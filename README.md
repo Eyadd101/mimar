@@ -1,47 +1,40 @@
-# React + TypeScript + Vite
+# Cloud Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Cloud Game is a bilingual educational infrastructure management game for cloud beginners. You operate a growing SaaS startup, observe how traffic affects the system, and evolve one persistent architecture through a ten-stage campaign.
 
-Currently, two official plugins are available:
+The campaign introduces vertical and horizontal scaling, load balancing, managed databases, caching, queues and workers, object storage, security configuration, and backup recovery. All infrastructure and AWS references are simulated; the project does not create real cloud resources or use a backend.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run locally
 
-## React Compiler
+Requirements: Node.js 20 or newer and npm.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite prints the local URL. Campaign progress is saved in the browser with a versioned `localStorage` schema.
 
-### Expanded campaign pacing
+## Validation
 
-The same infrastructure continues through ten stages. Stage durations in game seconds:
-270, 300, 330, 390, 330, 360, 390, 360, 330, 420.
-Stages 5–6 announce a second traffic lift at 90 seconds. Stage 7 announces a
-25-second worker outage at 240 seconds, Stage 8 a 20-second application outage
-at 240 seconds, and Stage 10 a data-loss exercise at 180 seconds followed by a
-15-second database outage at 300 seconds. All use the central simulation clock.
+```bash
+npm run build
+npm run lint
+npm test
+```
 
-Run `npm run check:balance` for visible end-of-stage metrics for two strategies:
-Medium Database, or Cache with a resized Small Database. Add `-- --sweep` to run
-both strategies across 100 seeds. These timely-action scripts verify solvability;
-they do not replace beginner usability testing. The cache strategy pays upfront
-for deployment/resizing and saves 5 credits per operating period afterward.
+`npm run build` runs the TypeScript project build before creating the production bundle. The automated suite covers the pure simulation rules, campaign transitions, persistence, node movement, failures, and advanced resources.
+
+For targeted balance diagnostics, run `npm run check:balance`. Add `-- --sweep` only when broad seeded campaign verification is needed.
+
+## Stack
+
+- React
+- TypeScript
+- Vite
+- `@xyflow/react`
+- Node's built-in test runner with Vite's module runner
+
+## Campaign pacing
+
+The same infrastructure continues through all ten stages. Stage durations are expressed in game seconds and the Pause, 1x, 2x, and 4x controls share one simulation clock. Temporary traffic and incident state resets between stages while resources, positions, unlocks, and campaign progression carry forward.

@@ -122,12 +122,12 @@ export function GameStateOverlay({
               <ResultMetric translationKey="metric.gameTime" value={`${simulation.gameTimeSeconds}s`} />
               <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
               <ResultMetric
-                translationKey="metric.satisfaction"
-                value={`${simulation.customerSatisfaction.toFixed(1)}%`}
+                translationKey="metric.lowestSatisfaction"
+                value={`${stageStatistics.lowestSatisfaction.toFixed(1)}%`}
               />
               <ResultMetric
-                translationKey="metric.latency"
-                value={`${simulation.applicationLatencyMs} ms`}
+                translationKey="metric.averageLatency"
+                value={`${calculateAverageLatency(stageStatistics)} ms`}
               />
             </>
           )}

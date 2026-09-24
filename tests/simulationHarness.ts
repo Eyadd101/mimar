@@ -12,6 +12,7 @@ import * as connectionValidation from '../src/simulation/connectionValidation'
 import * as translations from '../src/i18n/translations'
 import * as metricEducation from '../src/data/metricEducation'
 import * as stageLearningSimulation from '../src/simulation/stageLearningSimulation'
+import * as gameOverExplanationSimulation from '../src/simulation/gameOverExplanationSimulation'
 
 export {
   appServerSimulation,
@@ -26,6 +27,7 @@ export {
   translations,
   metricEducation,
   stageLearningSimulation,
+  gameOverExplanationSimulation,
   simulationClock,
   trafficSimulation,
 }

@@ -16,6 +16,7 @@ const {
   customerSatisfactionSimulation,
   economySimulation,
   gameStateSimulation,
+  gameOverExplanationSimulation,
   infrastructureData,
   metricEducation,
   simulationClock,
@@ -24,6 +25,25 @@ const {
   trafficSimulation,
   translations,
 } = simulation
+
+test('service failure explanation uses sustained stage latency instead of a recovered final sample', () => {
+  const state = createReadyGameState()
+  const statistics = {
+    ...state.stageRuntime.statistics,
+    peakActiveUsers: 268,
+    cumulativeLatencyMs: 1_800,
+    latencySampleCount: 3,
+    lowestSatisfaction: 0,
+  }
+  const chain = gameOverExplanationSimulation.createGameOverFailureChain(
+    { code: 'service-failure' },
+    { ...state.stageRuntime.simulation, applicationLatencyMs: 110 },
+    statistics,
+  )
+
+  assert.equal(chain[1].key, 'failure.serviceLatencyAverage')
+  assert.equal(chain[1].variables.latency, 600)
+})
 
 function createMemoryStorage() {
   const values = new Map()

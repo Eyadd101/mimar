@@ -1,5 +1,6 @@
 import type { GameOverReason } from './gameStateSimulation'
 import type { StageStatistics } from './stageStatisticsSimulation'
+import { calculateAverageLatency } from './stageStatisticsSimulation'
 import type { TrafficSimulationState } from './trafficSimulation'
 import type { TranslationMessage } from '../i18n/translations'
 
@@ -22,8 +23,8 @@ export function createGameOverFailureChain(
     return [
       cause ?? trafficStep,
       {
-        key: 'failure.serviceLatency',
-        variables: { latency: simulation.applicationLatencyMs },
+        key: 'failure.serviceLatencyAverage',
+        variables: { latency: calculateAverageLatency(statistics) },
       },
       { key: 'failure.slowResponses' },
       { key: 'failure.zeroSatisfaction' },

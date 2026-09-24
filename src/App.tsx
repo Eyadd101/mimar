@@ -60,7 +60,10 @@ import type { TranslationMessage } from './i18n/translations'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
 const edgeTypes = { requestFlow: RequestFlowEdge }
-const fitViewOptions = { padding: 0.25, maxZoom: 1.1 }
+const fitViewOptions = {
+  padding: { top: 0.25, right: 0.18, bottom: 0.25, left: 0.32 },
+  maxZoom: 1.1,
+}
 
 type PendingInfrastructureAction =
   | { kind: 'server-upgrade'; resourceId: string }
