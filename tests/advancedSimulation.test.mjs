@@ -241,6 +241,55 @@ test('only servers on a complete player-created path receive traffic', () => {
   assert.equal(simulation.appServers.reduce((sum, server) => sum + server.requestsPerSecond, 0), simulation.requestsPerSecond)
   assert.ok(simulation.appServers.every(server => server.requestsPerSecond > 0))
 })
+test('save checkpoints preserve inventory, placed, and manually connected intermediate topology', () => {
+  let state = game.createInitialGameState(builtCampaign(3))
+
+  state = { ...state, campaign: campaign.addLoadBalancerResource(state.campaign) }
+  assert.equal(roundTrip(state).campaign.inventory.length, 1)
+
+  state = game.placePurchasedResource(state, 'load-balancer')
+  assert.equal(roundTrip(state).campaign.infrastructure.connections.length, 2)
+
+  state = { ...state, campaign: campaign.addAdditionalAppServerResource(state.campaign) }
+  assert.equal(roundTrip(state).campaign.inventory[0]?.id, 'server-b')
+
+  state = game.placePurchasedResource(state, 'server-b')
+  assert.equal(state.stageRuntime.simulation.appServers.length, 2)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 0)
+  assert.equal(state.stageRuntime.simulation.appServers.find(server => server.resourceId === 'server-b').requestsPerSecond, 0)
+  assert.equal(roundTrip(state).campaign.infrastructure.connections.length, 2)
+
+  state = game.connectInfrastructure(state, 'users', 'load-balancer')
+  state = game.connectInfrastructure(state, 'load-balancer', 'server-b')
+  state = game.connectInfrastructure(state, 'server-b', 'database')
+  state = game.disconnectInfrastructure(state, ['users-server'])
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 0)
+  assert.equal(state.stageRuntime.simulation.appServers.find(server => server.resourceId === 'server').requestsPerSecond, 0)
+  assert.equal(state.stageRuntime.simulation.appServers.find(server => server.resourceId === 'server-b').requestsPerSecond, state.stageRuntime.simulation.requestsPerSecond)
+  const restored = roundTrip(state)
+  assert.deepEqual(restored.campaign.infrastructure, state.campaign.infrastructure)
+  assert.equal(restored.stageRuntime.simulation.appServers.length, 2)
+})
+test('version 4 repairs a paused checkpoint saved before placed server metrics reconciled', () => {
+  let state = game.createInitialGameState(builtCampaign(3))
+  let campaignState = campaign.placeInventoryResource(
+    campaign.addLoadBalancerResource(state.campaign),
+    'load-balancer',
+  )
+  campaignState = campaign.placeInventoryResource(
+    campaign.addAdditionalAppServerResource(campaignState),
+    'server-b',
+  )
+  state = { ...state, campaign: campaignState }
+  assert.equal(state.stageRuntime.simulation.appServers.length, 1)
+
+  const store = memoryStorage()
+  saves.saveGameCheckpoint(state, 0, store)
+  const restored = saves.loadCampaignSave(store)
+  assert.equal(restored.status, 'ready')
+  assert.equal(restored.gameState.stageRuntime.simulation.appServers.length, 2)
+  assert.deepEqual(restored.campaign.infrastructure, campaignState.infrastructure)
+})
 test('Stage 4 warns before deployment time and early campaign economy requires choices', () => {
   assert.equal(campaign.createInitialCampaignState().balance, 160)
   const launch = stages.campaignStageConfigs[3]
@@ -248,10 +297,43 @@ test('Stage 4 warns before deployment time and early campaign economy requires c
   assert.ok(launch.trafficEvents[0].startsAtSecond > 20 + 30)
   assert.equal(baseConfig.additionalAppServerConfig.initialTierId, 'small')
 })
+test('Stage 5 identifies database pressure while application compute still has room', () => {
+  let graph = builtCampaign(4)
+  graph = { ...graph, infrastructure: { ...graph.infrastructure, resources: graph.infrastructure.resources.map(resource => resource.type === 'app-server' ? { ...resource, tierId: 'medium' } : resource) } }
+  graph = campaign.placeInventoryResource(campaign.addLoadBalancerResource(graph), 'load-balancer')
+  graph = campaign.disconnectCampaignResources(graph, ['users-server'])
+  graph = campaign.connectCampaignResources(graph, 'users', 'load-balancer')
+  graph = campaign.connectCampaignResources(graph, 'load-balancer', 'server')
+  graph = campaign.placeInventoryResource(campaign.addAdditionalAppServerResource(graph), 'server-b')
+  graph = { ...graph, infrastructure: { ...graph.infrastructure, resources: graph.infrastructure.resources.map(resource => resource.id === 'server-b' ? { ...resource, tierId: 'medium' } : resource) } }
+  graph = campaign.connectCampaignResources(graph, 'load-balancer', 'server-b')
+  graph = campaign.connectCampaignResources(graph, 'server-b', 'database')
+  const state = game.createInitialGameState(graph)
+  const hint = s.hintSimulation.getContextualHint(state.stageRuntime.simulation, stages.campaignStageConfigs[4])
+
+  assert.equal(state.stageRuntime.simulation.appServers.some(server => server.isOverloaded), false)
+  assert.ok(state.stageRuntime.simulation.database.utilization >= 0.7)
+  assert.equal(hint.key, 'advanced.databaseCompareHint')
+  assert.match(s.translations.translate('ar', hint.key), /قاعدة البيانات/)
+})
+test('Stage 6 cache preparation still requires explicit placement and connections', () => {
+  let state = ready(5)
+  const originalConnections = structuredClone(state.campaign.infrastructure.connections)
+  state = game.beginAdvancedResourceDeployment(state, 'cache')
+  state = game.advanceGameState(state, config.advancedResourceConfigs.cache.deploymentDurationSeconds)
+  assert.equal(state.campaign.inventory.some(resource => resource.type === 'cache'), true)
+  assert.equal(state.campaign.infrastructure.resources.some(resource => resource.type === 'cache'), false)
+  state = game.placePurchasedResource(state, 'cache')
+  assert.equal(state.campaign.infrastructure.resources.some(resource => resource.type === 'cache'), true)
+  assert.deepEqual(state.campaign.infrastructure.connections, originalConnections)
+  assert.deepEqual(roundTrip(state).campaign.infrastructure, state.campaign.infrastructure)
+})
 test('new deployments avoid existing nodes without moving existing positions', () => {
   const initial = builtCampaign(9)
   const expanded = expandedCampaign()
   for (const resource of initial.infrastructure.resources) assert.deepEqual(expanded.infrastructure.resources.find(r => r.id === resource.id).position, resource.position)
+  assert.ok(expanded.infrastructure.resources.find(r => r.id === 'load-balancer').position.y >= 0)
+  assert.ok(expanded.infrastructure.resources.find(r => r.id === 'server-b').position.y >= 0)
   const resources = expanded.infrastructure.resources
   for (let i = 0; i < resources.length; i++) for (let j = i + 1; j < resources.length; j++) {
     const a = resources[i].position, b = resources[j].position

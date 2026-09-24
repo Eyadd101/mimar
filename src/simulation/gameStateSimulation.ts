@@ -46,6 +46,7 @@ import {
 import {
   advanceTrafficSimulation,
   createInitialTrafficState,
+  reconcileTrafficInfrastructure,
   startServerUpgrade,
   type TrafficSimulationState,
 } from './trafficSimulation'
@@ -329,7 +330,9 @@ export function connectInfrastructure(state: GameState, sourceId: string, target
   if (state.stageRuntime.status !== 'playing') return state
   if (state.campaign.currentStageIndex === 0) return connectStageOneResources(state, sourceId, targetId)
   const campaign = connectCampaignResources(state.campaign, sourceId, targetId)
-  return campaign === state.campaign ? state : { ...state, campaign }
+  return campaign === state.campaign
+    ? state
+    : applyInfrastructureCampaignChange(state, campaign)
 }
 
 export function placePurchasedResource(
@@ -339,7 +342,9 @@ export function placePurchasedResource(
 ): GameState {
   if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
   const campaign = placeInventoryResource(state.campaign, resourceId, position)
-  return campaign === state.campaign ? state : { ...state, campaign }
+  return campaign === state.campaign
+    ? state
+    : applyInfrastructureCampaignChange(state, campaign)
 }
 
 export function disconnectInfrastructure(
@@ -348,7 +353,9 @@ export function disconnectInfrastructure(
 ): GameState {
   if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
   const campaign = disconnectCampaignResources(state.campaign, connectionIds)
-  return campaign === state.campaign ? state : { ...state, campaign }
+  return campaign === state.campaign
+    ? state
+    : applyInfrastructureCampaignChange(state, campaign)
 }
 
 export function reconnectInfrastructure(
@@ -364,7 +371,29 @@ export function reconnectInfrastructure(
     sourceId,
     targetId,
   )
-  return campaign === state.campaign ? state : { ...state, campaign }
+  return campaign === state.campaign
+    ? state
+    : applyInfrastructureCampaignChange(state, campaign)
+}
+
+function applyInfrastructureCampaignChange(
+  state: GameState,
+  campaign: CampaignState,
+): GameState {
+  const simulation = reconcileTrafficInfrastructure(
+    state.stageRuntime.simulation,
+    getCurrentStage(state).trafficProfile,
+    createTrafficInfrastructure(campaign),
+  )
+
+  return {
+    ...state,
+    campaign: syncCampaignWithSimulation(campaign, simulation),
+    stageRuntime: {
+      ...state.stageRuntime,
+      simulation,
+    },
+  }
 }
 
 export function connectStageOneResources(

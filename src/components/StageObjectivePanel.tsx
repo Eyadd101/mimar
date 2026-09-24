@@ -41,10 +41,10 @@ export function StageObjectivePanel({
         <div className="stage-learning">
           <div className="stage-learning__heading">
             <span>{t('stage.learningPath')}</span>
-            <strong>
+            <strong><bdi dir="ltr">
               {learningProgress.filter((step) => step.completed).length} /{' '}
               {stage.learningSteps.length}
-            </strong>
+            </bdi></strong>
           </div>
           <ol data-service-started={serviceStarted}>
             {stage.learningSteps.map((step, index) => {

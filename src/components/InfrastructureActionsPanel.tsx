@@ -97,7 +97,11 @@ export function InfrastructureActionsPanel({
                 )
               }
               disabledReason={
-                hasLoadBalancer ? undefined : t('build.loadBalancerFirst')
+                hasLoadBalancer
+                  ? undefined
+                  : ownsLoadBalancer
+                    ? t('build.placeLoadBalancerFirst')
+                    : t('build.loadBalancerFirst')
               }
               onDeploy={onDeployAppServer}
             />
@@ -185,7 +189,7 @@ function BuildOption({
       </div>
       <p>{t('common.credits', { value: cost })} · {t('common.gameSeconds', { value: duration })}</p>
       <button type="button" disabled={disabled} onClick={onDeploy}>
-        {disabledReason ?? (disabled ? t('resource.insufficientBalance') : t('common.deploy'))}
+        {disabledReason ?? (disabled ? t('resource.insufficientBalance') : t('common.purchasePrepare'))}
       </button>
     </div>
   )

@@ -2,7 +2,7 @@ import { getAdvancedNodeSummary } from './data/advancedNodePresentation'
 import { ExpansionAlerts } from './components/ExpansionAlerts'
 import { ReliabilityTimeline } from './components/ReliabilityTimeline'
 import { advancedResourceConfigs, type AdvancedResourceType, databaseUpgradeConfig, databaseDownsizeConfig, backupConfig } from './simulation/expansionConfig'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Background,
   BackgroundVariant,
@@ -12,6 +12,7 @@ import {
   type Connection,
   type Edge,
   type NodeChange,
+  type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { GameStateOverlay } from './components/GameStateOverlay'
@@ -128,6 +129,9 @@ function App() {
   } = useGameSimulation()
   const [flowNodeRuntime, setFlowNodeRuntime] =
     useState<InfrastructureNodeRuntime>({})
+  const flowInstanceRef = useRef<
+    Pick<ReactFlowInstance<InfrastructureFlowNode>, 'fitView'> | null
+  >(null)
   const campaignEdges = useMemo(
     () => createInfrastructureEdges(campaign.infrastructure),
     [campaign.infrastructure],
@@ -136,6 +140,24 @@ function App() {
     () => createInfrastructureNodes(campaign.infrastructure),
     [campaign.infrastructure],
   )
+  const resourceIdentity = campaign.infrastructure.resources
+    .map((resource) => resource.id)
+    .join('|')
+  const previousResourceIdentityRef = useRef(resourceIdentity)
+
+  useEffect(() => {
+    if (previousResourceIdentityRef.current === resourceIdentity) return
+    previousResourceIdentityRef.current = resourceIdentity
+
+    const frame = window.requestAnimationFrame(() => {
+      void flowInstanceRef.current?.fitView({
+        ...fitViewOptions,
+        duration: 250,
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [resourceIdentity])
   const stageOneBuildStep = useMemo(
     () => getStageOneBuildStep(campaign.infrastructure),
     [campaign.infrastructure],
@@ -256,7 +278,7 @@ function App() {
   const pendingActionDetails = pendingAction
     ? pendingAction.kind === 'database-downsize' ? { title: t('advanced.downsize'), description: t('advanced.downsizeWarning'), cost: databaseDownsizeConfig.deploymentCost, durationSeconds: databaseDownsizeConfig.deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
       : pendingAction.kind === 'database-restore' ? { title: t('advanced.restore'), description: t('advanced.backupPurpose'), cost: backupConfig.restoreCost, durationSeconds: backupConfig.restoreDurationSeconds, confirmLabel: t('advanced.restore') }
-      : pendingAction.kind === 'advanced' ? { title: t(advancedResourceConfigs[pendingAction.resourceType].labelKey), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startDeployment') }
+      : pendingAction.kind === 'advanced' ? { title: t('action.prepareResource', { resource: t(advancedResourceConfigs[pendingAction.resourceType].labelKey) }), description: t(advancedResourceConfigs[pendingAction.resourceType].purposeKey), cost: advancedResourceConfigs[pendingAction.resourceType].deploymentCost, durationSeconds: advancedResourceConfigs[pendingAction.resourceType].deploymentDurationSeconds, confirmLabel: t('action.startPreparation') }
       : pendingAction.kind === 'database-upgrade'
       ? { title: t('advanced.upgradeDatabase'), description: t('advanced.databasePurpose'), cost: databaseUpgradeConfig.deploymentCost, durationSeconds: databaseUpgradeConfig.deploymentDurationSeconds, confirmLabel: t('action.startUpgrade') }
       : pendingAction.kind === 'server-upgrade'
@@ -269,20 +291,20 @@ function App() {
         }
       : pendingAction.kind === 'load-balancer'
         ? {
-            title: t('action.deployResource', { resource: t('resource.loadBalancer') }),
+            title: t('action.prepareResource', { resource: t('resource.loadBalancer') }),
             description: t('action.loadBalancerDescription'),
             cost: loadBalancerResourceConfig.deploymentCost,
             durationSeconds:
               loadBalancerResourceConfig.deploymentDurationSeconds,
-            confirmLabel: t('action.startDeployment'),
+            confirmLabel: t('action.startPreparation'),
           }
         : {
-            title: t('action.deployResource', { resource: t('resource.appServerB') }),
+            title: t('action.prepareResource', { resource: t('resource.appServerB') }),
             description: t('action.appServerDescription'),
             cost: additionalAppServerConfig.deploymentCost,
             durationSeconds:
               additionalAppServerConfig.deploymentDurationSeconds,
-            confirmLabel: t('action.startDeployment'),
+            confirmLabel: t('action.startPreparation'),
           }
     : null
   const handleNodesChange = (
@@ -401,6 +423,9 @@ function App() {
           }}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          onInit={(instance) => {
+            flowInstanceRef.current = instance
+          }}
           colorMode="dark"
           fitView
           fitViewOptions={fitViewOptions}

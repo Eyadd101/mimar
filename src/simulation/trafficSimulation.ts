@@ -260,6 +260,80 @@ export function advanceTrafficSimulation(
   return simulation
 }
 
+/** Recalculate topology-dependent metrics without advancing the simulation clock.
+ * Placement and wiring remain available while paused, so their effects must be
+ * reflected immediately and produce a self-consistent save checkpoint.
+ */
+export function reconcileTrafficInfrastructure(
+  currentState: TrafficSimulationState,
+  trafficProfile: StageTrafficProfile,
+  infrastructure: TrafficInfrastructure,
+): TrafficSimulationState {
+  const failedResourceIds = getFailedResourceIds(
+    trafficProfile.failures ?? [],
+    currentState.gameTimeSeconds,
+  )
+  const backgroundJobs =
+    currentState.requestsPerSecond *
+    (trafficProfile.backgroundJobsPerRequest ?? 0)
+  const storage = advanceStorage(
+    currentState.storage,
+    currentState.requestsPerSecond * (trafficProfile.uploadsPerRequest ?? 0),
+    infrastructure.hasObjectStorage ?? false,
+    0,
+  )
+  const queueConnected = infrastructure.hasQueue ?? false
+  const workerConnected =
+    queueConnected &&
+    (infrastructure.hasWorker ?? false) &&
+    !failedResourceIds.includes('worker')
+  const queue = {
+    ...currentState.queue,
+    connected: queueConnected,
+    workerConnected,
+    enqueueRate: queueConnected ? backgroundJobs : 0,
+    processingRate: workerConnected
+      ? Math.min(queueConfig.workerCapacity, currentState.queue.depth + backgroundJobs)
+      : 0,
+  }
+  const application = calculateApplicationMetrics(
+    currentState.requestsPerSecond,
+    infrastructure,
+    trafficProfile.queriesPerRequest,
+    backgroundJobs,
+    failedResourceIds,
+  )
+
+  if (currentState.databaseData.dataLost) {
+    application.applicationLatencyMs += backupConfig.dataLossLatencyMs
+  }
+  application.applicationLatencyMs +=
+    storage.latencyPenaltyMs +
+    (currentState.security.incidentActive
+      ? securityConfig.incidentLatencyMs
+      : 0)
+  application.infrastructureCostPerPeriod +=
+    storage.costPerPeriod +
+    getBackupCost(infrastructure.backupSettings ?? defaultBackupSettings)
+  const economy = advanceEconomy(
+    currentState,
+    currentState.activeUsers,
+    currentState.customerSatisfaction,
+    application.infrastructureCostPerPeriod,
+    false,
+    trafficProfile.maximumRevenuePerPeriod,
+  )
+
+  return {
+    ...currentState,
+    ...application,
+    ...economy,
+    failedResourceIds,
+    queue,
+    storage,
+  }
+}
+
 /** Even distribution in tenths keeps the shares bounded and the total exact. */
 export function distributeRequestsEvenly(
   requestsPerSecond: number,

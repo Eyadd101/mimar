@@ -438,9 +438,9 @@ export function placeInventoryResource(
 
   const preferredPosition =
     inventoryResource.type === 'load-balancer'
-      ? { x: 300, y: 0 }
+      ? { x: 330, y: 580 }
       : inventoryResource.type === 'app-server'
-        ? { x: 600, y: 140 }
+        ? { x: 670, y: 580 }
         : advancedResourceConfigs[inventoryResource.type].position
   const placedResource: CampaignResource = {
     ...inventoryResource,

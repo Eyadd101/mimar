@@ -15,6 +15,7 @@ import * as metricEducation from '../src/data/metricEducation'
 import * as stageLearningSimulation from '../src/simulation/stageLearningSimulation'
 import * as stageObjectiveSimulation from '../src/simulation/stageObjectiveSimulation'
 import * as gameOverExplanationSimulation from '../src/simulation/gameOverExplanationSimulation'
+import * as hintSimulation from '../src/simulation/hintSimulation'
 
 export {
   appServerSimulation,
@@ -32,6 +33,7 @@ export {
   stageLearningSimulation,
   stageObjectiveSimulation,
   gameOverExplanationSimulation,
+  hintSimulation,
   simulationClock,
   trafficSimulation,
 }

@@ -7,10 +7,15 @@ import {
   type CampaignInventoryResource,
   type CampaignResourceType,
   type CampaignState,
+  createTrafficInfrastructure,
 } from './campaignSimulation'
 import { serverTierConfigs, type SimulationSpeed } from './config'
 import { isValidCheckpoint, type CampaignCheckpoint } from './checkpointValidation'
 import type { GameState } from './gameStateSimulation'
+import {
+  reconcileTrafficInfrastructure,
+  type TrafficSimulationState,
+} from './trafficSimulation'
 
 export const campaignSaveKey = 'cloud-game-campaign'
 export const campaignSaveVersion = 4
@@ -53,7 +58,10 @@ export function loadCampaignSave(
       return { status: 'empty' }
     }
 
-    const parsed = migrateSaveEnvelope(JSON.parse(storedValue))
+    let parsed = migrateSaveEnvelope(JSON.parse(storedValue))
+    if (isRecord(parsed) && isValidCampaign(parsed.campaign)) {
+      parsed = repairTopologyCheckpoint(parsed, parsed.campaign)
+    }
     if (!isValidSaveEnvelope(parsed)) {
       return {
         status: 'corrupt',
@@ -69,6 +77,65 @@ export function loadCampaignSave(
       status: 'corrupt',
       error: 'unreadable',
     }
+  }
+}
+
+/** Version 4 briefly allowed a placed App Server to reach storage before its
+ * paused runtime metrics were reconciled. Repair that narrow, structurally
+ * valid mismatch so the player's placed-but-unconnected topology is retained.
+ */
+function repairTopologyCheckpoint(
+  envelope: Record<string, unknown>,
+  campaign: CampaignState,
+): Record<string, unknown> {
+  if (!isRecord(envelope.checkpoint)) return envelope
+  const checkpoint = envelope.checkpoint
+  if (!isRecord(checkpoint.stageRuntime)) return envelope
+  const stageRuntime = checkpoint.stageRuntime
+  if (!isRecord(stageRuntime.simulation)) return envelope
+  const simulation = stageRuntime.simulation
+  if (!Array.isArray(simulation.appServers)) return envelope
+
+  const expectedServers = campaign.infrastructure.resources
+    .filter((resource) => resource.type === 'app-server')
+    .map((resource) => resource.id)
+  const runtimeServersAreWellFormed = simulation.appServers.every(
+    (server) =>
+      isRecord(server) &&
+      typeof server.resourceId === 'string' &&
+      expectedServers.includes(server.resourceId),
+  )
+  const runtimeServers = simulation.appServers
+    .filter(isRecord)
+    .map((server) => server.resourceId)
+
+  if (JSON.stringify(runtimeServers) === JSON.stringify(expectedServers)) {
+    return envelope
+  }
+  if (
+    !runtimeServersAreWellFormed ||
+    expectedServers.length !== runtimeServers.length + 1
+  ) {
+    return envelope
+  }
+
+  const stage = campaignStageConfigs[campaign.currentStageIndex]
+  if (!stage) return envelope
+  const repairedSimulation = reconcileTrafficInfrastructure(
+    simulation as TrafficSimulationState,
+    stage.trafficProfile,
+    createTrafficInfrastructure(campaign),
+  )
+
+  return {
+    ...envelope,
+    checkpoint: {
+      ...checkpoint,
+      stageRuntime: {
+        ...stageRuntime,
+        simulation: repairedSimulation,
+      },
+    },
   }
 }
 
