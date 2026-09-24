@@ -36,7 +36,13 @@ function isLearningStepComplete(
 ) {
   switch (step.type) {
     case 'place-resource':
-      return hasResourceType(context.infrastructure, step.resourceType)
+      return step.resourceId
+        ? context.infrastructure.resources.some(
+            (resource) =>
+              resource.id === step.resourceId &&
+              resource.type === step.resourceType,
+          )
+        : hasResourceType(context.infrastructure, step.resourceType)
     case 'connect-resources': {
       const sourceIds = getResourceIds(
         context.infrastructure,
@@ -46,12 +52,20 @@ function isLearningStepComplete(
         context.infrastructure,
         step.targetType,
       )
+      const eligibleSourceIds = step.sourceId ? [step.sourceId] : sourceIds
+      const eligibleTargetIds = step.targetId ? [step.targetId] : targetIds
       return context.infrastructure.connections.some(
         (connection) =>
-          sourceIds.includes(connection.sourceId) &&
-          targetIds.includes(connection.targetId),
+          eligibleSourceIds.includes(connection.sourceId) &&
+          eligibleTargetIds.includes(connection.targetId),
       )
     }
+    case 'remove-connection':
+      return !context.infrastructure.connections.some(
+        (connection) =>
+          connection.sourceId === step.sourceId &&
+          connection.targetId === step.targetId,
+      )
     case 'start-service':
       return context.serviceStarted
     case 'observe-growth':

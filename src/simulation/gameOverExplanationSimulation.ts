@@ -3,6 +3,8 @@ import type { StageStatistics } from './stageStatisticsSimulation'
 import { calculateAverageLatency } from './stageStatisticsSimulation'
 import type { TrafficSimulationState } from './trafficSimulation'
 import type { TranslationMessage } from '../i18n/translations'
+import type { TranslationKey } from '../i18n/translations'
+import { getCustomerSentiment } from './customerSentiment'
 
 export function createGameOverFailureChain(
   reason: GameOverReason,
@@ -36,10 +38,7 @@ export function createGameOverFailureChain(
     cause ?? trafficStep,
     statistics.lowestSatisfaction < 100
       ? {
-          key: 'failure.lowSatisfaction',
-          variables: {
-            satisfaction: statistics.lowestSatisfaction.toFixed(1),
-          },
+          key: `failure.sentiment.${getCustomerSentiment(statistics.lowestSatisfaction).id}` as TranslationKey,
         }
       : { key: 'failure.healthyCashOut' },
     {

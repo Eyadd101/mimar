@@ -5,6 +5,7 @@ import {
 } from '../simulation/stageObjectiveSimulation'
 import { useLanguage } from '../i18n/useLanguage'
 import type { StageLearningStepProgress } from '../simulation/stageLearningSimulation'
+import { getCustomerSentiment, getRequiredCustomerSentiment } from '../simulation/customerSentiment'
 
 type StageObjectivePanelProps = {
   stage: StageConfig
@@ -107,6 +108,12 @@ function ObjectiveRow({ label, objective, progress }: ObjectiveRowProps) {
     return null
   }
   const progressMessage = getObjectiveProgressLabel(objective, progress)
+  const satisfactionProgress = objective.type === 'finish-satisfaction'
+    ? {
+        current: getCustomerSentiment(progress.current),
+        target: getRequiredCustomerSentiment(objective.minimumSatisfaction),
+      }
+    : null
 
   return (
     <div className="stage-objectives__item" data-complete={progress.completed}>
@@ -116,7 +123,14 @@ function ObjectiveRow({ label, objective, progress }: ObjectiveRowProps) {
       <div>
         <small>{label}</small>
         <p>{t(objective.titleKey)}</p>
-        <span>{t(progressMessage.key, progressMessage.variables)}</span>
+        <span>
+          {satisfactionProgress
+            ? t('objective.progressSentiment', {
+                current: `${satisfactionProgress.current.emoji} ${t(satisfactionProgress.current.labelKey)}`,
+                target: `${satisfactionProgress.target.emoji} ${t(satisfactionProgress.target.labelKey)}`,
+              })
+            : t(progressMessage.key, progressMessage.variables)}
+        </span>
       </div>
     </div>
   )

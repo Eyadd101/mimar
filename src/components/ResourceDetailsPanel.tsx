@@ -1,4 +1,5 @@
 import { AdvancedResourceEducation } from './AdvancedResourceEducation'
+import type { ReactNode } from 'react'
 import { queueConfig } from '../simulation/expansionConfig'
 import { DatabaseBackupControls } from './DatabaseBackupControls'
 import { defaultBackupSettings, type BackupSettings } from '../simulation/backupSimulation'
@@ -108,6 +109,15 @@ export function ResourceDetailsPanel({
     appServer?.tierId === 'medium'
       ? 'resource.mediumServer'
       : 'resource.smallServer'
+  const connectedServerCount = campaign.infrastructure.connections.filter(
+    (connection) =>
+      connection.sourceId === node.id &&
+      campaign.infrastructure.resources.some(
+        (resource) =>
+          resource.id === connection.targetId &&
+          resource.type === 'app-server',
+      ),
+  ).length
 
   return (
     <aside
@@ -119,6 +129,12 @@ export function ResourceDetailsPanel({
         <div>
           <p className="resource-panel__eyebrow">{t('resource.details')}</p>
           <h2><TechnicalTerm translationKey={resourceNameKey} /></h2>
+          {isAppServer && (
+            <p className="resource-panel__identity">
+              <TechnicalTerm translationKey="resource.appServer" /> ·{' '}
+              <bdi dir="ltr">{appServerResourceConfig.awsReference}</bdi>
+            </p>
+          )}
         </div>
         <button
           type="button"
@@ -133,49 +149,37 @@ export function ResourceDetailsPanel({
       {simulation.failedResourceIds.includes(node.id) && <p role="alert">{t('advanced.resourceUnavailable')}</p>}
       {isAppServer && appServer ? (
         <dl className="resource-panel__details">
-          <div>
-            <dt><TechnicalTerm translationKey="resource.name" /></dt>
-            <dd><TechnicalTerm translationKey={resourceNameKey} /></dd>
-          </div>
-          <div>
-            <dt><TechnicalTerm translationKey="resource.genericType" /></dt>
-            <dd><TechnicalTerm translationKey="resource.appServer" /></dd>
-          </div>
-          <div>
-            <dt><TechnicalTerm translationKey="resource.awsReference" /></dt>
-            <dd>{appServerResourceConfig.awsReference}</dd>
-          </div>
-          <div>
+          <div className="resource-panel__metric resource-panel__metric--primary">
             <dt><TechnicalTerm translationKey="metric.currentTier" /></dt>
             <dd><TechnicalTerm translationKey={tierKey} /></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric resource-panel__metric--primary">
             <dt><TechnicalTerm translationKey="metric.requestCapacity" /></dt>
-            <dd>{appServer.requestCapacity.toFixed(1)} req/s</dd>
+            <dd><TechnicalValue>{appServer.requestCapacity.toFixed(1)} req/s</TechnicalValue></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="metric.currentTraffic" /></dt>
-            <dd>{appServer.requestsPerSecond.toFixed(1)} req/s</dd>
+            <dd><TechnicalValue>{appServer.requestsPerSecond.toFixed(1)} req/s</TechnicalValue></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="metric.cpuUsage" /></dt>
-            <dd>{appServer.cpuUsage.toFixed(1)}%</dd>
+            <dd><TechnicalValue>{appServer.cpuUsage.toFixed(1)}%</TechnicalValue></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="metric.memoryUsage" /></dt>
-            <dd>{appServer.memoryUsage.toFixed(1)}%</dd>
+            <dd><TechnicalValue>{appServer.memoryUsage.toFixed(1)}%</TechnicalValue></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="metric.latency" /></dt>
-            <dd>{appServer.latencyMs} ms</dd>
+            <dd><TechnicalValue>{appServer.latencyMs} ms</TechnicalValue></dd>
           </div>
-          <div>
+          <div className="resource-panel__metric resource-panel__metric--status">
             <dt><TechnicalTerm translationKey="metric.status" /></dt>
             <dd data-status={appServer.status}>
               {t(statusTranslationKeys[appServer.status])}
             </dd>
           </div>
-          <div>
+          <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
             <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
           </div>
@@ -183,16 +187,16 @@ export function ResourceDetailsPanel({
       ) : node.data.kind === 'object-storage' ? (
         <><p>S3</p><p>{t('advanced.storagePurpose')}</p><dl className="resource-panel__details">{([
           ['advanced.storedObjects', simulation.storage.storedObjects.toFixed(0)], ['advanced.storageUsed', `${simulation.storage.storageUsedGiB.toFixed(2)} GiB`], ['metric.currentTraffic', `${simulation.storage.requestRate.toFixed(1)}/s`], ['resource.costPerPeriod', simulation.storage.costPerPeriod.toFixed(2)],
-        ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}</dl></>
+        ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd><TechnicalValue>{value}</TechnicalValue></dd></div>)}</dl></>
       ) : node.data.kind === 'queue'  || node.data.kind === 'worker' ? (
         <><p>{advancedResourceConfigs[node.data.kind].awsReference}</p><p>{t(advancedResourceConfigs[node.data.kind].purposeKey)}</p>
           <dl className="resource-panel__details">{([
             ['advanced.queueDepth', simulation.queue.depth.toFixed(1)], ['advanced.enqueueRate', `${simulation.queue.enqueueRate.toFixed(1)}/s`], ['advanced.processingRate', `${simulation.queue.processingRate.toFixed(1)}/s`], ['advanced.oldestAge', `${simulation.queue.oldestMessageAge.toFixed(1)}s`], ['resource.costPerPeriod', advancedResourceConfigs[node.data.kind].costPerPeriod],
-          ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}</dl></>
+          ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd><TechnicalValue>{value}</TechnicalValue></dd></div>)}</dl></>
       ) : node.data.kind === 'cache'  ? (
         <><p><TechnicalTerm translationKey="advanced.cache" /> — ElastiCache</p><p>{t('advanced.cachePurpose')}</p>
           <dl className="resource-panel__details">
-            {([['advanced.hitRate', `${simulation.cache.hitRate.toFixed(1)}%`], ['advanced.served', `${simulation.cache.requestsServed.toFixed(1)}/s`], ['advanced.queryCapacity', `${simulation.cache.capacity}/s`], ['metric.status', t(statusTranslationKeys[simulation.cache.status])], ['resource.costPerPeriod', advancedResourceConfigs.cache.costPerPeriod]] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
+            {([['advanced.hitRate', `${simulation.cache.hitRate.toFixed(1)}%`], ['advanced.served', `${simulation.cache.requestsServed.toFixed(1)}/s`], ['advanced.queryCapacity', `${simulation.cache.capacity}/s`], ['metric.status', t(statusTranslationKeys[simulation.cache.status])], ['resource.costPerPeriod', advancedResourceConfigs.cache.costPerPeriod]] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{key === 'metric.status' ? value : <TechnicalValue>{value}</TechnicalValue>}</dd></div>)}
           </dl></>
       ) : node.data.kind === 'database'  ? (
         <>
@@ -211,7 +215,7 @@ export function ResourceDetailsPanel({
               ['advanced.queryLatency', `${simulation.database.queryLatencyMs} ms`],
               ['metric.status', t(statusTranslationKeys[simulation.database.status])],
               ['resource.costPerPeriod', t('common.credits', { value: simulation.database.costPerPeriod })],
-            ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{value}</dd></div>)}
+            ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{key === 'metric.currentTier' || key === 'metric.status' || key === 'resource.costPerPeriod' ? value : <TechnicalValue>{value}</TechnicalValue>}</dd></div>)}
           </dl>
           {campaign.unlockedControls?.includes('backups') && <DatabaseBackupControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings} data={simulation.databaseData} balance={simulation.balance} onRestore={onRestoreDatabase} restoreRemainingSeconds={simulation.databaseRestoreCompletesAt === null ? null : Math.max(0, simulation.databaseRestoreCompletesAt - simulation.gameTimeSeconds)} onChange={onConfigureBackups} />}
           {campaign.unlockedControls?.includes('security') && <DatabaseSecurityControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.security ?? secureSettings} runtime={simulation.security} onChange={onConfigureSecurity} />}
@@ -234,11 +238,11 @@ export function ResourceDetailsPanel({
           </div>
           <div>
             <dt>{t('resource.distribution')}</dt>
-            <dd>{t('resource.evenSplit')}</dd>
+            <dd>{connectedServerCount > 0 ? t('resource.evenSplit') : t('advanced.disconnected')}</dd>
           </div>
           <div>
             <dt>{t('resource.connectedServers')}</dt>
-            <dd>{simulation.appServers.length}</dd>
+            <dd><TechnicalValue>{connectedServerCount}</TechnicalValue></dd>
           </div>
           <div>
             <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
@@ -317,4 +321,8 @@ export function ResourceDetailsPanel({
       )}
     </aside>
   )
+}
+
+function TechnicalValue({ children }: { children: ReactNode }) {
+  return <bdi className="metric-value" dir="ltr">{children}</bdi>
 }

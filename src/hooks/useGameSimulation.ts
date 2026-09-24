@@ -20,14 +20,17 @@ import {
   beginAdvancedResourceDeployment,
   continueToNextStage,
   connectInfrastructure,
+  disconnectInfrastructure,
   createInitialGameState,
   dismissStageBriefing,
   getCurrentStage,
   hasNextCampaignStage,
   moveCampaignResources,
+  placePurchasedResource,
   placeStageOneResource,
   restartCampaign,
   restartStage,
+  reconnectInfrastructure,
 } from '../simulation/gameStateSimulation'
 import {
   clearCampaignSave,
@@ -150,6 +153,35 @@ export function useGameSimulation() {
     )
   }, [])
 
+  const placeResource = useCallback(
+    (resourceId: string) => {
+      setGameState((currentState) =>
+        placePurchasedResource(currentState, resourceId),
+      )
+    },
+    [],
+  )
+
+  const disconnectResources = useCallback((connectionIds: readonly string[]) => {
+    setGameState((currentState) =>
+      disconnectInfrastructure(currentState, connectionIds),
+    )
+  }, [])
+
+  const reconnectResource = useCallback(
+    (connectionId: string, sourceId: string, targetId: string) => {
+      setGameState((currentState) =>
+        reconnectInfrastructure(
+          currentState,
+          connectionId,
+          sourceId,
+          targetId,
+        ),
+      )
+    },
+    [],
+  )
+
   const stage = getCurrentStage(gameState)
 
   return {
@@ -191,5 +223,8 @@ export function useGameSimulation() {
     updateResourcePositions,
     addResource,
     connectResources,
+    placeResource,
+    disconnectResources,
+    reconnectResource,
   }
 }

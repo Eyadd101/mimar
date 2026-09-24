@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { runnerImport } from 'vite'
 const { module: s } = await runnerImport(new URL('./simulationHarness.ts', import.meta.url).pathname, { root: process.cwd(), logLevel: 'silent' })
-const { gameStateSimulation: game, campaignSimulation: campaign, campaignSave: saves, databaseSimulation: db, cacheSimulation: cache, queueSimulation: queue, storageSimulation: storage, securitySimulation: security, backupSimulation: backup, expansionConfig: config, stages, trafficSimulation: traffic } = s
+const { gameStateSimulation: game, campaignSimulation: campaign, campaignSave: saves, customerSentiment, databaseSimulation: db, cacheSimulation: cache, queueSimulation: queue, storageSimulation: storage, securitySimulation: security, backupSimulation: backup, expansionConfig: config, baseConfig, stages, trafficSimulation: traffic } = s
 
 function memoryStorage() {
   const values = new Map()
@@ -23,8 +23,21 @@ function ready(stageIndex = 0) {
 function expandedCampaign(stageIndex = 9) {
   let result = builtCampaign(stageIndex)
   result = { ...result, infrastructure: { ...result.infrastructure, resources: result.infrastructure.resources.map(r => r.type === 'app-server' ? { ...r, tierId: 'medium' } : r) } }
-  result = campaign.addAdditionalAppServerResource(campaign.addLoadBalancerResource(result))
-  for (const type of ['cache', 'queue', 'worker', 'object-storage']) result = campaign.addAdvancedResource(result, type)
+  result = campaign.placeInventoryResource(campaign.addLoadBalancerResource(result), 'load-balancer')
+  result = campaign.disconnectCampaignResources(result, ['users-server'])
+  result = campaign.connectCampaignResources(result, 'users', 'load-balancer')
+  result = campaign.connectCampaignResources(result, 'load-balancer', 'server')
+  result = campaign.placeInventoryResource(campaign.addAdditionalAppServerResource(result), 'server-b')
+  result = campaign.connectCampaignResources(result, 'load-balancer', 'server-b')
+  result = campaign.connectCampaignResources(result, 'server-b', 'database')
+  for (const type of ['cache', 'queue', 'worker', 'object-storage']) {
+    result = campaign.placeInventoryResource(campaign.addAdvancedResource(result, type), type)
+  }
+  result = campaign.connectCampaignResources(result, 'server', 'cache')
+  result = campaign.connectCampaignResources(result, 'cache', 'database')
+  result = campaign.connectCampaignResources(result, 'server', 'queue')
+  result = campaign.connectCampaignResources(result, 'queue', 'worker')
+  result = campaign.connectCampaignResources(result, 'server', 'object-storage')
   return result
 }
 function roundTrip(state, speed = 0) {
@@ -156,6 +169,85 @@ test('resource and control unlocks arrive at the intended stages', () => {
   }
   assert.equal(game.beginAdvancedResourceDeployment(ready(), 'cache').campaign.infrastructure.resources.length, 3)
 })
+test('customer sentiment thresholds remain stable while satisfaction stays numeric', () => {
+  assert.equal(customerSentiment.getCustomerSentiment(100).id, 'very-happy')
+  assert.equal(customerSentiment.getCustomerSentiment(90).id, 'very-happy')
+  assert.equal(customerSentiment.getCustomerSentiment(89.9).id, 'happy')
+  assert.equal(customerSentiment.getCustomerSentiment(75).id, 'happy')
+  assert.equal(customerSentiment.getCustomerSentiment(50).id, 'neutral')
+  assert.equal(customerSentiment.getCustomerSentiment(25).id, 'unhappy')
+  assert.equal(customerSentiment.getCustomerSentiment(0).id, 'angry')
+  assert.equal(customerSentiment.getCustomerSentiment(-10).id, 'angry')
+})
+test('sentiment presentation does not change numeric objective evaluation', () => {
+  const stage = stages.campaignStageConfigs[0]
+  let progress = s.stageObjectiveSimulation.createStageObjectiveProgress(stage)
+  const state = ready()
+  const simulation = { ...state.stageRuntime.simulation, gameTimeSeconds: 270, customerSatisfaction: 74.9 }
+  progress = s.stageObjectiveSimulation.advanceStageObjectives(stage, progress, simulation, { completedEventIds: [] })
+  assert.equal(progress['healthy-customers'].completed, false)
+  progress = s.stageObjectiveSimulation.advanceStageObjectives(stage, progress, { ...simulation, customerSatisfaction: 75 }, { completedEventIds: [] })
+  assert.equal(progress['healthy-customers'].completed, true)
+})
+test('deployment purchases inventory before explicit placement and creates no connections', () => {
+  let state = ready(3)
+  const originalConnections = structuredClone(state.campaign.infrastructure.connections)
+  state = game.beginLoadBalancerDeployment(state)
+  state = game.advanceGameState(state, baseConfig.loadBalancerResourceConfig.deploymentDurationSeconds)
+  assert.equal(state.campaign.inventory.some(resource => resource.id === 'load-balancer'), true)
+  assert.equal(state.campaign.infrastructure.resources.some(resource => resource.id === 'load-balancer'), false)
+  assert.deepEqual(state.campaign.infrastructure.connections, originalConnections)
+
+  state = game.placePurchasedResource(state, 'load-balancer')
+  assert.equal(state.campaign.inventory.length, 0)
+  assert.equal(state.campaign.infrastructure.resources.some(resource => resource.id === 'load-balancer'), true)
+  assert.deepEqual(state.campaign.infrastructure.connections, originalConnections)
+  assert.deepEqual(roundTrip(state).campaign, state.campaign)
+
+  state = game.beginAdditionalAppServerDeployment(state)
+  state = game.advanceGameState(state, 30)
+  const purchasedServer = state.campaign.inventory.find(resource => resource.id === 'server-b')
+  assert.equal(purchasedServer?.type, 'app-server')
+  assert.equal(purchasedServer?.tierId, 'small')
+  assert.equal(state.campaign.infrastructure.resources.some(resource => resource.id === 'server-b'), false)
+})
+test('player-created connections can be deleted and reconnected without changing resources', () => {
+  const initial = expandedCampaign(3)
+  let state = game.createInitialGameState(initial)
+  const resources = structuredClone(state.campaign.infrastructure.resources)
+  state = game.disconnectInfrastructure(state, ['load-balancer-server-b'])
+  assert.equal(state.campaign.infrastructure.connections.some(connection => connection.id === 'load-balancer-server-b'), false)
+  assert.deepEqual(state.campaign.infrastructure.resources, resources)
+  state = game.reconnectInfrastructure(state, 'load-balancer-server', 'load-balancer', 'server-b')
+  assert.equal(state.campaign.infrastructure.connections.some(connection => connection.sourceId === 'load-balancer' && connection.targetId === 'server-b'), true)
+  assert.equal(state.campaign.infrastructure.connections.some(connection => connection.sourceId === 'load-balancer' && connection.targetId === 'server'), false)
+  assert.deepEqual(state.campaign.infrastructure.resources, resources)
+})
+test('only servers on a complete player-created path receive traffic', () => {
+  let graph = builtCampaign(3)
+  graph = campaign.placeInventoryResource(campaign.addLoadBalancerResource(graph), 'load-balancer')
+  graph = campaign.disconnectCampaignResources(graph, ['users-server'])
+  graph = campaign.connectCampaignResources(graph, 'users', 'load-balancer')
+  graph = campaign.connectCampaignResources(graph, 'load-balancer', 'server')
+  graph = campaign.placeInventoryResource(campaign.addAdditionalAppServerResource(graph), 'server-b')
+  let infrastructure = campaign.createTrafficInfrastructure(graph)
+  let simulation = traffic.createInitialTrafficState({ infrastructure })
+  assert.equal(simulation.appServers.find(server => server.resourceId === 'server-b').requestsPerSecond, 0)
+
+  graph = campaign.connectCampaignResources(graph, 'load-balancer', 'server-b')
+  graph = campaign.connectCampaignResources(graph, 'server-b', 'database')
+  infrastructure = campaign.createTrafficInfrastructure(graph)
+  simulation = traffic.createInitialTrafficState({ infrastructure })
+  assert.equal(simulation.appServers.reduce((sum, server) => sum + server.requestsPerSecond, 0), simulation.requestsPerSecond)
+  assert.ok(simulation.appServers.every(server => server.requestsPerSecond > 0))
+})
+test('Stage 4 warns before deployment time and early campaign economy requires choices', () => {
+  assert.equal(campaign.createInitialCampaignState().balance, 160)
+  const launch = stages.campaignStageConfigs[3]
+  assert.ok(launch.trafficEvents[0].startsAtSecond >= 120)
+  assert.ok(launch.trafficEvents[0].startsAtSecond > 20 + 30)
+  assert.equal(baseConfig.additionalAppServerConfig.initialTierId, 'small')
+})
 test('new deployments avoid existing nodes without moving existing positions', () => {
   const initial = builtCampaign(9)
   const expanded = expandedCampaign()
@@ -226,7 +318,7 @@ test('checkpoint retains paid server upgrade, pause, time and original retry sna
   state = game.advanceGameState(state, 8)
   state = roundTrip(state, 0)
   assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 20)
-  assert.equal(state.campaign.balance, 380)
+  assert.equal(state.campaign.balance, 400)
   assert.equal(game.advanceGameState(state, 0), state)
   const completed = game.advanceGameState(state, 22)
   assert.equal(completed.campaign.infrastructure.resources.find(r => r.id === 'server').tierId, 'medium')
@@ -240,7 +332,8 @@ test('checkpoint retains advanced deployment across continue and charges no seco
   state = roundTrip(state, 2)
   assert.equal(state.campaign.balance, 445)
   state = game.advanceGameState(state, 15)
-  assert.equal(state.campaign.infrastructure.resources.filter(r => r.type === 'cache').length, 1)
+  assert.equal(state.campaign.inventory.filter(r => r.type === 'cache').length, 1)
+  assert.equal(state.campaign.infrastructure.resources.filter(r => r.type === 'cache').length, 0)
   assert.deepEqual(state, uninterrupted)
 })
 test('checkpoints cover every campaign stage, seeded events and incident state', () => {
@@ -273,6 +366,34 @@ test('legacy schema 1 and 2 saves migrate safely without pretending to contain a
     assert.equal(loaded.gameState, undefined)
     assert.ok(game.createInitialGameState(loaded.campaign))
   }
+})
+test('schema 3 saves migrate campaign and retry snapshots with an empty inventory', () => {
+  const store = memoryStorage()
+  const state = ready(3)
+  const legacyCampaign = structuredClone(state.campaign)
+  const legacySnapshot = structuredClone(state.stageStartSnapshot)
+  delete legacyCampaign.inventory
+  delete legacySnapshot.inventory
+  store.setItem(saves.campaignSaveKey, JSON.stringify({
+    version: 3,
+    campaign: legacyCampaign,
+    checkpoint: {
+      stageRuntime: state.stageRuntime,
+      stageStartSnapshot: legacySnapshot,
+      gameSpeed: 0,
+    },
+  }))
+  const loaded = saves.loadCampaignSave(store)
+  assert.equal(loaded.status, 'ready')
+  assert.deepEqual(loaded.campaign.inventory, [])
+  assert.deepEqual(loaded.gameState.stageStartSnapshot.inventory, [])
+})
+test('save and continue preserve an intentionally incomplete player topology', () => {
+  let state = game.createInitialGameState(expandedCampaign(9))
+  state = game.disconnectInfrastructure(state, ['load-balancer-server-b'])
+  const loaded = roundTrip(state)
+  assert.deepEqual(loaded.campaign.infrastructure, state.campaign.infrastructure)
+  assert.equal(loaded.campaign.infrastructure.connections.some(connection => connection.id === 'load-balancer-server-b'), false)
 })
 test('corrupt runtime checkpoints are rejected without crashing or silently discarding deployment', () => {
   const corruptions = [

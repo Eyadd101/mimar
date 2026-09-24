@@ -126,7 +126,7 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
         >
           <div className="server-cpu__summary">
             <TechnicalTerm translationKey="metric.cpuUsage" />
-            <strong>{data.appServerMetrics.cpuUsage.toFixed(1)}%</strong>
+            <strong><bdi dir="ltr">{data.appServerMetrics.cpuUsage.toFixed(1)}%</bdi></strong>
           </div>
           <div
             className="server-cpu__track"
@@ -147,8 +147,8 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
         </div>
       )}
       {data.databaseMetrics && <div className="server-cpu" data-status={data.databaseMetrics.status}>
-        <div className="server-cpu__summary"><TechnicalTerm translationKey="advanced.queryLoad" /><strong>{data.databaseMetrics.queryLoad.toFixed(1)} / {data.databaseMetrics.capacity}</strong></div>
-        <span>{data.databaseMetrics.queryLatencyMs} ms · {t(statusLabelKeys[data.databaseMetrics.status])}</span>
+        <div className="server-cpu__summary"><TechnicalTerm translationKey="advanced.queryLoad" /><strong><bdi dir="ltr">{data.databaseMetrics.queryLoad.toFixed(1)} / {data.databaseMetrics.capacity}</bdi></strong></div>
+        <span><bdi dir="ltr">{data.databaseMetrics.queryLatencyMs} ms</bdi> · {t(statusLabelKeys[data.databaseMetrics.status])}</span>
       </div>}
       {data.isAvailable === false && <strong className="node-incident">{t('advanced.unavailable')}</strong>}
       {data.metricSummary && <div className="node-metric" data-warning={data.metricSummary.warning}><TechnicalTerm translationKey={data.metricSummary.labelKey} /><strong>{data.metricSummary.value}</strong></div>}

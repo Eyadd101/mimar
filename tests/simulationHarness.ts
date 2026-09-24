@@ -2,6 +2,7 @@ import * as appServerSimulation from '../src/simulation/appServerSimulation'
 import * as campaignSimulation from '../src/simulation/campaignSimulation'
 import * as campaignSave from '../src/simulation/campaignSave'
 import * as customerSatisfactionSimulation from '../src/simulation/customerSatisfactionSimulation'
+import * as customerSentiment from '../src/simulation/customerSentiment'
 import * as economySimulation from '../src/simulation/economySimulation'
 import * as gameStateSimulation from '../src/simulation/gameStateSimulation'
 import * as simulationClock from '../src/simulation/simulationClock'
@@ -12,6 +13,7 @@ import * as connectionValidation from '../src/simulation/connectionValidation'
 import * as translations from '../src/i18n/translations'
 import * as metricEducation from '../src/data/metricEducation'
 import * as stageLearningSimulation from '../src/simulation/stageLearningSimulation'
+import * as stageObjectiveSimulation from '../src/simulation/stageObjectiveSimulation'
 import * as gameOverExplanationSimulation from '../src/simulation/gameOverExplanationSimulation'
 
 export {
@@ -19,6 +21,7 @@ export {
   campaignSimulation,
   campaignSave,
   customerSatisfactionSimulation,
+  customerSentiment,
   economySimulation,
   gameStateSimulation,
   infrastructureData,
@@ -27,6 +30,7 @@ export {
   translations,
   metricEducation,
   stageLearningSimulation,
+  stageObjectiveSimulation,
   gameOverExplanationSimulation,
   simulationClock,
   trafficSimulation,
@@ -39,4 +43,5 @@ export * as securitySimulation from '../src/simulation/securitySimulation'
 export * as backupSimulation from '../src/simulation/backupSimulation'
 export * as reliabilitySimulation from '../src/simulation/reliabilitySimulation'
 export * as expansionConfig from '../src/simulation/expansionConfig'
+export * as baseConfig from '../src/simulation/config'
 export * as stages from '../src/data/stages'

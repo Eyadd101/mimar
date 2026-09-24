@@ -34,6 +34,7 @@ export function RequestFlowEdge({
   targetPosition,
   markerEnd,
   style,
+  selected,
   data,
 }: EdgeProps<RequestFlowEdgeModel>) {
   const [edgePath] = getSmoothStepPath({
@@ -54,7 +55,16 @@ export function RequestFlowEdge({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        interactionWidth={24}
+        style={{
+          ...style,
+          ...(selected ? { stroke: '#b9e7c7', strokeWidth: 3 } : {}),
+        }}
+      />
       <path
         d={edgePath}
         className="request-flow__pulse"

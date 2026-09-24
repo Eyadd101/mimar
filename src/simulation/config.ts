@@ -42,7 +42,7 @@ export const appServerResourceConfig = {
 
 export const serverUpgradeConfig = {
   targetTierId: 'medium' satisfies ServerTierId,
-  upgradeCost: 120,
+  upgradeCost: 100,
   deploymentDurationSeconds: 30,
 } as const
 
@@ -58,13 +58,13 @@ export const loadBalancerResourceConfig = {
 export const additionalAppServerConfig = {
   id: 'server-b',
   name: 'App Server B',
-  initialTierId: 'medium' satisfies ServerTierId,
-  deploymentCost: 80,
+  initialTierId: 'small' satisfies ServerTierId,
+  deploymentCost: 70,
   deploymentDurationSeconds: 30,
 } as const
 
 export const economyConfig = {
-  initialBalance: 200,
+  initialBalance: 160,
   revenuePerActiveUserPerPeriod: 0.6,
   maximumRevenuePerPeriod: 70,
 } as const
@@ -82,6 +82,13 @@ export const customerSatisfactionConfig = {
   badLatencyThresholdMs: 400,
   sustainedBadLatencySeconds: 10,
   satisfactionDecreasePerSecond: 0.35,
+} as const
+
+export const customerSentimentConfig = {
+  veryHappyMinimum: 90,
+  happyMinimum: 75,
+  neutralMinimum: 50,
+  unhappyMinimum: 25,
 } as const
 
 export const businessConsequenceConfig = {
@@ -102,5 +109,8 @@ export const gameFeedbackConfig = {
 export const campaignProgressionConfig = {
   balanceCarryoverRatio: 0.8,
   minimumNextStageBalance: 100,
+  // Stage four introduces two paid resources; its floor includes a recovery
+  // buffer so a first-time player can make one reasonable mistake.
+  minimumBalanceByStage: [160, 100, 110, 285, 150, 120, 120, 120, 120, 120],
   defaultCampaignSeed: 47_291,
 } as const

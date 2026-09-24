@@ -40,6 +40,8 @@ export const stageOneResourcePalette: readonly StageOnePaletteResource[] = [
 
 export function getUnlockedAdvancedResources(campaign: import('../simulation/campaignSimulation').CampaignState) {
   return (Object.keys(advancedResourceConfigs) as AdvancedResourceType[]).filter(type =>
-    campaign.unlockedResourceTypes.includes(type) && !campaign.infrastructure.resources.some(resource => resource.type === type),
+    campaign.unlockedResourceTypes.includes(type) &&
+    !campaign.infrastructure.resources.some(resource => resource.type === type) &&
+    !campaign.inventory.some(resource => resource.type === type),
   )
 }

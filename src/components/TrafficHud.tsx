@@ -9,6 +9,7 @@ import { gameFeedbackConfig } from '../simulation/config'
 import { MetricExplanationPanel } from './MetricExplanationPanel'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationMessage } from '../i18n/translations'
+import { getCustomerSentiment } from '../simulation/customerSentiment'
 
 type TrafficHudProps = {
   activeUsers: number
@@ -78,6 +79,7 @@ export function TrafficHud(props: TrafficHudProps) {
     ...props,
     infrastructureCostPerPeriod: infrastructureCost,
   }
+  const sentiment = getCustomerSentiment(customerSatisfaction)
   const metrics: Array<{
     id: MetricId
     labelKey: Parameters<typeof TechnicalTerm>[0]['translationKey']
@@ -99,7 +101,18 @@ export function TrafficHud(props: TrafficHudProps) {
     {
       id: 'satisfaction',
       labelKey: 'metric.satisfaction',
-      value: `${customerSatisfaction.toFixed(1)}%`,
+      value: (
+        <span
+          className="customer-sentiment"
+          data-sentiment={sentiment.id}
+          title={t('sentiment.numericDetail', {
+            value: customerSatisfaction.toFixed(1),
+          })}
+        >
+          <span aria-hidden="true">{sentiment.emoji}</span>{' '}
+          {t(sentiment.labelKey)}
+        </span>
+      ),
     },
     {
       id: 'balance',

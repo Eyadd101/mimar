@@ -10,6 +10,7 @@ import {
   Panel,
   ReactFlow,
   type Connection,
+  type Edge,
   type NodeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -77,6 +78,7 @@ type PendingInfrastructureAction =
 function App() {
   const { direction, t } = useLanguage()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [hint, setHint] = useState<TranslationMessage | null>(null)
   const [pendingAction, setPendingAction] =
     useState<PendingInfrastructureAction | null>(null)
@@ -120,6 +122,9 @@ function App() {
     updateResourcePositions,
     addResource,
     connectResources,
+    disconnectResources,
+    reconnectResource,
+    placeResource,
   } = useGameSimulation()
   const [flowNodeRuntime, setFlowNodeRuntime] =
     useState<InfrastructureNodeRuntime>({})
@@ -189,6 +194,7 @@ function App() {
     () =>
       campaignEdges.map((edge) => ({
         ...edge,
+        selected: edge.id === selectedEdgeId,
         type: 'requestFlow',
         data: {
           requestsPerSecond: getConnectionRequestRate(
@@ -206,11 +212,13 @@ function App() {
       campaign.infrastructure.resources,
       campaignEdges,
       isSimulationRunning,
+      selectedEdgeId,
       traffic,
     ],
   )
   const handleRestartStage = () => {
     setSelectedNodeId(null)
+    setSelectedEdgeId(null)
     setHint(null)
     setPendingAction(null)
     setConnectionFeedback(null)
@@ -219,6 +227,7 @@ function App() {
   }
   const handleRestartCampaign = () => {
     setSelectedNodeId(null)
+    setSelectedEdgeId(null)
     setHint(null)
     setPendingAction(null)
     setConnectionFeedback(null)
@@ -303,6 +312,30 @@ function App() {
       connectResources(connection.source, connection.target)
     }
   }
+  const handleEdgesDelete = (edges: Edge[]) => {
+    if (stage.sequence === 1 || edges.length === 0) return
+    disconnectResources(edges.map((edge) => edge.id))
+    setSelectedEdgeId(null)
+    setConnectionFeedback({ key: 'connection.removed', valid: true })
+  }
+  const handleReconnect = (oldEdge: Edge, connection: Connection) => {
+    if (!connection.source || !connection.target || stage.sequence === 1) return
+    const infrastructureWithoutOldEdge = {
+      ...campaign.infrastructure,
+      connections: campaign.infrastructure.connections.filter(
+        (item) => item.id !== oldEdge.id,
+      ),
+    }
+    const result = validateCampaignConnection(
+      infrastructureWithoutOldEdge,
+      connection.source,
+      connection.target,
+    )
+    setConnectionFeedback({ ...result.explanation, valid: result.valid })
+    if (result.valid) {
+      reconnectResource(oldEdge.id, connection.source, connection.target)
+    }
+  }
 
   return (
     <main className="game" dir="ltr" data-language={direction === 'rtl' ? 'ar' : 'en'}>
@@ -352,8 +385,20 @@ function App() {
           edges={displayEdges}
           onNodesChange={handleNodesChange}
           onConnect={handleConnect}
-          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-          onPaneClick={() => setSelectedNodeId(null)}
+          onEdgesDelete={handleEdgesDelete}
+          onReconnect={handleReconnect}
+          onNodeClick={(_, node) => {
+            setSelectedNodeId(node.id)
+            setSelectedEdgeId(null)
+          }}
+          onEdgeClick={(_, edge) => {
+            setSelectedNodeId(null)
+            setSelectedEdgeId(edge.id)
+          }}
+          onPaneClick={() => {
+            setSelectedNodeId(null)
+            setSelectedEdgeId(null)
+          }}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           colorMode="dark"
@@ -362,9 +407,9 @@ function App() {
           minZoom={0.25}
           maxZoom={1.6}
           nodesConnectable={gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted)}
-          edgesReconnectable={false}
-          edgesFocusable={false}
-          deleteKeyCode={null}
+          edgesReconnectable={gameStatus === 'playing' && stage.sequence > 1}
+          edgesFocusable={gameStatus === 'playing' && stage.sequence > 1}
+          deleteKeyCode={stage.sequence > 1 ? ['Backspace', 'Delete'] : null}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#293532" />
           <Panel position="top-left" className="canvas-heading" dir={direction}>
@@ -449,6 +494,7 @@ function App() {
                 onDeployAdvanced={resourceType => setPendingAction({ kind: 'advanced', resourceType })}
                 onDeployLoadBalancer={() => setPendingAction({ kind: 'load-balancer' })}
                 onDeployAppServer={() => setPendingAction({ kind: 'app-server' })}
+                onPlaceResource={placeResource}
               /></details>}
             </div>
           </Panel>}
@@ -490,6 +536,7 @@ function App() {
         onRestartCampaign={handleRestartCampaign}
         onContinueToNextStage={() => {
           setSelectedNodeId(null)
+          setSelectedEdgeId(null)
           setHint(null)
           setPendingAction(null)
           setConnectionFeedback(null)
@@ -516,11 +563,13 @@ function App() {
           saveResult={campaignSaveResult}
           onNewCampaign={() => {
             setConnectionFeedback(null)
+            setSelectedEdgeId(null)
             setFlowNodeRuntime({})
             startNewCampaign()
           }}
           onContinueCampaign={() => {
             setConnectionFeedback(null)
+            setSelectedEdgeId(null)
             setFlowNodeRuntime({})
             continueSavedCampaign()
           }}

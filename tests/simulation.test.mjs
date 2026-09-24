@@ -10,6 +10,7 @@ const { module: simulation } = await runnerImport(harnessPath, {
 
 const {
   appServerSimulation,
+  baseConfig,
   campaignSave,
   campaignSimulation,
   connectionValidation,
@@ -822,7 +823,13 @@ test('continuity audit preserves all stage transitions and resets temporary stat
     assert.equal(next.campaign.currentStageIndex, index + 1)
     assert.deepEqual(next.campaign.infrastructure, initial.campaign.infrastructure)
     assert.deepEqual(next.campaign.unlockedResourceTypes, initial.campaign.unlockedResourceTypes)
-    assert.equal(next.campaign.balance, 240)
+    assert.equal(
+      next.campaign.balance,
+      Math.max(
+        240,
+        baseConfig.campaignProgressionConfig.minimumBalanceByStage[index + 1],
+      ),
+    )
     assert.equal(next.stageRuntime.simulation.gameTimeSeconds, 0)
     assert.equal(next.stageRuntime.zeroSatisfactionDurationSeconds, 0)
     assert.equal(next.stageRuntime.infrastructureDeployment, null)

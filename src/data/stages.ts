@@ -88,6 +88,7 @@ export type StageLearningStepDefinition =
       id: string
       type: 'place-resource'
       resourceType: CampaignResourceType
+      resourceId?: string
       titleKey: TranslationKey
     }
   | {
@@ -95,6 +96,15 @@ export type StageLearningStepDefinition =
       type: 'connect-resources'
       sourceType: CampaignResourceType
       targetType: CampaignResourceType
+      sourceId?: string
+      targetId?: string
+      titleKey: TranslationKey
+    }
+  | {
+      id: string
+      type: 'remove-connection'
+      sourceId: string
+      targetId: string
       titleKey: TranslationKey
     }
   | {
@@ -286,10 +296,10 @@ export const prototypeStageConfig: StageConfig = {
   },
   starCriteria: {
     twoStars: {
-      minimumSatisfaction: 85,
+      minimumSatisfaction: 75,
     },
     threeStars: {
-      minimumSatisfaction: 95,
+      minimumSatisfaction: 90,
       minimumBalance: 75,
     },
   },
@@ -415,7 +425,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
       type: 'finish-satisfaction',
       titleKey: 'objective.protectTrust70.title',
       descriptionKey: 'objective.protectTrust70.description',
-      minimumSatisfaction: 70,
+      minimumSatisfaction: 75,
     },
     {
       id: 'vertical-limit-latency',
@@ -453,8 +463,21 @@ export const surviveTheLaunchStageConfig: StageConfig = {
     activeUsersAddedPerInterval: 1,
     requestsPerUserPerSecond: 0.1,
   },
-  tutorialSteps: [],
-  learningSteps: [],
+  tutorialSteps: [
+    {
+      titleKey: 'stage.surviveLaunch.tutorialTitle',
+      messageKey: 'stage.surviveLaunch.tutorialMessage',
+    },
+  ],
+  learningSteps: [
+    { id: 'place-load-balancer', type: 'place-resource', resourceType: 'load-balancer', resourceId: 'load-balancer', titleKey: 'learning.placeLoadBalancer' },
+    { id: 'connect-users-load-balancer', type: 'connect-resources', sourceType: 'users', targetType: 'load-balancer', sourceId: 'users', targetId: 'load-balancer', titleKey: 'learning.connectUsersLoadBalancer' },
+    { id: 'remove-users-server', type: 'remove-connection', sourceId: 'users', targetId: 'server', titleKey: 'learning.removeDirectPath' },
+    { id: 'place-app-server-b', type: 'place-resource', resourceType: 'app-server', resourceId: 'server-b', titleKey: 'learning.placeAppServerB' },
+    { id: 'connect-load-balancer-server-a', type: 'connect-resources', sourceType: 'load-balancer', targetType: 'app-server', sourceId: 'load-balancer', targetId: 'server', titleKey: 'learning.connectLoadBalancerServerA' },
+    { id: 'connect-load-balancer-server-b', type: 'connect-resources', sourceType: 'load-balancer', targetType: 'app-server', sourceId: 'load-balancer', targetId: 'server-b', titleKey: 'learning.connectLoadBalancerServerB' },
+    { id: 'connect-server-b-database', type: 'connect-resources', sourceType: 'app-server', targetType: 'database', sourceId: 'server-b', targetId: 'database', titleKey: 'learning.connectServerBDatabase' },
+  ],
   learningGoalKeys: [
     'learning.goal.loadBalancer',
     'learning.goal.multipleServers',
@@ -466,8 +489,8 @@ export const surviveTheLaunchStageConfig: StageConfig = {
       senderKey: 'event.launch.sender',
       titleKey: 'event.launch.title',
       messageKey: 'event.launch.message',
-      startsAtSecond: 60,
-      durationSeconds: 300,
+      startsAtSecond: 130,
+      durationSeconds: 230,
       forecastMinimumMultiplier: 4.5,
       forecastMaximumMultiplier: 6.5,
       outcomeProfile: {
@@ -505,7 +528,7 @@ export const surviveTheLaunchStageConfig: StageConfig = {
       type: 'finish-satisfaction',
       titleKey: 'objective.protectTrust80.title',
       descriptionKey: 'objective.protectTrust80.description',
-      minimumSatisfaction: 80,
+      minimumSatisfaction: 75,
     },
     {
       id: 'launch-latency',
@@ -522,11 +545,11 @@ export const surviveTheLaunchStageConfig: StageConfig = {
   },
   starCriteria: {
     twoStars: {
-      minimumSatisfaction: 80,
+      minimumSatisfaction: 75,
     },
     threeStars: {
-      minimumSatisfaction: 95,
-      minimumBalance: 120,
+      minimumSatisfaction: 90,
+      minimumBalance: 90,
     },
   },
 }

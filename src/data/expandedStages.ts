@@ -25,7 +25,7 @@ export function createExpandedStage(options: {
     primaryObjective: { id: 'survive', type: 'survive-duration', titleKey: 'advanced.objective', descriptionKey: 'advanced.objectiveDescription', durationSeconds: options.durationSeconds },
     secondaryObjectives: [
       { id: 'responsive', type: 'maintain-latency', titleKey: 'advanced.responsive', descriptionKey: 'advanced.responsiveDescription', maximumLatencyMs: 350, durationSeconds: 60 },
-      { id: 'satisfied', type: 'finish-satisfaction', titleKey: 'metric.satisfaction', descriptionKey: 'advanced.satisfactionGoal', minimumSatisfaction: 40 },
+      { id: 'satisfied', type: 'finish-satisfaction', titleKey: 'metric.satisfaction', descriptionKey: 'advanced.satisfactionGoal', minimumSatisfaction: 50 },
       { id: 'solvent', type: 'finish-balance', titleKey: 'metric.balance', descriptionKey: 'advanced.solvent', minimumBalance: 1 },
     ],
     winCondition: { type: 'all-required-objectives', requiredObjectiveIds: ['survive', 'responsive', 'satisfied', 'solvent'] },

@@ -4,6 +4,7 @@ import { securityRiskKeys } from './securitySimulation'
 import { campaignStageConfigs } from '../data/stages'
 import {
   type CampaignResource,
+  type CampaignInventoryResource,
   type CampaignResourceType,
   type CampaignState,
 } from './campaignSimulation'
@@ -12,7 +13,7 @@ import { isValidCheckpoint, type CampaignCheckpoint } from './checkpointValidati
 import type { GameState } from './gameStateSimulation'
 
 export const campaignSaveKey = 'cloud-game-campaign'
-export const campaignSaveVersion = 3
+export const campaignSaveVersion = 4
 
 type CampaignSaveEnvelope = {
   version: typeof campaignSaveVersion
@@ -52,7 +53,7 @@ export function loadCampaignSave(
       return { status: 'empty' }
     }
 
-    const parsed: unknown = JSON.parse(storedValue)
+    const parsed = migrateSaveEnvelope(JSON.parse(storedValue))
     if (!isValidSaveEnvelope(parsed)) {
       return {
         status: 'corrupt',
@@ -140,7 +141,7 @@ function getBrowserStorage() {
 }
 
 function isValidSaveEnvelope(value: unknown): value is CampaignSaveEnvelope {
-  if (!isRecord(value) || (value.version !== campaignSaveVersion && value.version !== 2 && value.version !== 1)) {
+  if (!isRecord(value) || value.version !== campaignSaveVersion) {
     return false
   }
 
@@ -195,10 +196,33 @@ function isValidCampaign(value: unknown): value is CampaignState {
     value.infrastructure,
     Number(value.currentStageIndex),
   )
+  const inventoryIsValid = isValidInventory(
+    value.inventory,
+    value.infrastructure,
+  )
   const loadBalancerUnlockIsValid =
-    !infrastructureContainsResource(value.infrastructure, 'load-balancer') ||
+    (!infrastructureContainsResource(value.infrastructure, 'load-balancer') &&
+      !inventoryContainsResource(value.inventory, 'load-balancer')) ||
     (Array.isArray(value.unlockedResourceTypes) &&
       value.unlockedResourceTypes.includes('load-balancer'))
+  const unlockedTypeSet = new Set(
+    Array.isArray(value.unlockedResourceTypes)
+      ? value.unlockedResourceTypes
+      : [],
+  )
+  const ownedTypesAreUnlocked = [
+    ...(isRecord(value.infrastructure) && Array.isArray(value.infrastructure.resources)
+      ? value.infrastructure.resources
+      : []),
+    ...(Array.isArray(value.inventory) ? value.inventory : []),
+  ].every(
+    (resource) =>
+      !isRecord(resource) ||
+      resource.type === 'users' ||
+      resource.type === 'app-server' ||
+      resource.type === 'database' ||
+      unlockedTypeSet.has(resource.type),
+  )
 
   return (
     stageIndexIsValid &&
@@ -207,7 +231,9 @@ function isValidCampaign(value: unknown): value is CampaignState {
     unlocksAreValid &&
     completedStagesAreValid &&
     infrastructureIsValid &&
-    loadBalancerUnlockIsValid
+    inventoryIsValid &&
+    loadBalancerUnlockIsValid &&
+    ownedTypesAreUnlocked
   )
 }
 
@@ -242,8 +268,7 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
       databases.length === 1 &&
       appServers.length >= 1 &&
       appServers.length <= 2 &&
-      loadBalancers.length <= 1 &&
-      (loadBalancers.length === 1 || appServers.length === 1)
+      loadBalancers.length <= 1
   const connectionIds = new Set<string>()
   const connectionPairs = new Set<string>()
   const connectionsAreWellFormed = value.connections.every((connection) => {
@@ -293,14 +318,35 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
     const target = resources.find(r => r.id === connection.targetId)
     return source && target && isConnectionTypeAllowed(source.type, target.type)
   })) return false
-  const linked = (source: string, target: string) => connectionPairs.has(`${source}->${target}`)
-  const cache = resources.find(r => r.type === 'cache')
-  // Save valid alternative architectures, while requiring the core service path.
-  return appServers.every(server => {
-    const incoming = linked(users[0].id, server.id) || (loadBalancers[0] && linked(users[0].id, loadBalancers[0].id) && linked(loadBalancers[0].id, server.id))
-    const dataPath = linked(server.id, databases[0].id) || (cache && linked(server.id, cache.id) && linked(cache.id, databases[0].id))
-    return incoming && dataPath
+  // An in-progress topology is valid save data. Use simulation feedback to
+  // teach whether its paths are useful instead of rejecting the player's work.
+  return true
+}
+
+function isValidInventory(value: unknown, infrastructure: unknown) {
+  if (!Array.isArray(value) || !isRecord(infrastructure) || !Array.isArray(infrastructure.resources)) return false
+  const placedIds = new Set(
+    infrastructure.resources
+      .filter(isRecord)
+      .map((resource) => resource.id)
+      .filter((id): id is string => typeof id === 'string'),
+  )
+  const inventoryIds = new Set<string>()
+  const valid = value.every((item): item is CampaignInventoryResource => {
+    if (!isRecord(item) || typeof item.id !== 'string' || typeof item.name !== 'string' || typeof item.type !== 'string' || placedIds.has(item.id)) return false
+    if (item.type === 'app-server' && (item.id !== 'server-b' || !isServerTierId(item.tierId))) return false
+    if (!['app-server', 'load-balancer', 'cache', 'queue', 'worker', 'object-storage'].includes(item.type)) return false
+    if (item.type !== 'app-server' && item.id !== item.type) return false
+    inventoryIds.add(item.id)
+    return true
   })
+  return valid && inventoryIds.size === value.length
+}
+
+function inventoryContainsResource(value: unknown, type: CampaignResourceType) {
+  return Array.isArray(value) && value.some(
+    (resource) => isRecord(resource) && resource.type === type,
+  )
 }
 
 function infrastructureContainsResource(
@@ -340,6 +386,27 @@ function isValidResource(value: unknown): value is CampaignResource {
 
 function isServerTierId(value: unknown): value is keyof typeof serverTierConfigs {
   return typeof value === 'string' && value in serverTierConfigs
+}
+
+function migrateSaveEnvelope(value: unknown): unknown {
+  if (!isRecord(value) || ![1, 2, 3, campaignSaveVersion].includes(Number(value.version))) return value
+  if (value.version === campaignSaveVersion) return value
+
+  const addInventory = (campaign: unknown) =>
+    isRecord(campaign) ? { ...campaign, inventory: [] } : campaign
+  const checkpoint = isRecord(value.checkpoint)
+    ? {
+        ...value.checkpoint,
+        stageStartSnapshot: addInventory(value.checkpoint.stageStartSnapshot),
+      }
+    : value.checkpoint
+
+  return {
+    ...value,
+    version: campaignSaveVersion,
+    campaign: addInventory(value.campaign),
+    ...(checkpoint === undefined ? {} : { checkpoint }),
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

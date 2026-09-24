@@ -20,6 +20,15 @@ export function getContextualHint(
   if (simulation.queue.depth > 0) return { key: 'advanced.queueHint' }
   if (stage?.trafficProfile.backgroundJobsPerRequest && !simulation.queue.connected) return { key: 'advanced.backgroundHint' }
 
+  if (
+    stage?.id === 'database-bottleneck' &&
+    simulation.database.utilization >= 0.7 &&
+    !appServer.isOverloaded &&
+    badLatencyDurationSeconds < 20
+  ) {
+    return { key: 'advanced.databaseCompareHint' }
+  }
+
   if (simulation.database.utilization > 1 && !appServer.isOverloaded) {
     return { key: 'advanced.databaseHint' }
   }

@@ -17,6 +17,7 @@ import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationKey } from '../i18n/translations'
 import { CampaignResetDialog } from './CampaignResetDialog'
+import { getCustomerSentiment, getRequiredCustomerSentiment } from '../simulation/customerSentiment'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -64,15 +65,19 @@ export function GameStateOverlay({
     }
 
     if (star === 2) {
+      const sentiment = earned
+        ? getCustomerSentiment(simulation.customerSatisfaction)
+        : getRequiredCustomerSentiment(stage.starCriteria.twoStars.minimumSatisfaction)
       return t(earned ? 'game.star2Earned' : 'game.star2Missed', {
-        satisfaction: earned
-          ? simulation.customerSatisfaction.toFixed(1)
-          : stage.starCriteria.twoStars.minimumSatisfaction,
+        satisfaction: `${sentiment.emoji} ${t(sentiment.labelKey)}`,
       })
     }
 
+    const sentiment = getRequiredCustomerSentiment(
+      stage.starCriteria.threeStars.minimumSatisfaction,
+    )
     return t(earned ? 'game.star3Earned' : 'game.star3Missed', {
-      satisfaction: stage.starCriteria.threeStars.minimumSatisfaction,
+      satisfaction: `${sentiment.emoji} ${t(sentiment.labelKey)}`,
       balance: earned
         ? simulation.balance.toFixed(1)
         : stage.starCriteria.threeStars.minimumBalance,
@@ -117,7 +122,7 @@ export function GameStateOverlay({
               />
               <ResultMetric
                 translationKey="metric.lowestSatisfaction"
-                value={`${stageStatistics.lowestSatisfaction.toFixed(1)}%`}
+                value={formatSentiment(stageStatistics.lowestSatisfaction, t)}
               />
               <ResultMetric
                 translationKey="metric.infrastructureCost"
@@ -135,7 +140,7 @@ export function GameStateOverlay({
               <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
               <ResultMetric
                 translationKey="metric.lowestSatisfaction"
-                value={`${stageStatistics.lowestSatisfaction.toFixed(1)}%`}
+                value={formatSentiment(stageStatistics.lowestSatisfaction, t)}
               />
               <ResultMetric
                 translationKey="metric.averageLatency"
@@ -233,6 +238,14 @@ export function GameStateOverlay({
       />
     )}
   </>
+}
+
+function formatSentiment(
+  satisfaction: number,
+  t: ReturnType<typeof useLanguage>['t'],
+) {
+  const sentiment = getCustomerSentiment(satisfaction)
+  return `${sentiment.emoji} ${t(sentiment.labelKey)}`
 }
 
 function getStarTitleKey(star: 1 | 2 | 3): TranslationKey {

@@ -43,6 +43,7 @@ export type TrafficAppServerResource = {
   id: string
   name: string
   tierId: ServerTierId
+  receivesTraffic?: boolean
 }
 
 export type TrafficInfrastructure = {
@@ -395,15 +396,34 @@ function calculateApplicationMetrics(
   backgroundJobs = 0,
   failedResourceIds: string[] = [],
 ) {
-  const cache = calculateCacheMetrics(requestsPerSecond * (queriesPerRequest ?? databaseConfig.queriesPerRequest), infrastructure.hasCache ?? false)
-  const database = calculateDatabaseMetrics(infrastructure.hasDatabase === false ? 0 : cache.databaseQueries, 1, infrastructure.databaseTierId, requestsPerSecond)
   const effectiveRequests = requestsPerSecond + (infrastructure.hasQueue ? 0 : backgroundJobs * queueConfig.synchronousRequestEquivalentsPerJob)
-  const availableServers = infrastructure.appServers.filter(resource => !failedResourceIds.includes(resource.id))
-  const availableShares = infrastructure.distributesTraffic ? distributeRequestsEvenly(effectiveRequests, availableServers.length) : availableServers.map(resource => resource.id === infrastructure.appServers[0]?.id ? effectiveRequests : 0)
+  const routableServers = infrastructure.appServers.filter(
+    (resource) =>
+      resource.receivesTraffic !== false &&
+      !failedResourceIds.includes(resource.id),
+  )
+  const databaseIsAvailable =
+    infrastructure.hasDatabase !== false &&
+    !failedResourceIds.includes('database')
+  const hasOperationalRoute = routableServers.length > 0 && databaseIsAvailable
+  const routedRequests = hasOperationalRoute ? effectiveRequests : 0
+  const cache = calculateCacheMetrics(
+    routedRequests * (queriesPerRequest ?? databaseConfig.queriesPerRequest),
+    infrastructure.hasCache ?? false,
+  )
+  const database = calculateDatabaseMetrics(
+    databaseIsAvailable ? cache.databaseQueries : 0,
+    1,
+    infrastructure.databaseTierId,
+    hasOperationalRoute ? requestsPerSecond : 0,
+  )
+  const availableShares = infrastructure.distributesTraffic
+    ? distributeRequestsEvenly(routedRequests, routableServers.length)
+    : routableServers.map((_, index) => index === 0 ? routedRequests : 0)
   const appServers = infrastructure.appServers.map(resource => {
-    const index = availableServers.findIndex(server => server.id === resource.id)
+    const index = routableServers.findIndex(server => server.id === resource.id)
     const requests = availableShares[index] ?? 0
-    return { resourceId: resource.id, resourceName: resource.name, isAvailable: index >= 0,
+    return { resourceId: resource.id, resourceName: resource.name, isAvailable: !failedResourceIds.includes(resource.id),
       requestsPerSecond: requests, ...calculateAppServerMetrics(requests, resource.tierId) }
   })
   const weightedLatency = appServers.reduce(
@@ -414,8 +434,8 @@ function calculateApplicationMetrics(
   const appLatencyMs =
     appServers.length === 0
       ? 0
-      : requestsPerSecond > 0
-        ? Math.round(weightedLatency / effectiveRequests)
+      : routedRequests > 0
+        ? Math.round(weightedLatency / routedRequests)
         : Math.round(
             appServers.reduce((total, server) => total + server.latencyMs, 0) /
               appServers.length,
@@ -429,7 +449,7 @@ function calculateApplicationMetrics(
     appServers,
     database,
     cache,
-    applicationLatencyMs: appLatencyMs + database.queryLatencyMs + (availableServers.length === 0 || (!infrastructure.distributesTraffic && failedResourceIds.includes(infrastructure.appServers[0]?.id)) || failedResourceIds.includes('database') ? reliabilityConfig.unavailableLatencyMs : 0),
+    applicationLatencyMs: appLatencyMs + database.queryLatencyMs + (!hasOperationalRoute && requestsPerSecond > 0 ? reliabilityConfig.unavailableLatencyMs : 0),
     isServiceOverloaded: appServers.some((server) => server.isOverloaded) || database.status === 'overloaded',
     infrastructureCostPerPeriod,
   }

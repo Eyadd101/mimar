@@ -22,6 +22,7 @@ type InfrastructureActionsPanelProps = {
   onDeployAdvanced: (type: AdvancedResourceType) => void
   onDeployLoadBalancer: () => void
   onDeployAppServer: () => void
+  onPlaceResource: (resourceId: string) => void
 }
 
 export function InfrastructureActionsPanel({
@@ -31,14 +32,23 @@ export function InfrastructureActionsPanel({
   onDeployAdvanced,
   onDeployLoadBalancer,
   onDeployAppServer,
+  onPlaceResource,
 }: InfrastructureActionsPanelProps) {
   const { direction, t } = useLanguage()
   const hasLoadBalancer = campaign.infrastructure.resources.some(
     (resource) => resource.type === 'load-balancer',
   )
+  const ownsLoadBalancer =
+    hasLoadBalancer ||
+    campaign.inventory.some((resource) => resource.type === 'load-balancer')
   const hasAdditionalServer = campaign.infrastructure.resources.some(
     (resource) => resource.id === additionalAppServerConfig.id,
   )
+  const ownsAdditionalServer =
+    hasAdditionalServer ||
+    campaign.inventory.some(
+      (resource) => resource.id === additionalAppServerConfig.id,
+    )
 
   return (
     <aside className="infrastructure-actions nodrag nopan" aria-label={t('build.title')} dir={direction}>
@@ -52,13 +62,13 @@ export function InfrastructureActionsPanel({
           deployment={deployment}
           gameTimeSeconds={simulation.gameTimeSeconds}
         />
-      ) : hasLoadBalancer && hasAdditionalServer ? (
+      ) : ownsLoadBalancer && ownsAdditionalServer ? (
         <p className="infrastructure-actions__ready">
           {t('advanced.currentResources', { count: campaign.infrastructure.resources.length })}
         </p>
       ) : (
         <div className="infrastructure-actions__options">
-          {!hasLoadBalancer && (
+          {!ownsLoadBalancer && (
             <BuildOption
               titleKey="resource.loadBalancer"
               awsReference={loadBalancerResourceConfig.awsReference}
@@ -73,7 +83,7 @@ export function InfrastructureActionsPanel({
               onDeploy={onDeployLoadBalancer}
             />
           )}
-          {!hasAdditionalServer && (
+          {!ownsAdditionalServer && (
             <BuildOption
               titleKey="resource.appServerB"
               awsReference="EC2"
@@ -94,12 +104,55 @@ export function InfrastructureActionsPanel({
           )}
         </div>
       )}
+      {campaign.inventory.length > 0 && (
+        <div className="infrastructure-inventory">
+          <strong>{t('build.readyToPlace')}</strong>
+          {campaign.inventory.map((resource) => (
+            <InventoryOption
+              key={resource.id}
+              resource={resource}
+              onPlace={() => onPlaceResource(resource.id)}
+            />
+          ))}
+        </div>
+      )}
       {!deployment && <div className="infrastructure-actions__options">{getUnlockedAdvancedResources(campaign).map(type => {
         const definition = advancedResourceConfigs[type]
         return <BuildOption key={type} titleKey={definition.labelKey} awsReference={definition.awsReference} cost={definition.deploymentCost} duration={definition.deploymentDurationSeconds} disabled={simulation.balance < definition.deploymentCost} onDeploy={() => onDeployAdvanced(type)} />
       })}</div>}
       {!!campaign.unlockedControls?.length && <p className="infrastructure-actions__ready">{t('advanced.inspectDatabaseControls')}</p>}
     </aside>
+  )
+}
+
+function InventoryOption({
+  resource,
+  onPlace,
+}: {
+  resource: CampaignState['inventory'][number]
+  onPlace: () => void
+}) {
+  const { t } = useLanguage()
+  const titleKey: TranslationKey =
+    resource.type === 'load-balancer'
+      ? 'resource.loadBalancer'
+      : resource.type === 'app-server'
+        ? 'resource.appServerB'
+        : advancedResourceConfigs[resource.type].labelKey
+  const purposeKey: TranslationKey =
+    resource.type === 'load-balancer'
+      ? 'build.loadBalancerPurpose'
+      : resource.type === 'app-server'
+        ? 'build.appServerPurpose'
+        : advancedResourceConfigs[resource.type].purposeKey
+
+  return (
+    <article className="inventory-option">
+      <strong><TechnicalTerm translationKey={titleKey} /></strong>
+      <p>{t(purposeKey)}</p>
+      <small>{t('build.placeThenConnect')}</small>
+      <button type="button" onClick={onPlace}>{t('build.placeOnCanvas')}</button>
+    </article>
   )
 }
 

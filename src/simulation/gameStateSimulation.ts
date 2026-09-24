@@ -13,6 +13,8 @@ import {
   addLoadBalancerResource,
   addStageOneConnection,
   connectCampaignResources,
+  disconnectCampaignResources,
+  reconnectCampaignResource,
   addStageOneResource,
   applyResourceUnlocks,
   createInitialCampaignState,
@@ -20,6 +22,7 @@ import {
   createTrafficInfrastructure,
   hasLoadBalancer,
   hasOperationalServicePath,
+  placeInventoryResource,
   syncCampaignWithSimulation,
   updateResourcePositions,
   type CampaignResourceType,
@@ -214,7 +217,7 @@ export function configureDatabaseSecurity(state: GameState, key: SecurityRisk, e
 
 export function beginAdvancedResourceDeployment(state: GameState, type: AdvancedResourceType): GameState {
   const definition = advancedResourceConfigs[type]
-  if (!state.campaign.unlockedResourceTypes.includes(type) || state.campaign.infrastructure.resources.some(resource => resource.type === type)) return state
+  if (!state.campaign.unlockedResourceTypes.includes(type) || state.campaign.infrastructure.resources.some(resource => resource.type === type) || state.campaign.inventory.some(resource => resource.type === type)) return state
   return beginInfrastructureDeployment(state, type, definition.deploymentCost, definition.deploymentDurationSeconds)
 }
 
@@ -326,6 +329,41 @@ export function connectInfrastructure(state: GameState, sourceId: string, target
   if (state.stageRuntime.status !== 'playing') return state
   if (state.campaign.currentStageIndex === 0) return connectStageOneResources(state, sourceId, targetId)
   const campaign = connectCampaignResources(state.campaign, sourceId, targetId)
+  return campaign === state.campaign ? state : { ...state, campaign }
+}
+
+export function placePurchasedResource(
+  state: GameState,
+  resourceId: string,
+  position?: { x: number; y: number },
+): GameState {
+  if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
+  const campaign = placeInventoryResource(state.campaign, resourceId, position)
+  return campaign === state.campaign ? state : { ...state, campaign }
+}
+
+export function disconnectInfrastructure(
+  state: GameState,
+  connectionIds: readonly string[],
+): GameState {
+  if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
+  const campaign = disconnectCampaignResources(state.campaign, connectionIds)
+  return campaign === state.campaign ? state : { ...state, campaign }
+}
+
+export function reconnectInfrastructure(
+  state: GameState,
+  connectionId: string,
+  sourceId: string,
+  targetId: string,
+): GameState {
+  if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
+  const campaign = reconnectCampaignResource(
+    state.campaign,
+    connectionId,
+    sourceId,
+    targetId,
+  )
   return campaign === state.campaign ? state : { ...state, campaign }
 }
 
@@ -530,13 +568,13 @@ function beginInfrastructureDeployment(
 ) {
   const simulation = currentState.stageRuntime.simulation
   const resourceAlreadyExists =
-    kind === 'database-downsize' ? false : kind in advancedResourceConfigs ? currentState.campaign.infrastructure.resources.some(resource => resource.type === kind) : kind === 'database-upgrade'
+    kind === 'database-downsize' ? false : kind in advancedResourceConfigs ? currentState.campaign.infrastructure.resources.some(resource => resource.type === kind) || currentState.campaign.inventory.some(resource => resource.type === kind) : kind === 'database-upgrade'
       ? currentState.campaign.infrastructure.resources.some(resource => resource.type === 'database' && resource.databaseTierId === 'medium')
       : kind === 'load-balancer'
-      ? hasLoadBalancer(currentState.campaign)
+      ? hasLoadBalancer(currentState.campaign) || currentState.campaign.inventory.some(resource => resource.type === 'load-balancer')
       : currentState.campaign.infrastructure.resources.some(
           (resource) => resource.id === additionalAppServerConfig.id,
-        )
+        ) || currentState.campaign.inventory.some(resource => resource.id === additionalAppServerConfig.id)
   const resourceIsUnlocked =
     kind in advancedResourceConfigs || kind === 'database-downsize' || kind === 'database-upgrade' || kind === 'app-server' ||
     currentState.campaign.unlockedResourceTypes.includes('load-balancer')
