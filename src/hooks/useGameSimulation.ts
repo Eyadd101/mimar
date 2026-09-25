@@ -37,6 +37,7 @@ import {
   loadCampaignSave,
   saveGameCheckpoint,
 } from '../simulation/campaignSave'
+import type { CampaignConnectionHandles } from '../simulation/campaignSimulation'
 import { calculateTickGameSeconds } from '../simulation/simulationClock'
 
 export function useGameSimulation() {
@@ -147,11 +148,18 @@ export function useGameSimulation() {
     [],
   )
 
-  const connectResources = useCallback((sourceId: string, targetId: string) => {
-    setGameState((currentState) =>
-      connectInfrastructure(currentState, sourceId, targetId),
-    )
-  }, [])
+  const connectResources = useCallback(
+    (
+      sourceId: string,
+      targetId: string,
+      handles: CampaignConnectionHandles = {},
+    ) => {
+      setGameState((currentState) =>
+        connectInfrastructure(currentState, sourceId, targetId, handles),
+      )
+    },
+    [],
+  )
 
   const placeResource = useCallback(
     (resourceId: string) => {
@@ -169,13 +177,19 @@ export function useGameSimulation() {
   }, [])
 
   const reconnectResource = useCallback(
-    (connectionId: string, sourceId: string, targetId: string) => {
+    (
+      connectionId: string,
+      sourceId: string,
+      targetId: string,
+      handles: CampaignConnectionHandles = {},
+    ) => {
       setGameState((currentState) =>
         reconnectInfrastructure(
           currentState,
           connectionId,
           sourceId,
           targetId,
+          handles,
         ),
       )
     },

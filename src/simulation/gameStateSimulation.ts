@@ -25,6 +25,7 @@ import {
   placeInventoryResource,
   syncCampaignWithSimulation,
   updateResourcePositions,
+  type CampaignConnectionHandles,
   type CampaignResourceType,
   type CampaignState,
 } from './campaignSimulation'
@@ -326,10 +327,22 @@ export function placeStageOneResource(
   }
 }
 
-export function connectInfrastructure(state: GameState, sourceId: string, targetId: string): GameState {
+export function connectInfrastructure(
+  state: GameState,
+  sourceId: string,
+  targetId: string,
+  handles: CampaignConnectionHandles = {},
+): GameState {
   if (state.stageRuntime.status !== 'playing') return state
-  if (state.campaign.currentStageIndex === 0) return connectStageOneResources(state, sourceId, targetId)
-  const campaign = connectCampaignResources(state.campaign, sourceId, targetId)
+  if (state.campaign.currentStageIndex === 0) {
+    return connectStageOneResources(state, sourceId, targetId, handles)
+  }
+  const campaign = connectCampaignResources(
+    state.campaign,
+    sourceId,
+    targetId,
+    handles,
+  )
   return campaign === state.campaign
     ? state
     : applyInfrastructureCampaignChange(state, campaign)
@@ -363,6 +376,7 @@ export function reconnectInfrastructure(
   connectionId: string,
   sourceId: string,
   targetId: string,
+  handles: CampaignConnectionHandles = {},
 ): GameState {
   if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
   const campaign = reconnectCampaignResource(
@@ -370,6 +384,7 @@ export function reconnectInfrastructure(
     connectionId,
     sourceId,
     targetId,
+    handles,
   )
   return campaign === state.campaign
     ? state
@@ -400,6 +415,7 @@ export function connectStageOneResources(
   currentState: GameState,
   sourceId: string,
   targetId: string,
+  handles: CampaignConnectionHandles = {},
 ): GameState {
   if (
     currentState.stageRuntime.status !== 'playing' ||
@@ -412,6 +428,7 @@ export function connectStageOneResources(
     currentState.campaign,
     sourceId,
     targetId,
+    handles,
   )
   if (campaign === currentState.campaign) {
     return currentState

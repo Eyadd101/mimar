@@ -434,6 +434,73 @@ test('edge handles choose the shortest sensible node sides and remain derived af
   assert.equal(after.find(edge => edge.id === 'server-database').sourceHandle, 'source-top')
   assert.equal(after.find(edge => edge.id === 'server-database').targetHandle, 'target-bottom')
 })
+test('connection handles provide forgiving four-side targets for every required resource path', () => {
+  assert.deepEqual(campaign.infrastructureHandleSides, [
+    'top',
+    'right',
+    'bottom',
+    'left',
+  ])
+  assert.ok(s.infrastructureData.infrastructureHandleInteraction.hitAreaPixels >= 24)
+  assert.ok(
+    s.infrastructureData.infrastructureHandleInteraction.connectionRadiusPixels >=
+      s.infrastructureData.infrastructureHandleInteraction.hitAreaPixels,
+  )
+
+  const graph = { ...expandedCampaign().infrastructure, connections: [] }
+  for (const [sourceId, targetId] of [
+    ['users', 'server'],
+    ['load-balancer', 'server'],
+    ['server', 'database'],
+    ['server', 'cache'],
+    ['server', 'queue'],
+    ['queue', 'worker'],
+  ]) {
+    assert.equal(
+      s.connectionValidation.validateCampaignConnection(
+        graph,
+        sourceId,
+        targetId,
+      ).valid,
+      true,
+      `${sourceId} -> ${targetId} should remain semantically valid`,
+    )
+  }
+})
+test('manual handle sides survive movement, reconnection, and save reload', () => {
+  let graph = campaign.disconnectCampaignResources(expandedCampaign(), [
+    'server-cache',
+  ])
+  graph = campaign.connectCampaignResources(graph, 'server', 'cache', {
+    sourceHandle: 'source-left',
+    targetHandle: 'target-right',
+  })
+  graph = campaign.updateResourcePositions(graph, [
+    { id: 'server', position: { x: 900, y: 40 } },
+    { id: 'cache', position: { x: 100, y: 40 } },
+  ])
+
+  let restored = roundTrip(game.createInitialGameState(graph))
+  let edge = s.infrastructureData
+    .createInfrastructureEdges(restored.campaign.infrastructure)
+    .find((item) => item.id === 'server-cache')
+  assert.equal(edge.sourceHandle, 'source-left')
+  assert.equal(edge.targetHandle, 'target-right')
+
+  restored = game.reconnectInfrastructure(
+    restored,
+    'server-cache',
+    'server',
+    'cache',
+    { sourceHandle: 'source-bottom', targetHandle: 'target-top' },
+  )
+  restored = roundTrip(restored)
+  edge = s.infrastructureData
+    .createInfrastructureEdges(restored.campaign.infrastructure)
+    .find((item) => item.id === 'server-cache')
+  assert.equal(edge.sourceHandle, 'source-bottom')
+  assert.equal(edge.targetHandle, 'target-top')
+})
 test('advanced resource teaching appears before scoring and covers metrics, paths, and tradeoffs', () => {
   const cacheStage = stages.campaignStageConfigs[5]
   const queueStage = stages.campaignStageConfigs[6]

@@ -13,6 +13,7 @@ import type { AppServerMetrics } from '../simulation/appServerSimulation'
 import type {
   CampaignInfrastructureState,
   CampaignResource,
+  InfrastructureHandleSide,
 } from '../simulation/campaignSimulation'
 import type { TranslationKey } from '../i18n/translations'
 
@@ -29,6 +30,12 @@ export type InfrastructureNodeData = {
 }
 
 export type InfrastructureFlowNode = Node<InfrastructureNodeData, 'infrastructure'>
+
+export const infrastructureHandleInteraction = {
+  hitAreaPixels: 28,
+  sideOffsetPixels: 16,
+  connectionRadiusPixels: 34,
+} as const
 
 export type InfrastructurePositionUpdate = {
   id: string
@@ -99,8 +106,8 @@ export function createInfrastructureEdges(
       id: connection.id,
       source: connection.sourceId,
       target: connection.targetId,
-      sourceHandle: handles?.sourceHandle,
-      targetHandle: handles?.targetHandle,
+      sourceHandle: connection.sourceHandle ?? handles?.sourceHandle,
+      targetHandle: connection.targetHandle ?? handles?.targetHandle,
       type: 'smoothstep',
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -113,16 +120,14 @@ export function createInfrastructureEdges(
   })
 }
 
-type HandleSide = 'top' | 'right' | 'bottom' | 'left'
-
 export function getConnectionHandles(
   source: { x: number; y: number },
   target: { x: number; y: number },
 ) {
   const horizontalDistance = target.x - source.x
   const verticalDistance = target.y - source.y
-  let sourceSide: HandleSide
-  let targetSide: HandleSide
+  let sourceSide: InfrastructureHandleSide
+  let targetSide: InfrastructureHandleSide
 
   if (Math.abs(horizontalDistance) >= Math.abs(verticalDistance)) {
     sourceSide = horizontalDistance >= 0 ? 'right' : 'left'
@@ -140,7 +145,7 @@ export function getConnectionHandles(
   }
 }
 
-const handlePositions: Record<HandleSide, Position> = {
+const handlePositions: Record<InfrastructureHandleSide, Position> = {
   top: Position.Top,
   right: Position.Right,
   bottom: Position.Bottom,

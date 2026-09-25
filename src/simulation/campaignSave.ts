@@ -8,6 +8,8 @@ import {
   type CampaignResourceType,
   type CampaignState,
   createTrafficInfrastructure,
+  isSourceHandleId,
+  isTargetHandleId,
 } from './campaignSimulation'
 import { serverTierConfigs, type SimulationSpeed } from './config'
 import { isValidCheckpoint, type CampaignCheckpoint } from './checkpointValidation'
@@ -344,6 +346,10 @@ function isValidInfrastructure(value: unknown, currentStageIndex: number) {
       typeof connection.id !== 'string' ||
       typeof connection.sourceId !== 'string' ||
       typeof connection.targetId !== 'string' ||
+      (connection.sourceHandle !== undefined &&
+        !isSourceHandleId(connection.sourceHandle)) ||
+      (connection.targetHandle !== undefined &&
+        !isTargetHandleId(connection.targetHandle)) ||
       !resourceIds.has(connection.sourceId) ||
       !resourceIds.has(connection.targetId)
     ) {

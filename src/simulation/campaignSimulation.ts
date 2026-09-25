@@ -33,6 +33,22 @@ export type ResourcePosition = {
   y: number
 }
 
+export const infrastructureHandleSides = [
+  'top',
+  'right',
+  'bottom',
+  'left',
+] as const
+
+export type InfrastructureHandleSide =
+  (typeof infrastructureHandleSides)[number]
+export type SourceHandleId = `source-${InfrastructureHandleSide}`
+export type TargetHandleId = `target-${InfrastructureHandleSide}`
+export type CampaignConnectionHandles = {
+  sourceHandle?: SourceHandleId
+  targetHandle?: TargetHandleId
+}
+
 type CampaignResourceBase = {
   id: string
   name: string
@@ -67,10 +83,34 @@ export type CampaignInventoryResource =
       tierId: ServerTierId
     }
 
-export type CampaignConnection = {
+export type CampaignConnection = CampaignConnectionHandles & {
   id: string
   sourceId: string
   targetId: string
+}
+
+export function isSourceHandleId(value: unknown): value is SourceHandleId {
+  return (
+    typeof value === 'string' &&
+    infrastructureHandleSides.some((side) => value === `source-${side}`)
+  )
+}
+
+export function isTargetHandleId(value: unknown): value is TargetHandleId {
+  return (
+    typeof value === 'string' &&
+    infrastructureHandleSides.some((side) => value === `target-${side}`)
+  )
+}
+
+export function getCampaignConnectionHandles(
+  sourceHandle: string | null | undefined,
+  targetHandle: string | null | undefined,
+): CampaignConnectionHandles {
+  return {
+    ...(isSourceHandleId(sourceHandle) ? { sourceHandle } : {}),
+    ...(isTargetHandleId(targetHandle) ? { targetHandle } : {}),
+  }
 }
 
 export type CampaignInfrastructureState = {
@@ -180,6 +220,7 @@ export function addStageOneConnection(
   campaign: CampaignState,
   sourceId: string,
   targetId: string,
+  handles: CampaignConnectionHandles = {},
 ) {
   if (
     campaign.currentStageIndex !== 0 ||
@@ -202,15 +243,44 @@ export function addStageOneConnection(
           id: `${sourceId}-${targetId}`,
           sourceId,
           targetId,
+          ...handles,
         },
       ],
     },
   }
 }
 
-export function connectCampaignResources(campaign: CampaignState, sourceId: string, targetId: string): CampaignState {
-  if (!validateCampaignConnection(campaign.infrastructure, sourceId, targetId).valid) return campaign
-  return { ...campaign, infrastructure: { ...campaign.infrastructure, connections: [...campaign.infrastructure.connections, { id: `${sourceId}-${targetId}`, sourceId, targetId }] } }
+export function connectCampaignResources(
+  campaign: CampaignState,
+  sourceId: string,
+  targetId: string,
+  handles: CampaignConnectionHandles = {},
+): CampaignState {
+  if (
+    !validateCampaignConnection(
+      campaign.infrastructure,
+      sourceId,
+      targetId,
+    ).valid
+  ) {
+    return campaign
+  }
+
+  return {
+    ...campaign,
+    infrastructure: {
+      ...campaign.infrastructure,
+      connections: [
+        ...campaign.infrastructure.connections,
+        {
+          id: `${sourceId}-${targetId}`,
+          sourceId,
+          targetId,
+          ...handles,
+        },
+      ],
+    },
+  }
 }
 
 export function disconnectCampaignResources(
@@ -234,6 +304,7 @@ export function reconnectCampaignResource(
   connectionId: string,
   sourceId: string,
   targetId: string,
+  handles: CampaignConnectionHandles = {},
 ): CampaignState {
   const existing = campaign.infrastructure.connections.find(
     (connection) => connection.id === connectionId,
@@ -265,7 +336,7 @@ export function reconnectCampaignResource(
       ...withoutExisting.infrastructure,
       connections: [
         ...withoutExisting.infrastructure.connections,
-        { id: `${sourceId}-${targetId}`, sourceId, targetId },
+        { id: `${sourceId}-${targetId}`, sourceId, targetId, ...handles },
       ],
     },
   }

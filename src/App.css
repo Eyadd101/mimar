@@ -2043,21 +2043,42 @@
 }
 
 .infrastructure-node .react-flow__handle {
+  border: 0;
+  background: transparent;
+}
+
+.infrastructure-node .react-flow__handle::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 9px;
   height: 9px;
   border: 2px solid #18211c;
+  border-radius: 50%;
   background: #91b7a4;
-  opacity: 0.62;
-  transition: width 120ms, height 120ms, opacity 120ms;
+  content: '';
+  opacity: 0.68;
+  transform: translate(-50%, -50%);
+  transition: width 120ms, height 120ms, border-color 120ms, opacity 120ms;
 }
 
-.react-flow__node:hover .infrastructure-node .react-flow__handle,
-.react-flow__node.selected .infrastructure-node .react-flow__handle,
-.infrastructure-node .react-flow__handle.connectingfrom,
-.infrastructure-node .react-flow__handle.connectingto {
-  width: 12px;
-  height: 12px;
+.infrastructure-node .react-flow__handle.target::after {
+  border-color: #91b7a4;
+  background: #18211c;
+}
+
+.react-flow__node:hover .infrastructure-node .react-flow__handle::after,
+.react-flow__node.selected .infrastructure-node .react-flow__handle::after,
+.infrastructure-node .react-flow__handle.connectingfrom::after,
+.infrastructure-node .react-flow__handle.connectingto::after {
+  width: 11px;
+  height: 11px;
   opacity: 1;
+}
+
+.infrastructure-node .react-flow__handle.connectingto.valid::after {
+  border-color: #b5f0cc;
+  background: #4b8d70;
 }
 
 .request-flow__pulse {

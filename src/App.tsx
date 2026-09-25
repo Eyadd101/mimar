@@ -36,6 +36,7 @@ import {
   createInfrastructureNodes,
   applyInfrastructureNodeChanges,
   carryInfrastructureNodeRuntime,
+  infrastructureHandleInteraction,
   type InfrastructureFlowNode,
   type InfrastructureNodeRuntime,
 } from './data/infrastructure'
@@ -62,7 +63,10 @@ import type {
   TranslationKey,
   TranslationMessage,
 } from './i18n/translations'
-import type { CampaignResourceType } from './simulation/campaignSimulation'
+import {
+  getCampaignConnectionHandles,
+  type CampaignResourceType,
+} from './simulation/campaignSimulation'
 import { useStableScrollPosition } from './hooks/useStableScrollPosition'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
@@ -357,7 +361,14 @@ function App() {
     })
 
     if (result.valid) {
-      connectResources(connection.source, connection.target)
+      connectResources(
+        connection.source,
+        connection.target,
+        getCampaignConnectionHandles(
+          connection.sourceHandle,
+          connection.targetHandle,
+        ),
+      )
     }
   }
   const handleEdgesDelete = (edges: Edge[]) => {
@@ -381,7 +392,15 @@ function App() {
     )
     setConnectionFeedback({ ...result.explanation, valid: result.valid })
     if (result.valid) {
-      reconnectResource(oldEdge.id, connection.source, connection.target)
+      reconnectResource(
+        oldEdge.id,
+        connection.source,
+        connection.target,
+        getCampaignConnectionHandles(
+          connection.sourceHandle,
+          connection.targetHandle,
+        ),
+      )
       setSelectedEdgeId(null)
     }
   }
@@ -458,6 +477,9 @@ function App() {
           fitViewOptions={fitViewOptions}
           minZoom={0.25}
           maxZoom={1.6}
+          connectionRadius={
+            infrastructureHandleInteraction.connectionRadiusPixels
+          }
           nodesConnectable={gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted)}
           edgesReconnectable={gameStatus === 'playing' && stage.sequence > 1}
           edgesFocusable={gameStatus === 'playing' && stage.sequence > 1}

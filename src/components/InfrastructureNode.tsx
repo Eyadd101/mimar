@@ -1,9 +1,11 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { CSSProperties } from 'react'
-import type {
-  InfrastructureFlowNode,
-  InfrastructureNodeData,
+import {
+  infrastructureHandleInteraction,
+  type InfrastructureFlowNode,
+  type InfrastructureNodeData,
 } from '../data/infrastructure'
+import { infrastructureHandleSides } from '../simulation/campaignSimulation'
 import { useLanguage } from '../i18n/useLanguage'
 import {
   getEnglishTranslation,
@@ -176,12 +178,12 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
   )
 }
 
-const handleSides = [
-  ['top', Position.Top],
-  ['right', Position.Right],
-  ['bottom', Position.Bottom],
-  ['left', Position.Left],
-] as const
+const handlePositions = {
+  top: Position.Top,
+  right: Position.Right,
+  bottom: Position.Bottom,
+  left: Position.Left,
+} as const
 
 function NodeHandles({
   type,
@@ -190,26 +192,39 @@ function NodeHandles({
   type: 'source' | 'target'
   canConnect: boolean
 }) {
-  return handleSides.map(([side, position]) => (
-    <Handle
-      key={`${type}-${side}`}
-      id={`${type}-${side}`}
-      type={type}
-      position={position}
-      isConnectable={canConnect}
-      style={getHandleOffset(position, type)}
-    />
-  ))
+  return infrastructureHandleSides.map((side) => {
+    const position = handlePositions[side]
+
+    return (
+      <Handle
+        key={`${type}-${side}`}
+        id={`${type}-${side}`}
+        type={type}
+        position={position}
+        isConnectable={canConnect}
+        isConnectableStart={canConnect && type === 'source'}
+        style={getHandleStyle(position, type)}
+      />
+    )
+  })
 }
 
-function getHandleOffset(
+function getHandleStyle(
   position: Position,
   type: 'source' | 'target',
 ): CSSProperties {
+  const { hitAreaPixels, sideOffsetPixels } = infrastructureHandleInteraction
   const positionValue =
-    type === 'target' ? 'calc(50% - 8px)' : 'calc(50% + 8px)'
+    type === 'target'
+      ? `calc(50% - ${sideOffsetPixels}px)`
+      : `calc(50% + ${sideOffsetPixels}px)`
+  const hitArea = `${hitAreaPixels}px`
 
-  return position === Position.Top || position === Position.Bottom
-    ? { left: positionValue }
-    : { top: positionValue }
+  return {
+    width: hitArea,
+    height: hitArea,
+    ...(position === Position.Top || position === Position.Bottom
+      ? { left: positionValue }
+      : { top: positionValue }),
+  }
 }
