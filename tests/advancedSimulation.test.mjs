@@ -378,6 +378,81 @@ test('new connection rules accept every supported pair and reject invalid direct
   for (const language of ['en', 'ar']) assert.ok(s.translations.translate(language, invalid.explanation.key).length > 10)
   assert.equal(campaign.connectCampaignResources(expandedCampaign(), 'database', 'users').infrastructure.connections.length, initial.connections.length)
 })
+test('invalid connections identify the attempted pair and teach the specific useful path', () => {
+  const graph = { ...expandedCampaign().infrastructure, connections: [] }
+  const cases = [
+    ['cache', 'users', 'connection.fromCache', 'connection.tryAppCacheDatabase'],
+    ['users', 'database', 'connection.usersDatabase', 'connection.tryUsersAppDatabase'],
+    ['server', 'worker', 'connection.appServerWorker', 'connection.tryAppQueueWorker'],
+    ['queue', 'database', 'connection.fromQueue', 'connection.tryAppQueueWorker'],
+  ]
+
+  for (const [sourceId, targetId, key, suggestionKey] of cases) {
+    const result = s.connectionValidation.validateCampaignConnection(graph, sourceId, targetId)
+    assert.equal(result.valid, false)
+    assert.equal(result.explanation.key, key)
+    assert.equal(result.explanation.suggestionKey, suggestionKey)
+    assert.ok(result.explanation.attempted)
+    for (const language of ['en', 'ar']) {
+      assert.ok(s.translations.translate(language, result.explanation.key).length > 20)
+      if (suggestionKey) assert.match(s.translations.translate(language, suggestionKey), /→/)
+    }
+  }
+
+  assert.equal(s.connectionValidation.validateCampaignConnection(graph, 'server', 'queue').valid, true)
+  assert.equal(s.connectionValidation.validateCampaignConnection(graph, 'queue', 'worker').valid, true)
+})
+test('edge handles choose the shortest sensible node sides and remain derived after save', () => {
+  assert.deepEqual(
+    s.infrastructureData.getConnectionHandles({ x: 0, y: 0 }, { x: 400, y: 20 }),
+    {
+      sourceHandle: 'source-right',
+      targetHandle: 'target-left',
+      sourcePosition: 'right',
+      targetPosition: 'left',
+    },
+  )
+  assert.deepEqual(
+    s.infrastructureData.getConnectionHandles({ x: 100, y: 500 }, { x: 80, y: 0 }),
+    {
+      sourceHandle: 'source-top',
+      targetHandle: 'target-bottom',
+      sourcePosition: 'top',
+      targetPosition: 'bottom',
+    },
+  )
+
+  const state = roundTrip(ready())
+  const before = s.infrastructureData.createInfrastructureEdges(state.campaign.infrastructure)
+  const movedCampaign = campaign.updateResourcePositions(
+    state.campaign,
+    [{ id: 'database', position: { x: 670, y: -500 } }],
+  )
+  const restored = roundTrip({ ...state, campaign: movedCampaign })
+  const after = s.infrastructureData.createInfrastructureEdges(restored.campaign.infrastructure)
+  assert.equal(before.find(edge => edge.id === 'server-database').sourceHandle, 'source-right')
+  assert.equal(after.find(edge => edge.id === 'server-database').sourceHandle, 'source-top')
+  assert.equal(after.find(edge => edge.id === 'server-database').targetHandle, 'target-bottom')
+})
+test('advanced resource teaching appears before scoring and covers metrics, paths, and tradeoffs', () => {
+  const cacheStage = stages.campaignStageConfigs[5]
+  const queueStage = stages.campaignStageConfigs[6]
+  const storageStage = stages.campaignStageConfigs[7]
+  assert.ok(cacheStage.tutorialSteps.some(step => step.messageKey === 'advanced.cacheIntro'))
+  assert.deepEqual(
+    queueStage.tutorialSteps.map(step => step.messageKey),
+    ['advanced.stage7Story', 'advanced.queueIntro', 'advanced.workerIntro', 'advanced.queueMetricsIntro'],
+  )
+  assert.ok(storageStage.tutorialSteps.some(step => step.messageKey === 'advanced.storageIntro'))
+
+  for (const language of ['en', 'ar']) {
+    assert.match(s.translations.translate(language, 'advanced.queueIntro'), /SQS/)
+    assert.match(s.translations.translate(language, 'advanced.queueMetricsIntro'), /Queue Depth/)
+    assert.match(s.translations.translate(language, 'advanced.queueMetricsIntro'), /Processing Rate/)
+    assert.match(s.translations.translate(language, 'advanced.cacheIntro'), /App Server → Cache → Database/)
+    assert.match(s.translations.translate(language, 'advanced.storageIntro'), /App Server → Object Storage/)
+  }
+})
 test('failed app servers stop receiving traffic and recover without resource loss', () => {
   const infra = campaign.createTrafficInfrastructure(expandedCampaign())
   const profile = { ...stages.campaignStageConfigs[0].trafficProfile, failures: [{ id: 'failure', resourceId: 'server', startsAtSecond: 1, durationSeconds: 2 }] }
@@ -505,7 +580,10 @@ test('storage denial is nonfatal and does not claim a successful save', () => {
 })
 
 test('stage complete checkpoint retains results and continues with the same infrastructure', () => {
-  const won = game.advanceGameState(ready(), 270)
+  const won = game.advanceGameState(
+    game.beginServerUpgrade(ready(), 'server'),
+    stages.prototypeStageConfig.primaryObjective.durationSeconds,
+  )
   assert.equal(won.stageRuntime.status, 'stage-won')
   const loaded = roundTrip(won)
   const next = game.continueToNextStage(loaded)

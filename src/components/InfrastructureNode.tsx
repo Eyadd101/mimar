@@ -1,4 +1,5 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import type { CSSProperties } from 'react'
 import type {
   InfrastructureFlowNode,
   InfrastructureNodeData,
@@ -89,7 +90,6 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
       ? 'resource.appServerB'
       : resourceLabelKeys[data.kind]
   const englishResourceLabel = getEnglishTranslation(resourceLabelKey)
-
   return (
     <div
       className="infrastructure-node"
@@ -98,13 +98,10 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
       data-status={data.appServerMetrics?.status ?? data.databaseMetrics?.status}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
-      {(data.canConnect || data.kind !== 'users') && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          isConnectable={data.canConnect === true}
-        />
-      )}
+      <NodeHandles
+        type="target"
+        canConnect={data.canConnect === true}
+      />
 
       <div className="node-heading">
         <span className="node-icon">
@@ -171,13 +168,48 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
         </svg>
       </div>
 
-      {(data.canConnect || data.kind !== 'database') && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          isConnectable={data.canConnect === true}
-        />
-      )}
+      <NodeHandles
+        type="source"
+        canConnect={data.canConnect === true}
+      />
     </div>
   )
+}
+
+const handleSides = [
+  ['top', Position.Top],
+  ['right', Position.Right],
+  ['bottom', Position.Bottom],
+  ['left', Position.Left],
+] as const
+
+function NodeHandles({
+  type,
+  canConnect,
+}: {
+  type: 'source' | 'target'
+  canConnect: boolean
+}) {
+  return handleSides.map(([side, position]) => (
+    <Handle
+      key={`${type}-${side}`}
+      id={`${type}-${side}`}
+      type={type}
+      position={position}
+      isConnectable={canConnect}
+      style={getHandleOffset(position, type)}
+    />
+  ))
+}
+
+function getHandleOffset(
+  position: Position,
+  type: 'source' | 'target',
+): CSSProperties {
+  const positionValue =
+    type === 'target' ? 'calc(50% - 8px)' : 'calc(50% + 8px)'
+
+  return position === Position.Top || position === Position.Bottom
+    ? { left: positionValue }
+    : { top: positionValue }
 }

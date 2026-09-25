@@ -58,13 +58,32 @@ import {
 import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
 import { useLanguage } from './i18n/useLanguage'
-import type { TranslationMessage } from './i18n/translations'
+import type {
+  TranslationKey,
+  TranslationMessage,
+} from './i18n/translations'
+import type { CampaignResourceType } from './simulation/campaignSimulation'
+import { useStableScrollPosition } from './hooks/useStableScrollPosition'
 
 const nodeTypes = { infrastructure: InfrastructureNode }
 const edgeTypes = { requestFlow: RequestFlowEdge }
 const fitViewOptions = {
   padding: { top: 0.28, right: 0.42, bottom: 0.28, left: 0.42 },
   maxZoom: 0.9,
+}
+
+const connectionResourceLabelKeys: Record<
+  CampaignResourceType,
+  TranslationKey
+> = {
+  users: 'resource.users',
+  'app-server': 'resource.appServer',
+  database: 'resource.database',
+  'load-balancer': 'resource.loadBalancer',
+  cache: 'advanced.cache',
+  queue: 'advanced.queue',
+  worker: 'advanced.worker',
+  'object-storage': 'advanced.storage',
 }
 
 type PendingInfrastructureAction =
@@ -129,6 +148,10 @@ function App() {
   } = useGameSimulation()
   const [flowNodeRuntime, setFlowNodeRuntime] =
     useState<InfrastructureNodeRuntime>({})
+  const [operationsScrollRef, handleOperationsScroll] =
+    useStableScrollPosition<HTMLDivElement>(
+      `operations:${stage.id}`,
+    )
   const flowInstanceRef = useRef<
     Pick<ReactFlowInstance<InfrastructureFlowNode>, 'fitView'> | null
   >(null)
@@ -195,6 +218,9 @@ function App() {
     traffic,
   ])
   const selectedNode = displayNodes.find((node) => node.id === selectedNodeId)
+  const selectedConnection = campaign.infrastructure.connections.find(
+    (connection) => connection.id === selectedEdgeId,
+  )
   const mostLoadedAppServer = getMostLoadedAppServer(traffic)
   const learningProgress = useMemo(
     () =>
@@ -356,6 +382,7 @@ function App() {
     setConnectionFeedback({ ...result.explanation, valid: result.valid })
     if (result.valid) {
       reconnectResource(oldEdge.id, connection.source, connection.target)
+      setSelectedEdgeId(null)
     }
   }
 
@@ -451,7 +478,6 @@ function App() {
                 stage={stage}
                 progress={objectiveProgress}
                 learningProgress={learningProgress}
-                serviceStarted={serviceStarted}
               /></details>
             </Panel>
           )}
@@ -479,7 +505,60 @@ function App() {
                 >
                   ×
                 </button>
+                {connectionFeedback.attempted && (
+                  <p className="connection-feedback__attempt">
+                    <span>{t('connection.attempted')}</span>{' '}
+                    <bdi dir="ltr">
+                      {t(connectionResourceLabelKeys[connectionFeedback.attempted.sourceType])}
+                      {' → '}
+                      {t(connectionResourceLabelKeys[connectionFeedback.attempted.targetType])}
+                    </bdi>
+                  </p>
+                )}
                 <p>{t(connectionFeedback.key)}</p>
+                {connectionFeedback.suggestionKey && (
+                  <p className="connection-feedback__suggestion">
+                    <span>{t('connection.suggestion')}:</span>{' '}
+                    <bdi dir="ltr">{t(connectionFeedback.suggestionKey)}</bdi>
+                  </p>
+                )}
+              </aside>
+            </Panel>
+          )}
+          {selectedConnection && stage.sequence > 1 && (
+            <Panel position="bottom-center" className="connection-editor-position">
+              <aside className="connection-editor nodrag nopan" dir={direction}>
+                <div>
+                  <span>{t('connection.selected')}</span>
+                  <strong>
+                    <bdi dir="ltr">
+                      {t(connectionResourceLabelKeys[
+                        campaign.infrastructure.resources.find(
+                          (resource) => resource.id === selectedConnection.sourceId,
+                        )?.type ?? 'app-server'
+                      ])}
+                      {' → '}
+                      {t(connectionResourceLabelKeys[
+                        campaign.infrastructure.resources.find(
+                          (resource) => resource.id === selectedConnection.targetId,
+                        )?.type ?? 'database'
+                      ])}
+                    </bdi>
+                  </strong>
+                  <small>{t('connection.reconnectHelp')}</small>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleEdgesDelete([
+                    displayEdges.find((edge) => edge.id === selectedConnection.id) ?? {
+                      id: selectedConnection.id,
+                      source: selectedConnection.sourceId,
+                      target: selectedConnection.targetId,
+                    },
+                  ])}
+                >
+                  {t('connection.remove')}
+                </button>
               </aside>
             </Panel>
           )}
@@ -510,7 +589,12 @@ function App() {
             </Panel>
           )}
           {!selectedNode && stage.sequence > 1 && <Panel position="top-right" className="operations-dock">
-            <div className="operations-dock__contents" dir={direction}>
+            <div
+              className="operations-dock__contents"
+              dir={direction}
+              ref={operationsScrollRef}
+              onScroll={handleOperationsScroll}
+            >
               <ExpansionAlerts stage={stage} simulation={traffic} />
               {stage.trafficEvents.length > 0 && <details open className="operations-section"><summary>{t('event.timeline')}</summary><EventTimelinePanel events={stage.trafficEvents} runtime={trafficEvents} gameTimeSeconds={traffic.gameTimeSeconds} /></details>}
               {!!stage.trafficProfile.failures?.length && <details open className="operations-section"><summary>{t('advanced.reliabilityNotice')}</summary><ReliabilityTimeline events={stage.trafficProfile.failures} gameTimeSeconds={traffic.gameTimeSeconds} /></details>}

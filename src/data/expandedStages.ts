@@ -42,6 +42,10 @@ export const databaseBottleneckStage = createExpandedStage({
 })
 
 databaseBottleneckStage.unlocksControls = ['database-scaling']
+databaseBottleneckStage.tutorialSteps = [
+  { titleKey: 'advanced.stage5', messageKey: 'advanced.stage5Story' },
+  { titleKey: 'advanced.database', messageKey: 'advanced.databaseIntro' },
+]
 
 export const readHeavyStage = createExpandedStage({
   id: 'read-heavy-traffic', sequence: 6,
@@ -49,6 +53,10 @@ export const readHeavyStage = createExpandedStage({
   durationSeconds: 360, unlocks: ['cache'],
   trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 8 },
 })
+readHeavyStage.tutorialSteps = [
+  { titleKey: 'advanced.stage6', messageKey: 'advanced.stage6Story' },
+  { titleKey: 'advanced.cache', messageKey: 'advanced.cacheIntro' },
+]
 
 export const backgroundStage = createExpandedStage({
   id: 'too-much-work', sequence: 7,
@@ -58,6 +66,12 @@ export const backgroundStage = createExpandedStage({
 })
 backgroundStage.secondaryObjectives.push({ id: 'background', type: 'healthy-background', titleKey: 'advanced.processingRate', descriptionKey: 'advanced.backgroundGoal', maximumAgeSeconds: 30 })
 backgroundStage.winCondition.requiredObjectiveIds.push('background')
+backgroundStage.tutorialSteps = [
+  { titleKey: 'advanced.stage7', messageKey: 'advanced.stage7Story' },
+  { titleKey: 'advanced.queue', messageKey: 'advanced.queueIntro' },
+  { titleKey: 'advanced.worker', messageKey: 'advanced.workerIntro' },
+  { titleKey: 'advanced.queueDepth', messageKey: 'advanced.queueMetricsIntro' },
+]
 
 export const uploadsStage = createExpandedStage({
   id: 'growing-uploads', sequence: 8,
@@ -67,6 +81,10 @@ export const uploadsStage = createExpandedStage({
 })
 uploadsStage.secondaryObjectives.push({ id: 'durable-files', type: 'durable-storage', titleKey: 'advanced.storage', descriptionKey: 'advanced.storageGoal' })
 uploadsStage.winCondition.requiredObjectiveIds.push('durable-files')
+uploadsStage.tutorialSteps = [
+  { titleKey: 'advanced.stage8', messageKey: 'advanced.stage8Story' },
+  { titleKey: 'advanced.storage', messageKey: 'advanced.storageIntro' },
+]
 
 export const securityStage = createExpandedStage({
   id: 'too-public', sequence: 9,
@@ -78,6 +96,10 @@ securityStage.unlocksControls = ['security']
 securityStage.initialSecurity = { publicDatabase: true, weakCredentials: false, excessivePermissions: true, openNetwork: true }
 securityStage.secondaryObjectives.push({ id: 'secure', type: 'secure-configuration', titleKey: 'advanced.security', descriptionKey: 'advanced.securityGoal' })
 securityStage.winCondition.requiredObjectiveIds.push('secure')
+securityStage.tutorialSteps = [
+  { titleKey: 'advanced.stage9', messageKey: 'advanced.stage9Story' },
+  { titleKey: 'advanced.security', messageKey: 'advanced.securityIntro' },
+]
 
 export const recoveryStage = createExpandedStage({
   id: 'recover-the-data', sequence: 10,
@@ -88,6 +110,10 @@ export const recoveryStage = createExpandedStage({
 recoveryStage.unlocksControls = ['backups']
 recoveryStage.secondaryObjectives.push({ id: 'recovered', type: 'recovered-data', titleKey: 'advanced.restore', descriptionKey: 'advanced.recoveryGoal' })
 recoveryStage.winCondition.requiredObjectiveIds.push('recovered')
+recoveryStage.tutorialSteps = [
+  { titleKey: 'advanced.stage10', messageKey: 'advanced.stage10Story' },
+  { titleKey: 'advanced.backups', messageKey: 'advanced.backupIntro' },
+]
 
 // Scheduled exercises teach backlog recovery and redundancy without random attacks.
 backgroundStage.trafficProfile.failures = [{ id: 'worker-maintenance', resourceId: 'worker', labelKey: 'advanced.worker', startsAtSecond: 240, durationSeconds: 25 }]

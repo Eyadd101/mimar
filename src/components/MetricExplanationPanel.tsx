@@ -6,6 +6,7 @@ import {
 } from '../data/metricEducation'
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
+import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
 
 type MetricExplanationPanelProps = {
   metricId: MetricId
@@ -21,6 +22,9 @@ export function MetricExplanationPanel({
   const { direction, t } = useLanguage()
   const definition = metricEducationDefinitions[metricId]
   const currentReason = getMetricCurrentReason(metricId, snapshot)
+  const [scrollRef, handleScroll] = useStableScrollPosition<HTMLElement>(
+    `metric:${metricId}`,
+  )
 
   return (
     <aside
@@ -31,6 +35,8 @@ export function MetricExplanationPanel({
       })}
       aria-live="polite"
       dir={direction}
+      ref={scrollRef}
+      onScroll={handleScroll}
     >
       <button
         type="button"

@@ -78,7 +78,8 @@ export const expansionEnglish = {
   "advanced.storageHint": "Files are accumulating on application local disk. This space belongs to a machine, not to the service.",
 
   "advanced.storage": "Object Storage",
-  "advanced.storagePurpose": "Durable, shared storage for uploads. Application local disk is tied to a machine and is at risk during replacement.",
+  "advanced.storagePurpose": "Stores uploads outside any one server. Watch local disk usage; connect App Server → Object Storage. Storage adds cost as files and requests grow.",
+  "advanced.storageIntro": "Object Storage keeps uploaded files durable and shared when an App Server is replaced. Rising local disk usage shows the need. Connect App Server → Object Storage; stored data and requests add operating cost.",
   "advanced.storedObjects": "Stored Objects",
   "advanced.storageUsed": "Storage Used",
   "advanced.localStorageWarning": "Local files: {{size}} GiB. Local disk is not shared or durable storage. Replacing a server risks these uploads; storage pressure adds latency.",
@@ -92,8 +93,11 @@ export const expansionEnglish = {
 
   "advanced.queue": "Message Queue",
   "advanced.worker": "Worker",
-  "advanced.queuePurpose": "Buffers background jobs so user requests can finish promptly. A queue stores work; a worker must process it.",
-  "advanced.workerPurpose": "Processes queued jobs independently of user-facing application servers.",
+  "advanced.queuePurpose": "Stores work that does not need to finish while the user waits. Connect App Server → Message Queue → Worker. Watch Queue Depth; a growing depth means the Worker cannot keep up. Queue and Worker add cost.",
+  "advanced.workerPurpose": "Takes jobs from the Message Queue and processes them away from user-facing requests. Processing Rate shows how many jobs it finishes each second; worker capacity adds cost.",
+  "advanced.queueIntro": "Without a queue, the App Server performs long jobs itself, increasing CPU pressure, wait time, and latency. With a queue, the App Server stores the job quickly and keeps the user request fast. AWS learning reference: SQS.",
+  "advanced.workerIntro": "A Worker takes queued jobs and runs them in the background. Build App Server → Message Queue → Worker. The Worker adds capacity and operating cost.",
+  "advanced.queueMetricsIntro": "Queue Depth is the number of jobs waiting. Processing Rate is how many jobs the Worker can finish each second. If Queue Depth keeps rising, the Worker cannot keep up.",
   "advanced.queueDepth": "Queue Depth",
   "advanced.enqueueRate": "Enqueue Rate",
   "advanced.processingRate": "Processing Rate",
@@ -105,7 +109,8 @@ export const expansionEnglish = {
   "advanced.cacheRecap": "At completion: {{hits}} queries/sec served by cache; {{queries}} queries/sec reached the database. Total infrastructure cost: {{cost}} credits/period. Cache adds cost but can reduce the database capacity you need.",
 
   "advanced.cache": "Cache",
-  "advanced.cachePurpose": "Serves repeated reads. Writes and misses still reach the database; cache capacity is finite.",
+  "advanced.cachePurpose": "Serves repeated reads quickly. Watch database Query Load and Cache Hit Rate; connect App Server → Cache → Database. Writes and misses still reach the database, and the Cache adds cost.",
+  "advanced.cacheIntro": "A Cache keeps frequently read data close to the App Server, reducing repeated database work and latency. Watch Query Load and Hit Rate. Connect App Server → Cache → Database; misses, writes, finite capacity, and extra cost remain.",
   "advanced.hitRate": "Cache Hit Rate",
   "advanced.served": "Requests Served",
 
@@ -127,7 +132,10 @@ export const expansionEnglish = {
   "advanced.databaseCompareHint": "Compare the layers: application CPU still has room, while database query load and query latency are rising. The slowest layer is the bottleneck.",
 
   'advanced.database': 'Managed Database',
-  'advanced.databasePurpose': 'Stores application data. Requests create queries; slow queries add to customer response time.',
+  'advanced.databasePurpose': 'Stores application data. Watch Query Load, connections, and query latency; connect App Server → Database. More capacity costs more, and application scaling does not increase database capacity.',
+  'advanced.databaseIntro': 'The Managed Database stores application data. Query Load or connections near capacity raise query latency, which slows every request. App Servers connect to the Database; a larger tier adds capacity and cost.',
+  'advanced.securityIntro': 'Security settings control who can reach the Database and what they can do. Inspect public access, network access, credentials, and permissions. Safer settings reduce exposure without adding request capacity.',
+  'advanced.backupIntro': 'Backups create recovery points for lost data. They do not prevent an outage or add database capacity. More frequent snapshots cost more but reduce how much recent data can be lost.',
   'advanced.queryLoad': 'Query Load',
   'advanced.connections': 'Active Connections',
   'advanced.queryLatency': 'Query Latency',
@@ -214,7 +222,8 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.storageHint": "تتراكم الملفات على قرص التطبيق المحلي. هذه المساحة مرتبطة بجهاز، وليست بالخدمة.",
 
   "advanced.storage": "تخزين الكائنات",
-  "advanced.storagePurpose": "تخزين دائم ومشترك للملفات. القرص المحلي مرتبط بجهاز واحد وتتعرض ملفاته للخطر عند استبداله.",
+  "advanced.storagePurpose": "يحفظ الملفات خارج أي خادم واحد. راقب مساحة القرص المحلي، واربط App Server → Object Storage. تزيد التكلفة مع الملفات والطلبات.",
+  "advanced.storageIntro": "يحفظ Object Storage ملفات العملاء بشكل دائم ومشترك، حتى لو استُبدل خادم التطبيق. ارتفاع استخدام القرص المحلي هو الإشارة. اربط App Server → Object Storage؛ وتذكّر أن المساحة والطلبات لها تكلفة.",
   "advanced.storedObjects": "الكائنات المخزنة",
   "advanced.storageUsed": "مساحة التخزين المستخدمة",
   "advanced.localStorageWarning": "ملفات محلية: {{size}} GiB. القرص المحلي ليس تخزيناً دائماً أو مشتركاً. استبدال الخادم يعرض الملفات للخطر، وامتلاؤه يزيد زمن الاستجابة.",
@@ -228,8 +237,11 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
 
   "advanced.queue": "طابور الرسائل",
   "advanced.worker": "عامل المعالجة",
-  "advanced.queuePurpose": "يحتفظ بالمهام الخلفية لتستجيب الخدمة بسرعة. الطابور يخزن العمل ويحتاج إلى عامل لمعالجته.",
-  "advanced.workerPurpose": "يعالج المهام في الطابور مستقلاً عن خوادم طلبات المستخدمين.",
+  "advanced.queuePurpose": "يحفظ المهام التي لا يحتاج المستخدم إلى انتظارها. اربط App Server → Message Queue → Worker. راقب عمق الطابور (Queue Depth)؛ فإذا استمر بالارتفاع فالعامل لا يلحق بالمهام. الطابور والعامل يضيفان تكلفة.",
+  "advanced.workerPurpose": "يأخذ المهام من Message Queue وينفّذها بعيدًا عن طلبات المستخدمين. يوضح معدل المعالجة (Processing Rate) عدد المهام التي ينهيها في الثانية، وسعته لها تكلفة.",
+  "advanced.queueIntro": "من دون الطابور، ينفّذ خادم التطبيق المهام الطويلة بنفسه، فيرتفع ضغط CPU وتنتظر الطلبات ويزيد Latency. مع الطابور، يحفظ خادم التطبيق المهمة بسرعة ويبقى طلب المستخدم سريعًا. مرجع AWS التعليمي: SQS.",
+  "advanced.workerIntro": "يأخذ Worker المهام من الطابور وينفّذها في الخلفية. ابنِ App Server → Message Queue → Worker. يضيف العامل سعة وتكلفة تشغيل.",
+  "advanced.queueMetricsIntro": "عمق الطابور (Queue Depth) هو عدد المهام التي تنتظر. معدل المعالجة (Processing Rate) هو عدد المهام التي ينهيها العامل في الثانية. إذا استمر عمق الطابور بالارتفاع، فالعامل لا يلحق بالمهام.",
   "advanced.queueDepth": "عمق الطابور",
   "advanced.enqueueRate": "معدل إضافة المهام",
   "advanced.processingRate": "معدل المعالجة",
@@ -241,7 +253,8 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.cacheRecap": "عند الإكمال: خدم التخزين المؤقت {{hits}} استعلام/ثانية، ووصل {{queries}} إلى قاعدة البيانات. التكلفة الكلية {{cost}} رصيد/فترة. يضيف التخزين المؤقت تكلفة لكنه قد يقلل السعة المطلوبة لقاعدة البيانات.",
 
   "advanced.cache": "ذاكرة التخزين المؤقت",
-  "advanced.cachePurpose": "تخدم القراءات المتكررة. تظل الكتابات والقراءات غير الموجودة متجهة إلى قاعدة البيانات؛ سعة التخزين المؤقت محدودة.",
+  "advanced.cachePurpose": "تخدم القراءات المتكررة بسرعة. راقب حمل الاستعلامات (Query Load) ونسبة الإصابة (Cache Hit Rate)، واربط App Server → Cache → Database. الكتابات وحالات عدم العثور تصل إلى قاعدة البيانات، وللـ Cache تكلفة.",
+  "advanced.cacheIntro": "تحفظ Cache البيانات التي تُقرأ كثيرًا بالقرب من خادم التطبيق، فتقلل العمل المتكرر على قاعدة البيانات وزمن الاستجابة (Latency). راقب حمل الاستعلامات (Query Load) ونسبة الإصابة (Hit Rate). اربط App Server → Cache → Database؛ وتذكّر أن سعتها محدودة وأنها تضيف تكلفة.",
   "advanced.hitRate": "نسبة إصابات التخزين المؤقت",
   "advanced.served": "الطلبات المخدومة",
 
@@ -263,7 +276,10 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.databaseCompareHint": "قارن بين الطبقتين: ما زالت لدى معالج التطبيق سعة، بينما يرتفع حمل استعلامات قاعدة البيانات وزمنها. الطبقة الأبطأ هي موضع الاختناق.",
 
   'advanced.database': 'قاعدة البيانات المُدارة',
-  'advanced.databasePurpose': 'تحفظ بيانات التطبيق. الطلبات تولّد استعلامات، وبطؤها يزيد زمن استجابة الخدمة.',
+  'advanced.databasePurpose': 'تحفظ بيانات التطبيق. راقب حمل الاستعلامات (Query Load) والاتصالات وزمن الاستعلام، واربط App Server → Database. السعة الأعلى تكلف أكثر، وتكبير التطبيق لا يزيد سعة القاعدة.',
+  'advanced.databaseIntro': 'قاعدة البيانات المُدارة تحفظ بيانات التطبيق. عندما يقترب حمل الاستعلامات (Query Load) أو عدد الاتصالات من السعة، يرتفع زمن الاستعلام وتتباطأ الطلبات. تتصل بها خوادم التطبيق، وتضيف الفئة الأكبر سعة وتكلفة.',
+  'advanced.securityIntro': 'تحدد إعدادات الأمان من يستطيع الوصول إلى قاعدة البيانات وماذا يستطيع فعله. افحص الوصول العام والشبكة وبيانات الدخول والصلاحيات. الإعدادات الأكثر أمانًا تقلل التعرض للخطر، لكنها لا تزيد سعة الطلبات.',
+  'advanced.backupIntro': 'تنشئ النسخ الاحتياطية نقاطًا لاستعادة البيانات بعد فقدها. لا تمنع التوقف ولا تزيد سعة قاعدة البيانات. اللقطات الأكثر تكرارًا تكلف أكثر، لكنها تقلل البيانات الحديثة التي قد تفقدها.',
   'advanced.queryLoad': 'حمل الاستعلامات',
   'advanced.connections': 'الاتصالات النشطة',
   'advanced.queryLatency': 'زمن الاستعلام',

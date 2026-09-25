@@ -1,5 +1,6 @@
 import type { TranslationMessage } from '../i18n/translations'
 import { useLanguage } from '../i18n/useLanguage'
+import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
 
 type HintPanelProps = {
   hint: TranslationMessage | null
@@ -13,6 +14,8 @@ export function HintPanel({
   onDismissHint,
 }: HintPanelProps) {
   const { direction, t } = useLanguage()
+  const [scrollRef, handleScroll] =
+    useStableScrollPosition<HTMLDivElement>('hint')
 
   return (
     <div className="hint-control">
@@ -20,7 +23,13 @@ export function HintPanel({
         {t('action.hint')}
       </button>
       {hint && (
-        <div className="hint-popover" role="status" dir={direction}>
+        <div
+          className="hint-popover"
+          role="status"
+          dir={direction}
+          ref={scrollRef}
+          onScroll={handleScroll}
+        >
           <div className="hint-popover__header">
             <span>{t('hint.system')}</span>
             <button

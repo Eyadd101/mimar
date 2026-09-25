@@ -18,6 +18,7 @@ import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationKey } from '../i18n/translations'
 import { CampaignResetDialog } from './CampaignResetDialog'
 import { getCustomerSentiment, getRequiredCustomerSentiment } from '../simulation/customerSentiment'
+import { formatElapsedTime } from '../data/timePresentation'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -132,11 +133,11 @@ export function GameStateOverlay({
                 translationKey="metric.remainingBalance"
                 value={`${simulation.balance.toFixed(1)} cr`}
               />
-              <ResultMetric translationKey="metric.gameTime" value={`${simulation.gameTimeSeconds}s`} />
+              <ResultMetric translationKey="metric.duration" value={formatElapsedTime(simulation.gameTimeSeconds)} />
             </>
           ) : (
             <>
-              <ResultMetric translationKey="metric.gameTime" value={`${simulation.gameTimeSeconds}s`} />
+              <ResultMetric translationKey="metric.duration" value={formatElapsedTime(simulation.gameTimeSeconds)} />
               <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
               <ResultMetric
                 translationKey="metric.lowestSatisfaction"

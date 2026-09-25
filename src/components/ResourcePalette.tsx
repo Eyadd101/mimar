@@ -6,6 +6,7 @@ import type {
 import type { StageOneBuildStep } from '../simulation/stageOneOnboardingSimulation'
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
+import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
 
 type ResourcePaletteProps = {
   resources: readonly CampaignResource[]
@@ -21,12 +22,16 @@ export function ResourcePalette({
   currentStep,
 }: ResourcePaletteProps) {
   const { language, t } = useLanguage()
+  const [scrollRef, handleScroll] =
+    useStableScrollPosition<HTMLElement>('stage-one-palette')
 
   return (
     <aside
       className="resource-palette nodrag nopan"
       aria-label={t('palette.title')}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
+      ref={scrollRef}
+      onScroll={handleScroll}
     >
       <div className="resource-palette__heading">
         <span>{t('palette.title')}</span>

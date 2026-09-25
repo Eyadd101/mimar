@@ -24,6 +24,7 @@ import {
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationKey } from '../i18n/translations'
+import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
 
 type ResourceDetailsPanelProps = {
   campaign: CampaignState
@@ -69,6 +70,9 @@ export function ResourceDetailsPanel({
   onStartUpgrade,
 }: ResourceDetailsPanelProps) {
   const { language, t } = useLanguage()
+  const [scrollRef, handleScroll] = useStableScrollPosition<HTMLElement>(
+    `resource-details:${node.id}`,
+  )
   const isAppServer = node.data.kind === 'server'
   const isLoadBalancer = node.data.kind === 'load-balancer'
   const appServer = simulation.appServers.find(
@@ -124,6 +128,8 @@ export function ResourceDetailsPanel({
       className="resource-panel nodrag nopan"
       aria-label={t('resource.details')}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
+      ref={scrollRef}
+      onScroll={handleScroll}
     >
       <div className="resource-panel__header">
         <div>

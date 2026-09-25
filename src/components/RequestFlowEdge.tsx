@@ -44,6 +44,8 @@ export function RequestFlowEdge({
     targetY,
     sourcePosition,
     targetPosition,
+    borderRadius: 14,
+    offset: 18,
   })
   const visual = getRequestFlowVisual(data?.requestsPerSecond ?? 0)
   const requestFlowStyle: RequestFlowStyle = {

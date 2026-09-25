@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import type { StageConfig } from '../data/stages'
 import { useLanguage } from '../i18n/useLanguage'
+import { TechnicalTerm } from './TechnicalTerm'
 
 type StageBriefingOverlayProps = {
   stage: StageConfig
@@ -35,7 +36,7 @@ export function StageBriefingOverlay({
         <p className="stage-briefing-card__eyebrow">
           {t('stage.label')} {stage.sequence} · {t(stage.nameKey)}
         </p>
-        <h2 id={titleId}>{t(step.titleKey)}</h2>
+        <h2 id={titleId}><TechnicalTerm translationKey={step.titleKey} /></h2>
         <p id={descriptionId}>{t(step.messageKey)}</p>
         <div className="stage-briefing-card__footer">
           <span>

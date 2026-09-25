@@ -23,9 +23,49 @@ const {
   simulationClock,
   stageOneOnboardingSimulation,
   stageLearningSimulation,
+  stages,
+  timePresentation,
   trafficSimulation,
   translations,
 } = simulation
+
+test('early campaign pacing reaches each lesson without old passive waits', () => {
+  const [firstUsers, marketing, verticalLimit] = stages.campaignStageConfigs
+
+  assert.equal(firstUsers.primaryObjective.durationSeconds, 140)
+  assert.deepEqual(firstUsers.winCondition.requiredObjectiveIds, [
+    'survive-first-users',
+    'healthy-customers',
+  ])
+  assert.equal(marketing.primaryObjective.durationSeconds, 165)
+  assert.equal(marketing.trafficEvents[0].startsAtSecond, 45)
+  assert.equal(marketing.trafficEvents[0].startsAtSecond + marketing.trafficEvents[0].durationSeconds, 120)
+  assert.equal(verticalLimit.primaryObjective.durationSeconds, 195)
+  assert.equal(verticalLimit.trafficProfile.activeUsersAddedPerInterval, 3)
+})
+
+test('live and results time uses a stable minutes and seconds format', () => {
+  assert.equal(timePresentation.formatElapsedTime(0), '00:00')
+  assert.equal(timePresentation.formatElapsedTime(73), '01:13')
+  assert.equal(timePresentation.formatElapsedTime(3_661.8), '61:01')
+  assert.equal(timePresentation.formatElapsedTime(-5), '00:00')
+})
+
+test('shortened Stage 1 still requires the player to address server pressure', () => {
+  let state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
+
+  state = gameStateSimulation.advanceGameState(
+    state,
+    stages.prototypeStageConfig.primaryObjective.durationSeconds,
+  )
+
+  assert.equal(state.stageRuntime.status, 'playing')
+  assert.ok(state.stageRuntime.simulation.customerSatisfaction < 75)
+  assert.equal(
+    state.stageRuntime.objectiveProgress['healthy-customers'].completed,
+    false,
+  )
+})
 
 test('service failure explanation uses sustained stage latency instead of a recovered final sample', () => {
   const state = createReadyGameState()
@@ -483,7 +523,9 @@ test('the primary survival condition completes at its configured duration', () =
   let state = gameStateSimulation.dismissStageBriefing(
     createReadyGameState(),
   )
-  state = gameStateSimulation.advanceGameState(state, 269)
+  state = gameStateSimulation.beginServerUpgrade(state, 'server')
+  const duration = stages.prototypeStageConfig.primaryObjective.durationSeconds
+  state = gameStateSimulation.advanceGameState(state, duration - 1)
   assert.equal(state.stageRuntime.status, 'playing')
 
   state = gameStateSimulation.advanceGameState(state, 1)

@@ -111,6 +111,6 @@ export const campaignProgressionConfig = {
   minimumNextStageBalance: 100,
   // Stage four introduces two paid resources; its floor includes a recovery
   // buffer so a first-time player can make one reasonable mistake.
-  minimumBalanceByStage: [160, 100, 110, 285, 150, 120, 120, 120, 120, 120],
+  minimumBalanceByStage: [160, 100, 110, 400, 150, 120, 120, 120, 120, 120],
   defaultCampaignSeed: 47_291,
 } as const

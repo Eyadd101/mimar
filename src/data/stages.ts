@@ -195,7 +195,7 @@ export const prototypeStageConfig: StageConfig = {
   trafficProfile: {
     initialActiveUsers: 20,
     activeUserGrowthIntervalSeconds: 5,
-    activeUsersAddedPerInterval: 1,
+    activeUsersAddedPerInterval: 4,
     requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [
@@ -245,7 +245,7 @@ export const prototypeStageConfig: StageConfig = {
     {
       id: 'observe-growth',
       type: 'observe-growth',
-      durationSeconds: 30,
+      durationSeconds: 20,
       titleKey: 'learning.observeGrowth',
     },
     {
@@ -266,13 +266,13 @@ export const prototypeStageConfig: StageConfig = {
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
-  minimumSurvivalDurationSeconds: 270,
+  minimumSurvivalDurationSeconds: 140,
   primaryObjective: {
     id: 'survive-first-users',
     type: 'survive-duration',
     titleKey: 'objective.surviveGrowth.title',
     descriptionKey: 'objective.surviveGrowth.description',
-    durationSeconds: 270,
+    durationSeconds: 140,
   },
   secondaryObjectives: [
     {
@@ -292,7 +292,7 @@ export const prototypeStageConfig: StageConfig = {
   ],
   winCondition: {
     type: 'all-required-objectives',
-    requiredObjectiveIds: ['survive-first-users'],
+    requiredObjectiveIds: ['survive-first-users', 'healthy-customers'],
   },
   starCriteria: {
     twoStars: {
@@ -338,8 +338,8 @@ export const growthPreviewStageConfig: StageConfig = {
       senderKey: 'event.marketing.sender',
       titleKey: 'event.marketing.title',
       messageKey: 'event.marketing.message',
-      startsAtSecond: 120,
-      durationSeconds: 90,
+      startsAtSecond: 45,
+      durationSeconds: 75,
       forecastMinimumMultiplier: 3,
       forecastMaximumMultiplier: 5,
       outcomeProfile: {
@@ -361,7 +361,7 @@ export const growthPreviewStageConfig: StageConfig = {
     type: 'survive-duration',
     titleKey: 'objective.keepGrowing.title',
     descriptionKey: 'objective.keepGrowing.description',
-    durationSeconds: 300,
+    durationSeconds: 165,
   },
   secondaryObjectives: [
     {
@@ -379,7 +379,7 @@ export const growthPreviewStageConfig: StageConfig = {
       minimumSatisfaction: 75,
     },
   ],
-  minimumSurvivalDurationSeconds: 300,
+  minimumSurvivalDurationSeconds: 165,
   winCondition: {
     type: 'all-required-objectives',
     requiredObjectiveIds: ['survive-growth-preview'],
@@ -395,7 +395,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   trafficProfile: {
     initialActiveUsers: 40,
     activeUserGrowthIntervalSeconds: 5,
-    activeUsersAddedPerInterval: 2,
+    activeUsersAddedPerInterval: 3,
     requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [
@@ -411,13 +411,13 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
-  minimumSurvivalDurationSeconds: 330,
+  minimumSurvivalDurationSeconds: 195,
   primaryObjective: {
     id: 'observe-vertical-limit',
     type: 'survive-duration',
     titleKey: 'objective.scalingCeiling.title',
     descriptionKey: 'objective.scalingCeiling.description',
-    durationSeconds: 330,
+    durationSeconds: 195,
   },
   secondaryObjectives: [
     {
@@ -433,7 +433,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
       titleKey: 'objective.controlLatency600.title',
       descriptionKey: 'objective.controlLatency600.description',
       maximumLatencyMs: 600,
-      durationSeconds: 60,
+      durationSeconds: 45,
     },
   ],
   winCondition: {
@@ -446,7 +446,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
     },
     threeStars: {
       minimumSatisfaction: 90,
-      minimumBalance: 100,
+      minimumBalance: 85,
     },
   },
 }

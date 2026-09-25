@@ -6,21 +6,23 @@ import {
 import { useLanguage } from '../i18n/useLanguage'
 import type { StageLearningStepProgress } from '../simulation/stageLearningSimulation'
 import { getCustomerSentiment, getRequiredCustomerSentiment } from '../simulation/customerSentiment'
+import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
 
 type StageObjectivePanelProps = {
   stage: StageConfig
   progress: StageObjectiveProgress
   learningProgress: StageLearningStepProgress[]
-  serviceStarted: boolean
 }
 
 export function StageObjectivePanel({
   stage,
   progress,
   learningProgress,
-  serviceStarted,
 }: StageObjectivePanelProps) {
   const { direction, t } = useLanguage()
+  const [scrollRef, handleScroll] = useStableScrollPosition<HTMLElement>(
+    `objectives:${stage.id}`,
+  )
   const primaryProgress = progress[stage.primaryObjective.id]
   const primaryProgressPercent = primaryProgress
     ? Math.min(Math.round((primaryProgress.current / primaryProgress.target) * 100), 100)
@@ -31,6 +33,8 @@ export function StageObjectivePanel({
       className="stage-objectives nodrag nopan"
       aria-label={t('stage.objectives')}
       dir={direction}
+      ref={scrollRef}
+      onScroll={handleScroll}
     >
       <div className="stage-objectives__heading">
         <span>{t('stage.label')} {stage.sequence}</span>
@@ -46,7 +50,7 @@ export function StageObjectivePanel({
               {stage.learningSteps.length}
             </bdi></strong>
           </div>
-          <ol data-service-started={serviceStarted}>
+          <ol>
             {stage.learningSteps.map((step, index) => {
               const stepProgress = learningProgress.find(
                 (item) => item.id === step.id,

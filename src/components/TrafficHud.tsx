@@ -10,6 +10,7 @@ import { MetricExplanationPanel } from './MetricExplanationPanel'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationMessage } from '../i18n/translations'
 import { getCustomerSentiment } from '../simulation/customerSentiment'
+import { formatElapsedTime } from '../data/timePresentation'
 
 type TrafficHudProps = {
   activeUsers: number
@@ -36,13 +37,6 @@ type TrafficHudProps = {
 
 function formatCredits(value: number) {
   return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
-}
-
-function formatGameTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 export function TrafficHud(props: TrafficHudProps) {
@@ -139,7 +133,7 @@ export function TrafficHud(props: TrafficHudProps) {
     {
       id: 'game-time',
       labelKey: 'metric.gameTime',
-      value: formatGameTime(gameTimeSeconds),
+      value: formatElapsedTime(gameTimeSeconds),
     },
   ]
 

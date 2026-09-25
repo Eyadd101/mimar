@@ -42,7 +42,7 @@ function runCampaign(seed, strategy) {
     for (let tick = 0; tick < 900 && state.stageRuntime.status === 'playing'; tick++) {
       const time = state.stageRuntime.simulation.gameTimeSeconds
       const actionDelay = strategy === 'delayed-decisions' ? 30 : 0
-      if (stageIndex === 0 && time >= 150 + actionDelay) state = game.beginServerUpgrade(state, 'server')
+      if (stageIndex === 0 && time >= 55 + actionDelay) state = game.beginServerUpgrade(state, 'server')
       if (stageIndex >= 3 && time >= actionDelay) {
         state = game.beginLoadBalancerDeployment(state)
         state = placeAndConnectPurchasedResources(state)

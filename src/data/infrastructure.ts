@@ -6,6 +6,7 @@ import {
   type Edge,
   type Node,
   type NodeChange,
+  Position,
 } from '@xyflow/react'
 import type { DatabaseMetrics } from '../simulation/databaseSimulation'
 import type { AppServerMetrics } from '../simulation/appServerSimulation'
@@ -83,19 +84,67 @@ export function createInfrastructureNodes(
 export function createInfrastructureEdges(
   infrastructure: CampaignInfrastructureState,
 ): Edge[] {
-  return infrastructure.connections.map((connection) => ({
-    id: connection.id,
-    source: connection.sourceId,
-    target: connection.targetId,
-    type: 'smoothstep',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: '#648d82',
-      width: 18,
-      height: 18,
-    },
-    style: { stroke: '#648d82', strokeWidth: 1.6 },
-  }))
+  const resourcesById = new Map(
+    infrastructure.resources.map((resource) => [resource.id, resource]),
+  )
+
+  return infrastructure.connections.map((connection) => {
+    const source = resourcesById.get(connection.sourceId)
+    const target = resourcesById.get(connection.targetId)
+    const handles = source && target
+      ? getConnectionHandles(source.position, target.position)
+      : null
+
+    return {
+      id: connection.id,
+      source: connection.sourceId,
+      target: connection.targetId,
+      sourceHandle: handles?.sourceHandle,
+      targetHandle: handles?.targetHandle,
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#648d82',
+        width: 18,
+        height: 18,
+      },
+      style: { stroke: '#648d82', strokeWidth: 1.6 },
+    }
+  })
+}
+
+type HandleSide = 'top' | 'right' | 'bottom' | 'left'
+
+export function getConnectionHandles(
+  source: { x: number; y: number },
+  target: { x: number; y: number },
+) {
+  const horizontalDistance = target.x - source.x
+  const verticalDistance = target.y - source.y
+  let sourceSide: HandleSide
+  let targetSide: HandleSide
+
+  if (Math.abs(horizontalDistance) >= Math.abs(verticalDistance)) {
+    sourceSide = horizontalDistance >= 0 ? 'right' : 'left'
+    targetSide = horizontalDistance >= 0 ? 'left' : 'right'
+  } else {
+    sourceSide = verticalDistance >= 0 ? 'bottom' : 'top'
+    targetSide = verticalDistance >= 0 ? 'top' : 'bottom'
+  }
+
+  return {
+    sourceHandle: `source-${sourceSide}`,
+    targetHandle: `target-${targetSide}`,
+    sourcePosition: handlePositions[sourceSide],
+    targetPosition: handlePositions[targetSide],
+  }
+}
+
+const handlePositions: Record<HandleSide, Position> = {
+  top: Position.Top,
+  right: Position.Right,
+  bottom: Position.Bottom,
+  left: Position.Left,
 }
 
 /**

@@ -80,6 +80,7 @@ export function InfrastructureActionsPanel({
                   loadBalancerResourceConfig.deploymentCost,
                 )
               }
+              purposeKey="build.loadBalancerPurpose"
               onDeploy={onDeployLoadBalancer}
             />
           )}
@@ -103,6 +104,7 @@ export function InfrastructureActionsPanel({
                     ? t('build.placeLoadBalancerFirst')
                     : t('build.loadBalancerFirst')
               }
+              purposeKey="build.appServerPurpose"
               onDeploy={onDeployAppServer}
             />
           )}
@@ -122,7 +124,7 @@ export function InfrastructureActionsPanel({
       )}
       {!deployment && <div className="infrastructure-actions__options">{getUnlockedAdvancedResources(campaign).map(type => {
         const definition = advancedResourceConfigs[type]
-        return <BuildOption key={type} titleKey={definition.labelKey} awsReference={definition.awsReference} cost={definition.deploymentCost} duration={definition.deploymentDurationSeconds} disabled={simulation.balance < definition.deploymentCost} onDeploy={() => onDeployAdvanced(type)} />
+        return <BuildOption key={type} titleKey={definition.labelKey} purposeKey={definition.purposeKey} awsReference={definition.awsReference} cost={definition.deploymentCost} duration={definition.deploymentDurationSeconds} disabled={simulation.balance < definition.deploymentCost} onDeploy={() => onDeployAdvanced(type)} />
       })}</div>}
       {!!campaign.unlockedControls?.length && <p className="infrastructure-actions__ready">{t('advanced.inspectDatabaseControls')}</p>}
     </aside>
@@ -162,6 +164,7 @@ function InventoryOption({
 
 type BuildOptionProps = {
   titleKey: TranslationKey
+  purposeKey?: TranslationKey
   awsReference: string
   cost: number
   duration: number
@@ -172,6 +175,7 @@ type BuildOptionProps = {
 
 function BuildOption({
   titleKey,
+  purposeKey,
   awsReference,
   cost,
   duration,
@@ -187,6 +191,7 @@ function BuildOption({
         <strong><TechnicalTerm translationKey={titleKey} /></strong>
         <span>{awsReference}</span>
       </div>
+      {purposeKey && <p>{t(purposeKey)}</p>}
       <p>{t('common.credits', { value: cost })} · {t('common.gameSeconds', { value: duration })}</p>
       <button type="button" disabled={disabled} onClick={onDeploy}>
         {disabledReason ?? (disabled ? t('resource.insufficientBalance') : t('common.purchasePrepare'))}
