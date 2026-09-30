@@ -56,7 +56,7 @@ import {
   validateCampaignConnection,
   type ConnectionExplanation,
 } from './simulation/connectionValidation'
-import { getStageOneBuildStep } from './simulation/stageOneOnboardingSimulation'
+import { getStageOneBuildStep, getStageOnePortHint } from './simulation/stageOneOnboardingSimulation'
 import './App.css'
 import { useLanguage } from './i18n/useLanguage'
 import type {
@@ -103,6 +103,7 @@ function App() {
   const { direction, t } = useLanguage()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
+  const [connectingSourceId, setConnectingSourceId] = useState<string | null>(null)
   const [hint, setHint] = useState<TranslationMessage | null>(null)
   const [pendingAction, setPendingAction] =
     useState<PendingInfrastructureAction | null>(null)
@@ -190,12 +191,25 @@ function App() {
     [campaign.infrastructure],
   )
   const displayNodes = useMemo(() => {
+    const validateConnection = stage.sequence === 1
+      ? validateStageOneConnection
+      : validateCampaignConnection
     const presentedNodes = nodes.map((node) => ({
       ...node,
       selected: node.id === selectedNodeId,
       data: {
         ...node.data,
         canConnect: gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted),
+        portHint: stage.sequence === 1 && !serviceStarted
+          ? getStageOnePortHint(stageOneBuildStep.id, node.id)
+          : undefined,
+        connectionPortState: connectingSourceId
+          ? node.id === connectingSourceId
+            ? 'origin' as const
+            : validateConnection(campaign.infrastructure, connectingSourceId, node.id).valid
+              ? 'valid' as const
+              : 'invalid' as const
+          : undefined,
         isAvailable: !traffic.failedResourceIds.includes(node.id) && !(node.data.kind === 'database' && traffic.databaseData.dataLost),
         metricSummary: getAdvancedNodeSummary(node.data.kind, traffic),
         databaseMetrics: node.data.kind === 'database' ? traffic.database : undefined,
@@ -214,10 +228,13 @@ function App() {
     )
   }, [
     flowNodeRuntime,
+    campaign.infrastructure,
+    connectingSourceId,
     gameStatus,
     nodes,
     selectedNodeId,
     serviceStarted,
+    stageOneBuildStep.id,
     stage.sequence,
     traffic,
   ])
@@ -453,6 +470,10 @@ function App() {
           edges={displayEdges}
           onNodesChange={handleNodesChange}
           onConnect={handleConnect}
+          onConnectStart={(_, connection) => {
+            setConnectingSourceId(connection.handleType === 'source' ? connection.nodeId : null)
+          }}
+          onConnectEnd={() => setConnectingSourceId(null)}
           onEdgesDelete={handleEdgesDelete}
           onReconnect={handleReconnect}
           onNodeClick={(_, node) => {

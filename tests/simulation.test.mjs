@@ -32,16 +32,16 @@ const {
 test('early campaign pacing reaches each lesson without old passive waits', () => {
   const [firstUsers, marketing, verticalLimit] = stages.campaignStageConfigs
 
-  assert.equal(firstUsers.primaryObjective.durationSeconds, 140)
+  assert.equal(firstUsers.primaryObjective.durationSeconds, 90)
   assert.deepEqual(firstUsers.winCondition.requiredObjectiveIds, [
     'survive-first-users',
     'healthy-customers',
   ])
-  assert.equal(marketing.primaryObjective.durationSeconds, 165)
-  assert.equal(marketing.trafficEvents[0].startsAtSecond, 45)
-  assert.equal(marketing.trafficEvents[0].startsAtSecond + marketing.trafficEvents[0].durationSeconds, 120)
-  assert.equal(verticalLimit.primaryObjective.durationSeconds, 195)
-  assert.equal(verticalLimit.trafficProfile.activeUsersAddedPerInterval, 3)
+  assert.equal(marketing.primaryObjective.durationSeconds, 100)
+  assert.equal(marketing.trafficEvents[0].startsAtSecond, 25)
+  assert.equal(marketing.trafficEvents[0].startsAtSecond + marketing.trafficEvents[0].durationSeconds, 85)
+  assert.equal(verticalLimit.primaryObjective.durationSeconds, 125)
+  assert.equal(verticalLimit.trafficProfile.activeUsersAddedPerInterval, 4)
 })
 
 test('live and results time uses a stable minutes and seconds format', () => {
@@ -51,7 +51,7 @@ test('live and results time uses a stable minutes and seconds format', () => {
   assert.equal(timePresentation.formatElapsedTime(-5), '00:00')
 })
 
-test('shortened Stage 1 still requires the player to address server pressure', () => {
+test('Stage 1 exposes pressure within 90 seconds and rewards scaling', () => {
   let state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
 
   state = gameStateSimulation.advanceGameState(
@@ -59,12 +59,102 @@ test('shortened Stage 1 still requires the player to address server pressure', (
     stages.prototypeStageConfig.primaryObjective.durationSeconds,
   )
 
-  assert.equal(state.stageRuntime.status, 'playing')
-  assert.ok(state.stageRuntime.simulation.customerSatisfaction < 75)
-  assert.equal(
-    state.stageRuntime.objectiveProgress['healthy-customers'].completed,
-    false,
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.equal(state.stageRuntime.simulation.appServers[0].cpuUsage, 100)
+  assert.ok(state.stageRuntime.simulation.applicationLatencyMs > 400)
+  assert.ok(state.stageRuntime.stageRating.stars < 3)
+
+  state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
+  state = gameStateSimulation.advanceGameState(state, 50)
+  state = gameStateSimulation.beginServerUpgrade(state, 'server')
+  state = gameStateSimulation.advanceGameState(state, 40)
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.equal(state.stageRuntime.stageRating.stars, 3)
+})
+
+test('Stages 1–3 finish at the shorter targets with an early event and achievable stars', () => {
+  let state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
+  state = gameStateSimulation.advanceGameState(state, 50)
+  state = gameStateSimulation.beginServerUpgrade(state, 'server')
+  state = gameStateSimulation.advanceGameState(state, 40)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 90)
+  assert.equal(state.stageRuntime.stageRating.stars, 3)
+
+  state = gameStateSimulation.dismissStageBriefing(
+    gameStateSimulation.continueToNextStage(state),
   )
+  assert.equal(campaignSimulation.getPrimaryAppServer(state.campaign).tierId, 'medium')
+  state = gameStateSimulation.advanceGameState(state, 25)
+  assert.equal(state.stageRuntime.trafficEvents['marketing-launch'].status, 'active')
+
+  const storage = createMemoryStorage()
+  assert.equal(campaignSave.saveGameCheckpoint(state, 1, storage), true)
+  const saved = campaignSave.loadCampaignSave(storage)
+  assert.equal(saved.status, 'ready')
+  state = saved.gameState
+  state = gameStateSimulation.advanceGameState(state, 60)
+  assert.equal(state.stageRuntime.trafficEvents['marketing-launch'].status, 'completed')
+  assert.equal(state.stageRuntime.status, 'playing')
+  state = gameStateSimulation.advanceGameState(state, 15)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 100)
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.equal(state.stageRuntime.stageRating.stars, 3)
+
+  state = gameStateSimulation.dismissStageBriefing(
+    gameStateSimulation.continueToNextStage(state),
+  )
+  assert.equal(campaignSimulation.getPrimaryAppServer(state.campaign).tierId, 'medium')
+  state = gameStateSimulation.advanceGameState(state, 90)
+  assert.equal(state.stageRuntime.status, 'playing')
+  assert.ok(state.stageRuntime.simulation.appServers[0].cpuUsage >= 95)
+  state = gameStateSimulation.advanceGameState(state, 35)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 125)
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.equal(state.stageRuntime.stageRating.stars, 3)
+  assert.ok(state.stageRuntime.simulation.applicationLatencyMs > 400)
+  assert.equal(stages.campaignStageConfigs[3].primaryObjective.durationSeconds, 390)
+})
+
+test('Stage 2 three stars reject sustained poor response time even with ample balance', () => {
+  let state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
+  state = gameStateSimulation.advanceGameState(state, 90)
+  state = gameStateSimulation.dismissStageBriefing(
+    gameStateSimulation.continueToNextStage(state),
+  )
+  state = gameStateSimulation.advanceGameState(state, 100)
+
+  const statistics = state.stageRuntime.statistics
+  const averageLatency = Math.round(
+    statistics.cumulativeLatencyMs / statistics.latencySampleCount,
+  )
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.ok(state.stageRuntime.simulation.balance > 85)
+  assert.ok(averageLatency > stages.campaignStageConfigs[1].starCriteria.threeStars.maximumAverageLatencyMs)
+  assert.equal(state.stageRuntime.stageRating.stars, 2)
+})
+
+test('2x and 4x complete the shorter first stage in the expected real ticks', () => {
+  for (const speed of [2, 4]) {
+    let state = gameStateSimulation.dismissStageBriefing(createReadyGameState())
+    let realTicks = 0
+    while (state.stageRuntime.status === 'playing') {
+      state = gameStateSimulation.advanceGameState(
+        state,
+        simulationClock.calculateTickGameSeconds(speed, true),
+      )
+      realTicks += 1
+    }
+    assert.equal(realTicks, Math.ceil(90 / speed))
+    assert.equal(state.stageRuntime.simulation.gameTimeSeconds, 90)
+  }
+})
+
+test('Stage 1 guided wiring hints identify only the current source and target', () => {
+  assert.equal(stageOneOnboardingSimulation.getStageOnePortHint('connect-users-app-server', 'users'), 'source')
+  assert.equal(stageOneOnboardingSimulation.getStageOnePortHint('connect-users-app-server', 'server'), 'target')
+  assert.equal(stageOneOnboardingSimulation.getStageOnePortHint('connect-app-server-database', 'server'), 'source')
+  assert.equal(stageOneOnboardingSimulation.getStageOnePortHint('connect-app-server-database', 'database'), 'target')
+  assert.equal(stageOneOnboardingSimulation.getStageOnePortHint('place-database', 'server'), undefined)
 })
 
 test('service failure explanation uses sustained stage latency instead of a recovered final sample', () => {

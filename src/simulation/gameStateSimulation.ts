@@ -575,13 +575,13 @@ function advanceOneGameSecond(currentState: GameState): GameState {
   )
   const stageWon =
     !gameOverReason && isStageComplete(stage, objectiveProgress)
-  const stageRating = stageWon
-    ? calculateStageRating(stage, simulation, objectiveProgress)
-    : null
   const statistics = advanceStageStatistics(
     currentState.stageRuntime.statistics,
     simulation,
   )
+  const stageRating = stageWon
+    ? calculateStageRating(stage, simulation, objectiveProgress, statistics)
+    : null
 
   return {
     ...currentState,

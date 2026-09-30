@@ -98,6 +98,8 @@ export function InfrastructureNode({ id, data }: NodeProps<InfrastructureFlowNod
       data-kind={data.kind}
       data-available={data.isAvailable}
       data-status={data.appServerMetrics?.status ?? data.databaseMetrics?.status}
+      data-port-hint={data.portHint}
+      data-connection-port-state={data.connectionPortState}
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       <NodeHandles
@@ -192,6 +194,8 @@ function NodeHandles({
   type: 'source' | 'target'
   canConnect: boolean
 }) {
+  // Overlapping centers give one visual port per side. React Flow chooses the
+  // opposite handle type when a dragged wire reaches either shared center.
   return infrastructureHandleSides.map((side) => {
     const position = handlePositions[side]
 
@@ -203,28 +207,18 @@ function NodeHandles({
         position={position}
         isConnectable={canConnect}
         isConnectableStart={canConnect && type === 'source'}
-        style={getHandleStyle(position, type)}
+        style={getHandleStyle()}
       />
     )
   })
 }
 
-function getHandleStyle(
-  position: Position,
-  type: 'source' | 'target',
-): CSSProperties {
-  const { hitAreaPixels, sideOffsetPixels } = infrastructureHandleInteraction
-  const positionValue =
-    type === 'target'
-      ? `calc(50% - ${sideOffsetPixels}px)`
-      : `calc(50% + ${sideOffsetPixels}px)`
+function getHandleStyle(): CSSProperties {
+  const { hitAreaPixels } = infrastructureHandleInteraction
   const hitArea = `${hitAreaPixels}px`
 
   return {
     width: hitArea,
     height: hitArea,
-    ...(position === Position.Top || position === Position.Bottom
-      ? { left: positionValue }
-      : { top: positionValue }),
   }
 }

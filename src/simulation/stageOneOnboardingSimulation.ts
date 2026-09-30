@@ -115,3 +115,18 @@ export function isStageOneBuildComplete(
 ) {
   return getStageOneBuildStep(infrastructure).id === 'complete'
 }
+
+export function getStageOnePortHint(
+  stepId: StageOneBuildStepId,
+  resourceId: string,
+): 'source' | 'target' | undefined {
+  const connection = stepId === 'connect-users-app-server'
+    ? { sourceId: 'users', targetId: 'server' }
+    : stepId === 'connect-app-server-database'
+      ? { sourceId: 'server', targetId: 'database' }
+      : null
+
+  if (resourceId === connection?.sourceId) return 'source'
+  if (resourceId === connection?.targetId) return 'target'
+  return undefined
+}

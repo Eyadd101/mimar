@@ -2,6 +2,10 @@ import type { StageConfig } from '../data/stages'
 import type { StageObjectiveProgress } from './stageObjectiveSimulation'
 import { isStageComplete } from './stageObjectiveSimulation'
 import type { TrafficSimulationState } from './trafficSimulation'
+import {
+  calculateAverageLatency,
+  type StageStatistics,
+} from './stageStatisticsSimulation'
 
 export type StarRatingExplanation = {
   star: 1 | 2 | 3
@@ -17,6 +21,7 @@ export function calculateStageRating(
   stage: StageConfig,
   simulation: TrafficSimulationState,
   objectiveProgress: StageObjectiveProgress,
+  statistics: StageStatistics,
 ): StageRating {
   const earnedFirstStar = isStageComplete(stage, objectiveProgress)
   const earnedSecondStar =
@@ -27,7 +32,10 @@ export function calculateStageRating(
     earnedSecondStar &&
     simulation.customerSatisfaction >=
       stage.starCriteria.threeStars.minimumSatisfaction &&
-    simulation.balance >= stage.starCriteria.threeStars.minimumBalance
+    simulation.balance >= stage.starCriteria.threeStars.minimumBalance &&
+    (stage.starCriteria.threeStars.maximumAverageLatencyMs === undefined ||
+      calculateAverageLatency(statistics) <=
+        stage.starCriteria.threeStars.maximumAverageLatencyMs)
 
   return {
     stars: earnedThirdStar ? 3 : earnedSecondStar ? 2 : earnedFirstStar ? 1 : 0,

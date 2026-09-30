@@ -77,11 +77,23 @@ export function GameStateOverlay({
     const sentiment = getRequiredCustomerSentiment(
       stage.starCriteria.threeStars.minimumSatisfaction,
     )
-    return t(earned ? 'game.star3Earned' : 'game.star3Missed', {
+    const averageLatencyTarget = stage.starCriteria.threeStars.maximumAverageLatencyMs
+    const variables = {
       satisfaction: `${sentiment.emoji} ${t(sentiment.labelKey)}`,
       balance: earned
         ? simulation.balance.toFixed(1)
         : stage.starCriteria.threeStars.minimumBalance,
+    }
+
+    if (averageLatencyTarget === undefined) {
+      return t(earned ? 'game.star3Earned' : 'game.star3Missed', variables)
+    }
+
+    return t(earned ? 'game.star3LatencyEarned' : 'game.star3LatencyMissed', {
+      ...variables,
+      latency: earned
+        ? calculateAverageLatency(stageStatistics)
+        : averageLatencyTarget,
     })
   }
 

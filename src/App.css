@@ -2051,34 +2051,69 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 9px;
-  height: 9px;
-  border: 2px solid #18211c;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #18211c;
   border-radius: 50%;
-  background: #91b7a4;
+  background: #a4c7b3;
   content: '';
-  opacity: 0.68;
+  opacity: 0;
+  pointer-events: none;
   transform: translate(-50%, -50%);
-  transition: width 120ms, height 120ms, border-color 120ms, opacity 120ms;
+  transition: width 150ms, height 150ms, background 150ms, opacity 150ms, box-shadow 150ms;
 }
 
-.infrastructure-node .react-flow__handle.target::after {
-  border-color: #91b7a4;
-  background: #18211c;
+.infrastructure-node .react-flow__handle.source::after {
+  opacity: 0.18;
 }
 
-.react-flow__node:hover .infrastructure-node .react-flow__handle::after,
-.react-flow__node.selected .infrastructure-node .react-flow__handle::after,
-.infrastructure-node .react-flow__handle.connectingfrom::after,
-.infrastructure-node .react-flow__handle.connectingto::after {
-  width: 11px;
-  height: 11px;
-  opacity: 1;
+.react-flow__node:hover .infrastructure-node .react-flow__handle.source::after,
+.react-flow__node.selected .infrastructure-node .react-flow__handle.source::after,
+.infrastructure-node[data-port-hint='source'] .react-flow__handle.source::after,
+.infrastructure-node[data-connection-port-state='origin'] .react-flow__handle.source::after {
+  width: 8px;
+  height: 8px;
+  opacity: 0.92;
 }
 
-.infrastructure-node .react-flow__handle.connectingto.valid::after {
-  border-color: #b5f0cc;
-  background: #4b8d70;
+.react-flow__node .infrastructure-node[data-port-hint='target'] .react-flow__handle.source::after,
+.react-flow__node .infrastructure-node[data-connection-port-state='valid'] .react-flow__handle.source::after,
+.react-flow__node .infrastructure-node[data-connection-port-state='invalid'] .react-flow__handle.source::after {
+  opacity: 0;
+}
+
+.infrastructure-node[data-port-hint='target'] .react-flow__handle.target,
+.infrastructure-node[data-connection-port-state='valid'] .react-flow__handle.target {
+  z-index: 1;
+}
+
+.infrastructure-node[data-port-hint='target'] .react-flow__handle.target::after,
+.infrastructure-node[data-connection-port-state='valid'] .react-flow__handle.target::after {
+  width: 8px;
+  height: 8px;
+  background: #9dd7b4;
+  opacity: 0.95;
+}
+
+.infrastructure-node[data-connection-port-state='valid'] .react-flow__handle.target.connectingto::after {
+  width: 10px;
+  height: 10px;
+  background: #b5f0cc;
+  box-shadow: 0 0 0 5px #b5f0cc30;
+}
+
+.infrastructure-node[data-port-hint] .react-flow__handle::after {
+  animation: guided-port-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes guided-port-pulse {
+  50% { box-shadow: 0 0 0 5px #b5f0cc20; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infrastructure-node[data-port-hint] .react-flow__handle::after {
+    animation: none;
+  }
 }
 
 .request-flow__pulse {

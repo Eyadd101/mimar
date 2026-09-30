@@ -446,6 +446,16 @@ test('connection handles provide forgiving four-side targets for every required 
     s.infrastructureData.infrastructureHandleInteraction.connectionRadiusPixels >=
       s.infrastructureData.infrastructureHandleInteraction.hitAreaPixels,
   )
+  for (const [target, sourceHandle, targetHandle] of [
+    [{ x: 100, y: 0 }, 'source-right', 'target-left'],
+    [{ x: -100, y: 0 }, 'source-left', 'target-right'],
+    [{ x: 0, y: 100 }, 'source-bottom', 'target-top'],
+    [{ x: 0, y: -100 }, 'source-top', 'target-bottom'],
+  ]) {
+    const handles = s.infrastructureData.getConnectionHandles({ x: 0, y: 0 }, target)
+    assert.equal(handles.sourceHandle, sourceHandle)
+    assert.equal(handles.targetHandle, targetHandle)
+  }
 
   const graph = { ...expandedCampaign().infrastructure, connections: [] }
   for (const [sourceId, targetId] of [

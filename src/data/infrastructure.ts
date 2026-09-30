@@ -27,13 +27,14 @@ export type InfrastructureNodeData = {
   databaseMetrics?: DatabaseMetrics
   appServerMetrics?: AppServerMetrics
   canConnect?: boolean
+  portHint?: 'source' | 'target'
+  connectionPortState?: 'origin' | 'valid' | 'invalid'
 }
 
 export type InfrastructureFlowNode = Node<InfrastructureNodeData, 'infrastructure'>
 
 export const infrastructureHandleInteraction = {
   hitAreaPixels: 28,
-  sideOffsetPixels: 16,
   connectionRadiusPixels: 34,
 } as const
 
