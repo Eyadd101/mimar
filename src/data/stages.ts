@@ -246,7 +246,7 @@ export const prototypeStageConfig: StageConfig = {
     {
       id: 'observe-growth',
       type: 'observe-growth',
-      durationSeconds: 20,
+      durationSeconds: 15,
       titleKey: 'learning.observeGrowth',
     },
     {
@@ -267,13 +267,13 @@ export const prototypeStageConfig: StageConfig = {
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
-  minimumSurvivalDurationSeconds: 90,
+  minimumSurvivalDurationSeconds: 70,
   primaryObjective: {
     id: 'survive-first-users',
     type: 'survive-duration',
     titleKey: 'objective.surviveGrowth.title',
     descriptionKey: 'objective.surviveGrowth.description',
-    durationSeconds: 90,
+    durationSeconds: 70,
   },
   secondaryObjectives: [
     {
@@ -302,7 +302,7 @@ export const prototypeStageConfig: StageConfig = {
     threeStars: {
       minimumSatisfaction: 90,
       minimumBalance: 75,
-      maximumAverageLatencyMs: 350,
+      maximumAverageLatencyMs: 210,
     },
   },
   failureConditions: [
@@ -323,8 +323,8 @@ export const growthPreviewStageConfig: StageConfig = {
   storyBriefingKey: 'stage.marketingCampaign.briefing',
   trafficProfile: {
     initialActiveUsers: 20,
-    activeUserGrowthIntervalSeconds: 10,
-    activeUsersAddedPerInterval: 2,
+    activeUserGrowthIntervalSeconds: 12,
+    activeUsersAddedPerInterval: 1,
     requestsPerUserPerSecond: 0.1,
   },
   tutorialSteps: [],
@@ -340,8 +340,8 @@ export const growthPreviewStageConfig: StageConfig = {
       senderKey: 'event.marketing.sender',
       titleKey: 'event.marketing.title',
       messageKey: 'event.marketing.message',
-      startsAtSecond: 25,
-      durationSeconds: 60,
+      startsAtSecond: 20,
+      durationSeconds: 50,
       forecastMinimumMultiplier: 3,
       forecastMaximumMultiplier: 5,
       outcomeProfile: {
@@ -363,7 +363,7 @@ export const growthPreviewStageConfig: StageConfig = {
     type: 'survive-duration',
     titleKey: 'objective.keepGrowing.title',
     descriptionKey: 'objective.keepGrowing.description',
-    durationSeconds: 100,
+    durationSeconds: 85,
   },
   secondaryObjectives: [
     {
@@ -381,7 +381,7 @@ export const growthPreviewStageConfig: StageConfig = {
       minimumSatisfaction: 75,
     },
   ],
-  minimumSurvivalDurationSeconds: 100,
+  minimumSurvivalDurationSeconds: 85,
   winCondition: {
     type: 'all-required-objectives',
     requiredObjectiveIds: ['survive-growth-preview'],
@@ -391,7 +391,7 @@ export const growthPreviewStageConfig: StageConfig = {
     threeStars: {
       minimumSatisfaction: 80,
       minimumBalance: 85,
-      maximumAverageLatencyMs: 800,
+      maximumAverageLatencyMs: 500,
     },
   },
 }
@@ -421,13 +421,13 @@ export const verticalScalingLimitStageConfig: StageConfig = {
   ],
   trafficEvents: [],
   unlocksResourceTypes: [],
-  minimumSurvivalDurationSeconds: 125,
+  minimumSurvivalDurationSeconds: 110,
   primaryObjective: {
     id: 'observe-vertical-limit',
     type: 'survive-duration',
     titleKey: 'objective.scalingCeiling.title',
     descriptionKey: 'objective.scalingCeiling.description',
-    durationSeconds: 125,
+    durationSeconds: 110,
   },
   secondaryObjectives: [
     {
@@ -443,7 +443,7 @@ export const verticalScalingLimitStageConfig: StageConfig = {
       titleKey: 'objective.controlLatency600.title',
       descriptionKey: 'objective.controlLatency600.description',
       maximumLatencyMs: 600,
-      durationSeconds: 45,
+      durationSeconds: 35,
     },
   ],
   winCondition: {
@@ -500,8 +500,8 @@ export const surviveTheLaunchStageConfig: StageConfig = {
       senderKey: 'event.launch.sender',
       titleKey: 'event.launch.title',
       messageKey: 'event.launch.message',
-      startsAtSecond: 130,
-      durationSeconds: 230,
+      startsAtSecond: 80,
+      durationSeconds: 60,
       forecastMinimumMultiplier: 4.5,
       forecastMaximumMultiplier: 6.5,
       outcomeProfile: {
@@ -518,13 +518,13 @@ export const surviveTheLaunchStageConfig: StageConfig = {
     },
   ],
   unlocksResourceTypes: ['load-balancer'],
-  minimumSurvivalDurationSeconds: 390,
+  minimumSurvivalDurationSeconds: 145,
   primaryObjective: {
     id: 'survive-feature-launch',
     type: 'survive-duration',
     titleKey: 'objective.surviveLaunch.title',
     descriptionKey: 'objective.surviveLaunch.description',
-    durationSeconds: 390,
+    durationSeconds: 145,
   },
   secondaryObjectives: [
     {
@@ -547,7 +547,7 @@ export const surviveTheLaunchStageConfig: StageConfig = {
       titleKey: 'objective.responsiveLaunch.title',
       descriptionKey: 'objective.responsiveLaunch.description',
       maximumLatencyMs: 400,
-      durationSeconds: 120,
+      durationSeconds: 40,
     },
   ],
   winCondition: {
@@ -561,6 +561,7 @@ export const surviveTheLaunchStageConfig: StageConfig = {
     threeStars: {
       minimumSatisfaction: 90,
       minimumBalance: 90,
+      maximumAverageLatencyMs: 260,
     },
   },
 }

@@ -11,6 +11,7 @@ export function createExpandedStage(options: {
   storyKey: TranslationKey
   lessonKey: TranslationKey
   durationSeconds: number
+  responsiveDurationSeconds?: number
   trafficProfile: StageTrafficProfile
   unlocks?: StageConfig['unlocksResourceTypes']
 }): StageConfig {
@@ -24,7 +25,7 @@ export function createExpandedStage(options: {
     minimumSurvivalDurationSeconds: options.durationSeconds,
     primaryObjective: { id: 'survive', type: 'survive-duration', titleKey: 'advanced.objective', descriptionKey: 'advanced.objectiveDescription', durationSeconds: options.durationSeconds },
     secondaryObjectives: [
-      { id: 'responsive', type: 'maintain-latency', titleKey: 'advanced.responsive', descriptionKey: 'advanced.responsiveDescription', maximumLatencyMs: 350, durationSeconds: 60 },
+      { id: 'responsive', type: 'maintain-latency', titleKey: 'advanced.responsive', descriptionKey: 'advanced.responsiveDescription', maximumLatencyMs: 350, durationSeconds: options.responsiveDurationSeconds ?? 60 },
       { id: 'satisfied', type: 'finish-satisfaction', titleKey: 'metric.satisfaction', descriptionKey: 'advanced.satisfactionGoal', minimumSatisfaction: 50 },
       { id: 'solvent', type: 'finish-balance', titleKey: 'metric.balance', descriptionKey: 'advanced.solvent', minimumBalance: 1 },
     ],
@@ -37,11 +38,12 @@ export function createExpandedStage(options: {
 export const databaseBottleneckStage = createExpandedStage({
   id: 'database-bottleneck', sequence: 5,
   nameKey: 'advanced.stage5', storyKey: 'advanced.stage5Story', lessonKey: 'advanced.stage5Lesson',
-  durationSeconds: 330,
+  durationSeconds: 160, responsiveDurationSeconds: 45,
   trafficProfile: { initialActiveUsers: 120, activeUserGrowthIntervalSeconds: 10, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 5 },
 })
 
 databaseBottleneckStage.unlocksControls = ['database-scaling']
+databaseBottleneckStage.starCriteria.threeStars.maximumAverageLatencyMs = 220
 databaseBottleneckStage.tutorialSteps = [
   { titleKey: 'advanced.stage5', messageKey: 'advanced.stage5Story' },
   { titleKey: 'advanced.database', messageKey: 'advanced.databaseIntro' },
@@ -50,13 +52,14 @@ databaseBottleneckStage.tutorialSteps = [
 export const readHeavyStage = createExpandedStage({
   id: 'read-heavy-traffic', sequence: 6,
   nameKey: 'advanced.stage6', storyKey: 'advanced.stage6Story', lessonKey: 'advanced.stage6Lesson',
-  durationSeconds: 360, unlocks: ['cache'],
-  trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 8 },
+  durationSeconds: 195, responsiveDurationSeconds: 45, unlocks: ['cache'],
+  trafficProfile: { initialActiveUsers: 150, activeUserGrowthIntervalSeconds: 20, activeUsersAddedPerInterval: 1, requestsPerUserPerSecond: .1, queriesPerRequest: 15 },
 })
 readHeavyStage.tutorialSteps = [
   { titleKey: 'advanced.stage6', messageKey: 'advanced.stage6Story' },
   { titleKey: 'advanced.cache', messageKey: 'advanced.cacheIntro' },
 ]
+readHeavyStage.starCriteria.threeStars.maximumAverageLatencyMs = 245
 
 export const backgroundStage = createExpandedStage({
   id: 'too-much-work', sequence: 7,
@@ -121,14 +124,14 @@ uploadsStage.trafficProfile.failures = [{ id: 'server-restart', resourceId: 'ser
 recoveryStage.trafficProfile.failures = [{ id: 'database-maintenance', resourceId: 'database', labelKey: 'advanced.database', startsAtSecond: 300, durationSeconds: 15 }]
 
 /** Small, forecasted traffic lifts provide a second observation point after deployment. */
-function workloadEvent(id: string, durationSeconds: number, range: readonly [number, number]): StageConfig['trafficEvents'][number] {
+function workloadEvent(id: string, startsAtSecond: number, durationSeconds: number, range: readonly [number, number]): StageConfig['trafficEvents'][number] {
   return {
     id, type: 'traffic-multiplier', senderKey: 'advanced.productTeam', titleKey: 'advanced.featureAdoption', messageKey: 'advanced.featureAdoptionStory',
-    startsAtSecond: 90, durationSeconds,
+    startsAtSecond, durationSeconds,
     forecastMinimumMultiplier: range[0], forecastMaximumMultiplier: range[1],
     outcomeProfile: { typicalProbability: 1, moderatelyLowerProbability: 0, moderatelyHigherProbability: 0, tailProbability: 0,
       typicalRange: range, moderatelyLowerRange: range, moderatelyHigherRange: range, tailRange: range, tailExplanationKey: 'advanced.featureAdoptionStory' },
   }
 }
-databaseBottleneckStage.trafficEvents = [workloadEvent('database-adoption', 150, [1.1, 1.2])]
-readHeavyStage.trafficEvents = [workloadEvent('dashboard-adoption', 180, [1.08, 1.12])]
+databaseBottleneckStage.trafficEvents = [workloadEvent('database-adoption', 45, 110, [1.1, 1.2])]
+readHeavyStage.trafficEvents = [workloadEvent('dashboard-adoption', 45, 140, [1.12, 1.18])]

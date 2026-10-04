@@ -370,8 +370,11 @@ test('version 4 repairs a paused checkpoint saved before placed server metrics r
 test('Stage 4 warns before deployment time and early campaign economy requires choices', () => {
   assert.equal(campaign.createInitialCampaignState().balance, 160)
   const launch = stages.campaignStageConfigs[3]
-  assert.ok(launch.trafficEvents[0].startsAtSecond >= 120)
-  assert.ok(launch.trafficEvents[0].startsAtSecond > 20 + 30)
+  assert.equal(launch.trafficEvents[0].startsAtSecond, 80)
+  assert.ok(launch.trafficEvents[0].startsAtSecond >
+    baseConfig.loadBalancerResourceConfig.deploymentDurationSeconds +
+    baseConfig.additionalAppServerConfig.deploymentDurationSeconds)
+  assert.equal(launch.trafficEvents[0].startsAtSecond + launch.trafficEvents[0].durationSeconds, 140)
   assert.equal(baseConfig.additionalAppServerConfig.initialTierId, 'small')
 })
 test('localized player copy uses natural time terms', () => {
