@@ -43,8 +43,15 @@ export const appServerResourceConfig = {
 export const serverUpgradeConfig = {
   targetTierId: 'medium' satisfies ServerTierId,
   upgradeCost: 100,
+  stageFourUpgradeCost: 120,
   deploymentDurationSeconds: 30,
 } as const
+
+export function getServerUpgradeCost(stageSequence: number): number {
+  return stageSequence === 4
+    ? serverUpgradeConfig.stageFourUpgradeCost
+    : serverUpgradeConfig.upgradeCost
+}
 
 export const loadBalancerResourceConfig = {
   name: 'Load Balancer',

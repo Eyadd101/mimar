@@ -7,6 +7,7 @@ import {
 import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
+import { formatCredits } from '../data/creditPresentation'
 
 type MetricExplanationPanelProps = {
   metricId: MetricId
@@ -75,19 +76,19 @@ export function MetricExplanationPanel({
           <dl className="metric-explanation__values">
             <div>
               <dt><TechnicalTerm translationKey="metric.revenue" /></dt>
-              <dd>+{snapshot.revenuePerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+              <dd>+{formatCredits(snapshot.revenuePerPeriod)} / {snapshot.costPeriodSeconds}s</dd>
             </div>
             <div>
               <dt><TechnicalTerm translationKey="metric.infrastructureCost" /></dt>
-              <dd>−{snapshot.infrastructureCostPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+              <dd>−{formatCredits(snapshot.infrastructureCostPerPeriod)} / {snapshot.costPeriodSeconds}s</dd>
             </div>
             <div>
               <dt><TechnicalTerm translationKey="metric.incidentCosts" /></dt>
-              <dd>−{t('common.total', { value: snapshot.incidentCosts.toFixed(1) })}</dd>
+              <dd>−{t('common.total', { value: formatCredits(snapshot.incidentCosts) })}</dd>
             </div>
             <div>
               <dt><TechnicalTerm translationKey="metric.netCashFlow" /></dt>
-              <dd>{snapshot.netCashFlowPerPeriod > 0 ? '+' : ''}{snapshot.netCashFlowPerPeriod.toFixed(1)} / {snapshot.costPeriodSeconds}s</dd>
+              <dd>{snapshot.netCashFlowPerPeriod > 0 ? '+' : ''}{formatCredits(snapshot.netCashFlowPerPeriod)} / {snapshot.costPeriodSeconds}s</dd>
             </div>
           </dl>
         </>

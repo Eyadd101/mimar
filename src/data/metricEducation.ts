@@ -6,6 +6,7 @@ import type {
   TranslationKey,
   TranslationMessage,
 } from '../i18n/translations'
+import { formatCredits } from './creditPresentation'
 
 export type MetricId =
   | 'active-users'
@@ -238,7 +239,7 @@ export function getMetricCurrentReason(
       return {
         key: 'reason.cost',
         variables: {
-          cost: snapshot.infrastructureCostPerPeriod,
+          cost: formatCredits(snapshot.infrastructureCostPerPeriod),
           seconds: snapshot.costPeriodSeconds,
         },
       }

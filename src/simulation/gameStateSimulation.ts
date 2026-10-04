@@ -31,6 +31,7 @@ import {
 } from './campaignSimulation'
 import {
   additionalAppServerConfig,
+  getServerUpgradeCost,
   loadBalancerResourceConfig,
 } from './config'
 import { canAffordCost, deductCost } from './economySimulation'
@@ -184,6 +185,7 @@ export function beginServerUpgrade(
   const simulation = startServerUpgrade(
     currentState.stageRuntime.simulation,
     resourceId,
+    getServerUpgradeCost(getCurrentStage(currentState).sequence),
   )
 
   if (simulation === currentState.stageRuntime.simulation) {

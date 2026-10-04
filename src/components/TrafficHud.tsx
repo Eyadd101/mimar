@@ -11,6 +11,7 @@ import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationMessage } from '../i18n/translations'
 import { getCustomerSentiment } from '../simulation/customerSentiment'
 import { formatElapsedTime } from '../data/timePresentation'
+import { formatCredits } from '../data/creditPresentation'
 
 type TrafficHudProps = {
   activeUsers: number
@@ -33,10 +34,6 @@ type TrafficHudProps = {
   serviceStarted: boolean
   isPaused: boolean
   isServiceOverloaded: boolean
-}
-
-function formatCredits(value: number) {
-  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
 }
 
 export function TrafficHud(props: TrafficHudProps) {

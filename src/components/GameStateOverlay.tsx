@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { advancedResourceConfigs, type AdvancedResourceType } from '../simulation/expansionConfig'
 import type {
   GameOverReason,
@@ -19,6 +19,7 @@ import type { TranslationKey } from '../i18n/translations'
 import { CampaignResetDialog } from './CampaignResetDialog'
 import { getCustomerSentiment, getRequiredCustomerSentiment } from '../simulation/customerSentiment'
 import { formatElapsedTime } from '../data/timePresentation'
+import { formatCredits } from '../data/creditPresentation'
 
 type GameStateOverlayProps = {
   status: GameStatus
@@ -81,8 +82,8 @@ export function GameStateOverlay({
     const variables = {
       satisfaction: `${sentiment.emoji} ${t(sentiment.labelKey)}`,
       balance: earned
-        ? simulation.balance.toFixed(1)
-        : stage.starCriteria.threeStars.minimumBalance,
+        ? formatCredits(simulation.balance)
+        : formatCredits(stage.starCriteria.threeStars.minimumBalance),
     }
 
     if (averageLatencyTarget === undefined) {
@@ -139,18 +140,18 @@ export function GameStateOverlay({
               />
               <ResultMetric
                 translationKey="metric.infrastructureCost"
-                value={`${stageStatistics.totalInfrastructureCost} cr`}
+                value={<CreditValue value={stageStatistics.totalInfrastructureCost} />}
               />
               <ResultMetric
                 translationKey="metric.remainingBalance"
-                value={`${simulation.balance.toFixed(1)} cr`}
+                value={<CreditValue value={simulation.balance} />}
               />
               <ResultMetric translationKey="metric.duration" value={formatElapsedTime(simulation.gameTimeSeconds)} />
             </>
           ) : (
             <>
               <ResultMetric translationKey="metric.duration" value={formatElapsedTime(simulation.gameTimeSeconds)} />
-              <ResultMetric translationKey="metric.balance" value={`${simulation.balance} cr`} />
+              <ResultMetric translationKey="metric.balance" value={<CreditValue value={simulation.balance} />} />
               <ResultMetric
                 translationKey="metric.lowestSatisfaction"
                 value={formatSentiment(stageStatistics.lowestSatisfaction, t)}
@@ -163,7 +164,7 @@ export function GameStateOverlay({
           )}
         </dl>
 
-        {stageWon && stage.sequence >= 6 && <p className="stage-recap">{t('advanced.cacheRecap', { hits: simulation.cache.requestsServed.toFixed(1), queries: simulation.database.queryLoad.toFixed(1), cost: simulation.infrastructureCostPerPeriod })}</p>}
+        {stageWon && stage.sequence >= 6 && <p className="stage-recap">{t('advanced.cacheRecap', { hits: simulation.cache.requestsServed.toFixed(1), queries: simulation.database.queryLoad.toFixed(1), cost: formatCredits(simulation.infrastructureCostPerPeriod) })}</p>}
         {stageWon && stageRating && (
           <div className="stage-rating" aria-label={t('game.starsEarned', { stars: stageRating.stars })}>
             <div className="stage-rating__stars" aria-hidden="true">
@@ -303,7 +304,7 @@ function ResultMetric({
 }: {
   label?: string
   translationKey?: Parameters<typeof TechnicalTerm>[0]['translationKey']
-  value: string | number
+  value: ReactNode
 }) {
   return (
     <div>
@@ -317,4 +318,8 @@ function ResultMetric({
       <dd>{value}</dd>
     </div>
   )
+}
+
+function CreditValue({ value }: { value: number }) {
+  return <bdi dir="ltr">{formatCredits(value)} cr</bdi>
 }

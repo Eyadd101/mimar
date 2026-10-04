@@ -16,6 +16,9 @@ import * as stageLearningSimulation from '../src/simulation/stageLearningSimulat
 import * as stageObjectiveSimulation from '../src/simulation/stageObjectiveSimulation'
 import * as gameOverExplanationSimulation from '../src/simulation/gameOverExplanationSimulation'
 import * as hintSimulation from '../src/simulation/hintSimulation'
+import * as creditPresentation from '../src/data/creditPresentation'
+import { GameStateOverlay } from '../src/components/GameStateOverlay'
+import { LanguageContext } from '../src/i18n/languageContextValue'
 
 export {
   appServerSimulation,
@@ -34,6 +37,9 @@ export {
   stageObjectiveSimulation,
   gameOverExplanationSimulation,
   hintSimulation,
+  creditPresentation,
+  GameStateOverlay,
+  LanguageContext,
   simulationClock,
   trafficSimulation,
 }

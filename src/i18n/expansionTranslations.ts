@@ -14,7 +14,7 @@ export const expansionEnglish = {
   "advanced.featureAdoptionStory": "More customers will begin using this feature shortly. Watch application and database metrics together; the forecast is an estimate.",
 
   "advanced.downsize": "Resize to Small Database",
-  "advanced.downsizeWarning": "Reduces query capacity and operating cost. Check current query load first: a cache only avoids repeated reads. Resizing takes game time and preserves data.",
+  "advanced.downsizeWarning": "Reduces query capacity and operating cost. Check current query load first: a cache only avoids repeated reads. Resizing takes time and preserves data.",
 
   "advanced.connectionDirection": "This direction does not match resource responsibilities. Users enter through application compute or a load balancer. Applications call databases, caches, queues, or object storage; queues feed workers and caches call databases.",
 
@@ -32,20 +32,20 @@ export const expansionEnglish = {
   "advanced.disconnected": "Not connected",
 
   "advanced.reliabilityNotice": "Operations · Scheduled reliability exercise",
-  "advanced.failureUpcoming": "A controlled outage starts in {{seconds}} game seconds and lasts {{duration}} seconds. Other resources keep operating.",
-  "advanced.failureActive": "Temporarily unavailable. Automatic recovery in {{seconds}} game seconds. Watch capacity or backlog on the remaining resources.",
+  "advanced.failureUpcoming": "A controlled outage starts in {{seconds}} seconds and lasts {{duration}} seconds. Other resources keep operating.",
+  "advanced.failureActive": "Temporarily unavailable. Automatic recovery in {{seconds}} seconds. Watch capacity or backlog on the remaining resources.",
   "advanced.failureRecovered": "Resource recovered. Its identity, tier, and configuration were preserved.",
   "advanced.resourceUnavailable": "Temporarily unavailable — see the operations timeline. Resources retain their operating cost during the outage.",
 
   "advanced.stage10": "Recover the Data",
-  "advanced.stage10Story": "Operations has scheduled a recovery exercise. At 180 game seconds, an operator mistake will remove the live database data. Configure snapshots before the event, then restore service from a valid backup. No backup means no recovery point.",
+  "advanced.stage10Story": "Operations has scheduled a recovery exercise. After 180 seconds, an operator mistake will remove the live database data. Configure snapshots before the event, then restore service from a valid backup. No backup means no recovery point.",
   "advanced.stage10Lesson": "Backup is not high availability. Snapshots restore data after a loss; restoration still takes time and recent changes may be lost.",
   "advanced.restore": "Restore Database",
   "advanced.recoveryGoal": "Restore the database after the announced data-loss event.",
-  "advanced.restoreProgress": "Restoring snapshot: {{seconds}} game seconds remaining.",
+  "advanced.restoreProgress": "Restoring snapshot: {{seconds}} seconds remaining.",
   "advanced.dataLost": "Live database data was lost. Inspect the database to restore a snapshot. Without a valid backup, retry the stage and prepare one.",
   "advanced.dataRecovered": "Database restored. The recovery snapshot restored service; backups did not prevent the outage.",
-  "advanced.recoveryWarning": "Operations notice: data-loss exercise begins in {{seconds}} game seconds. Check backup readiness.",
+  "advanced.recoveryWarning": "Operations notice: data-loss exercise begins in {{seconds}} seconds. Check backup readiness.",
 
   "advanced.backups": "Database Backup",
   "advanced.backupPurpose": "Snapshots protect against data loss. They do not increase query capacity and do not keep a failed database online.",
@@ -53,7 +53,7 @@ export const expansionEnglish = {
   "advanced.backupFrequency": "Backup frequency",
   "advanced.noBackup": "No valid backup yet",
   "advanced.backupReady": "A recovery snapshot is available",
-  "advanced.backupDue": "Next snapshot in {{seconds}} game seconds.",
+  "advanced.backupDue": "Next snapshot in {{seconds}} seconds.",
 
   "advanced.stage9": "Too Public",
   "advanced.stage9Story": "An integration change left the existing database publicly accessible, with open network access and excessive permissions. A security review has flagged the configuration. Inspect database settings before exposure becomes an incident.",
@@ -67,7 +67,7 @@ export const expansionEnglish = {
   "advanced.weakCredentials": "Weak Credentials",
   "advanced.excessivePermissions": "Excessive Permissions",
   "advanced.openNetwork": "Open Network Access",
-  "advanced.securityWarning": "Exposure detected. Fix the configuration within {{seconds}} game seconds to prevent an incident.",
+  "advanced.securityWarning": "Exposure detected. Fix the configuration within {{seconds}} seconds to prevent an incident.",
   "advanced.securityIncident": "Security incident: exposure continued beyond the grace period. A response cost was charged and service is degraded until the settings are fixed.",
   "advanced.securityClear": "No configuration risks detected.",
 
@@ -158,7 +158,7 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.featureAdoptionStory": "سيبدأ مزيد من العملاء استخدام الميزة قريباً. راقب مقاييس التطبيق وقاعدة البيانات معاً؛ التوقع تقديري.",
 
   "advanced.downsize": "تغيير الحجم إلى قاعدة صغيرة",
-  "advanced.downsizeWarning": "يقلل سعة الاستعلامات وتكلفة التشغيل. افحص الحمل أولاً: التخزين المؤقت يتجنب القراءات المتكررة فقط. يستغرق التغيير وقت لعب ويحفظ البيانات.",
+  "advanced.downsizeWarning": "يقلل سعة الاستعلامات وتكلفة التشغيل. افحص الحمل أولاً: التخزين المؤقت يتجنب القراءات المتكررة فقط. يستغرق التغيير وقتًا ويحفظ البيانات.",
 
   "advanced.connectionDirection": "هذا الاتجاه لا يناسب مسؤوليات الموارد. يدخل المستخدمون عبر التطبيق أو موزّع الحمل. يتصل التطبيق بقواعد البيانات والتخزين المؤقت والطوابير وتخزين الكائنات؛ تغذّي الطوابير العمال ويتصل التخزين المؤقت بقاعدة البيانات.",
 
@@ -176,20 +176,20 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.disconnected": "غير متصل",
 
   "advanced.reliabilityNotice": "العمليات · تمرين موثوقية مجدول",
-  "advanced.failureUpcoming": "يبدأ انقطاع محدد بعد {{seconds}} ثانية لعب ويستمر {{duration}} ثانية. تستمر الموارد الأخرى بالعمل.",
-  "advanced.failureActive": "غير متاح مؤقتاً. تعافٍ تلقائي خلال {{seconds}} ثانية لعب. راقب السعة أو المهام المتراكمة في الموارد المتبقية.",
+  "advanced.failureUpcoming": "يبدأ انقطاع محدد بعد {{seconds}} ثانية ويستمر {{duration}} ثانية. تستمر الموارد الأخرى بالعمل.",
+  "advanced.failureActive": "غير متاح مؤقتاً. تعافٍ تلقائي خلال {{seconds}} ثانية. راقب السعة أو المهام المتراكمة في الموارد المتبقية.",
   "advanced.failureRecovered": "تعافى المورد مع الاحتفاظ بهويته وفئته وإعداداته.",
   "advanced.resourceUnavailable": "غير متاح مؤقتاً — راجع خط العمليات الزمني. تستمر تكلفة التشغيل أثناء الانقطاع.",
 
   "advanced.stage10": "استعد البيانات",
-  "advanced.stage10Story": "حدّد فريق العمليات تمرين استعادة. عند الثانية 180 من اللعب سيزيل خطأ تشغيلي بيانات القاعدة الحية. اضبط اللقطات قبل الحدث ثم استعد الخدمة من نسخة صالحة. دون نسخة لا توجد نقطة استعادة.",
+  "advanced.stage10Story": "حدّد فريق العمليات تمرين استعادة. بعد 180 ثانية، سيزيل خطأ تشغيلي بيانات القاعدة الحية. اضبط اللقطات قبل الحدث ثم استعد الخدمة من نسخة صالحة. دون نسخة لا توجد نقطة استعادة.",
   "advanced.stage10Lesson": "النسخ الاحتياطي ليس توافراً عالياً. تعيد اللقطات البيانات بعد الفقد، لكن الاستعادة تستغرق وقتاً وقد تفقد التغييرات الحديثة.",
   "advanced.restore": "استعادة قاعدة البيانات",
   "advanced.recoveryGoal": "استعد قاعدة البيانات بعد حدث فقدان البيانات المعلن.",
-  "advanced.restoreProgress": "جارٍ استعادة اللقطة: {{seconds}} ثانية لعب متبقية.",
+  "advanced.restoreProgress": "جارٍ استعادة اللقطة: متبقي {{seconds}} ثوانٍ.",
   "advanced.dataLost": "فُقدت بيانات القاعدة الحية. افحص قاعدة البيانات لاستعادة لقطة. دون نسخة صالحة، أعد المرحلة وجهّز نسخة.",
   "advanced.dataRecovered": "استُعيدت قاعدة البيانات. أعادت اللقطة الخدمة، لكنها لم تمنع الانقطاع.",
-  "advanced.recoveryWarning": "إشعار العمليات: تمرين فقدان البيانات بعد {{seconds}} ثانية لعب. تحقّق من جاهزية النسخ.",
+  "advanced.recoveryWarning": "إشعار العمليات: تمرين فقدان البيانات بعد {{seconds}} ثانية. تحقّق من جاهزية النسخ.",
 
   "advanced.backups": "نسخ قاعدة البيانات احتياطياً",
   "advanced.backupPurpose": "تحمي اللقطات من فقدان البيانات. لا تزيد سعة الاستعلامات ولا تبقي قاعدة متعطلة قيد العمل.",
@@ -197,7 +197,7 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.backupFrequency": "تكرار النسخ الاحتياطي",
   "advanced.noBackup": "لا توجد نسخة صالحة بعد",
   "advanced.backupReady": "توجد لقطة متاحة للاستعادة",
-  "advanced.backupDue": "اللقطة التالية خلال {{seconds}} ثانية لعب.",
+  "advanced.backupDue": "اللقطة التالية خلال {{seconds}} ثانية.",
 
   "advanced.stage9": "مكشوفة أكثر من اللازم",
   "advanced.stage9Story": "ترك تغيير في التكامل قاعدة البيانات الحالية متاحة للعامة مع شبكة مفتوحة وصلاحيات زائدة. أبلغت المراجعة الأمنية عن الإعدادات. افحصها قبل تحوّل التعرض إلى حادث.",
@@ -211,7 +211,7 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.weakCredentials": "بيانات اعتماد ضعيفة",
   "advanced.excessivePermissions": "صلاحيات زائدة",
   "advanced.openNetwork": "وصول شبكي مفتوح",
-  "advanced.securityWarning": "تم اكتشاف تعرض للخطر. أصلح الإعدادات خلال {{seconds}} ثانية لعب لمنع الحادث.",
+  "advanced.securityWarning": "تم اكتشاف تعرض للخطر. أصلح الإعدادات خلال {{seconds}} ثانية لمنع الحادث.",
   "advanced.securityIncident": "حادث أمني: استمر التعرض بعد فترة السماح. خُصمت تكلفة الاستجابة وتبقى الخدمة متأثرة حتى إصلاح الإعدادات.",
   "advanced.securityClear": "لم تُكتشف مخاطر في الإعدادات.",
 
@@ -250,7 +250,7 @@ export const expansionArabic: Record<keyof typeof expansionEnglish, string> = {
   "advanced.stage6": "حمل كثيف من القراءات",
   "advanced.stage6Story": "تعيد لوحة العملاء قراءة البيانات نفسها باستمرار. افحص الحمل: قاعدة بيانات أكبر تستوعب استعلامات أكثر، والتخزين المؤقت يقلل العمل المتكرر. قارن التكلفة المستمرة والسعة.",
   "advanced.stage6Lesson": "التخزين المؤقت يقلل القراءات المتكررة لا الكتابات. قد تكون قاعدة صغيرة مع تخزين مؤقت أقل تكلفة من قاعدة متوسطة لهذا الحمل.",
-  "advanced.cacheRecap": "عند الإكمال: خدم التخزين المؤقت {{hits}} استعلام/ثانية، ووصل {{queries}} إلى قاعدة البيانات. التكلفة الكلية {{cost}} رصيد/فترة. يضيف التخزين المؤقت تكلفة لكنه قد يقلل السعة المطلوبة لقاعدة البيانات.",
+  "advanced.cacheRecap": "عند اكتمال المرحلة، عالج التخزين المؤقت {{hits}} استعلامًا/ثانية، ووصل {{queries}} استعلامًا/ثانية إلى قاعدة البيانات. بلغت تكلفة البنية التحتية {{cost}} رصيدًا لكل فترة. يضيف التخزين المؤقت تكلفة، لكنه قد يقلل سعة قاعدة البيانات المطلوبة.",
 
   "advanced.cache": "ذاكرة التخزين المؤقت",
   "advanced.cachePurpose": "تخدم القراءات المتكررة بسرعة. راقب حمل الاستعلامات (Query Load) ونسبة الإصابة (Cache Hit Rate)، واربط App Server → Cache → Database. الكتابات وحالات عدم العثور تصل إلى قاعدة البيانات، وللـ Cache تكلفة.",

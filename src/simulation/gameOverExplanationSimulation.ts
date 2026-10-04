@@ -5,6 +5,7 @@ import type { TrafficSimulationState } from './trafficSimulation'
 import type { TranslationMessage } from '../i18n/translations'
 import type { TranslationKey } from '../i18n/translations'
 import { getCustomerSentiment } from './customerSentiment'
+import { formatCredits } from '../data/creditPresentation'
 
 export function createGameOverFailureChain(
   reason: GameOverReason,
@@ -43,11 +44,11 @@ export function createGameOverFailureChain(
       : { key: 'failure.healthyCashOut' },
     {
       key: 'failure.revenue',
-      variables: { revenue: simulation.revenuePerPeriod.toFixed(1) },
+      variables: { revenue: formatCredits(simulation.revenuePerPeriod) },
     },
     {
       key: 'failure.cost',
-      variables: { cost: simulation.infrastructureCostPerPeriod.toFixed(1) },
+      variables: { cost: formatCredits(simulation.infrastructureCostPerPeriod) },
     },
     { key: 'failure.zeroBalance' },
   ]

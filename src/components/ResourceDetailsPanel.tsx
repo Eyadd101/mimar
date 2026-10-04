@@ -12,6 +12,7 @@ import { DeploymentStatus } from './InfrastructureActionsPanel'
 import type { InfrastructureFlowNode } from '../data/infrastructure'
 import {
   appServerResourceConfig,
+  getServerUpgradeCost,
   loadBalancerResourceConfig,
   serverTierConfigs,
   serverUpgradeConfig,
@@ -25,9 +26,11 @@ import { useLanguage } from '../i18n/useLanguage'
 import { TechnicalTerm } from './TechnicalTerm'
 import type { TranslationKey } from '../i18n/translations'
 import { useStableScrollPosition } from '../hooks/useStableScrollPosition'
+import { formatCredits } from '../data/creditPresentation'
 
 type ResourceDetailsPanelProps = {
   campaign: CampaignState
+  stageSequence: number
   onRestoreDatabase: () => void
   onConfigureBackups: (settings: BackupSettings) => void
   onConfigureSecurity: (key: SecurityRisk, exposed: boolean) => void
@@ -62,6 +65,7 @@ const statusTranslationKeys: Record<string, TranslationKey> = {
 
 export function ResourceDetailsPanel({
   node,
+  stageSequence,
   campaign, onConfigureSecurity, onConfigureBackups, onRestoreDatabase,
   simulation,
   serviceStarted,
@@ -93,9 +97,10 @@ export function ResourceDetailsPanel({
       )
     : 0
   const upgradeTarget = serverTierConfigs[serverUpgradeConfig.targetTierId]
+  const upgradeCost = getServerUpgradeCost(stageSequence)
   const canAffordUpgrade = canAffordCost(
     simulation.balance,
-    serverUpgradeConfig.upgradeCost,
+    upgradeCost,
   )
   const anotherUpgradeIsDeploying =
     simulation.serverDeployment !== null && deployment === null
@@ -187,12 +192,12 @@ export function ResourceDetailsPanel({
           </div>
           <div className="resource-panel__metric">
             <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
-            <dd>{t('common.credits', { value: appServer.costPerPeriod })}</dd>
+            <dd>{t('common.credits', { value: formatCredits(appServer.costPerPeriod) })}</dd>
           </div>
         </dl>
       ) : node.data.kind === 'object-storage' ? (
         <><p>S3</p><p>{t('advanced.storagePurpose')}</p><dl className="resource-panel__details">{([
-          ['advanced.storedObjects', simulation.storage.storedObjects.toFixed(0)], ['advanced.storageUsed', `${simulation.storage.storageUsedGiB.toFixed(2)} GiB`], ['metric.currentTraffic', `${simulation.storage.requestRate.toFixed(1)}/s`], ['resource.costPerPeriod', simulation.storage.costPerPeriod.toFixed(2)],
+          ['advanced.storedObjects', simulation.storage.storedObjects.toFixed(0)], ['advanced.storageUsed', `${simulation.storage.storageUsedGiB.toFixed(2)} GiB`], ['metric.currentTraffic', `${simulation.storage.requestRate.toFixed(1)}/s`], ['resource.costPerPeriod', formatCredits(simulation.storage.costPerPeriod)],
         ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd><TechnicalValue>{value}</TechnicalValue></dd></div>)}</dl></>
       ) : node.data.kind === 'queue'  || node.data.kind === 'worker' ? (
         <><p>{advancedResourceConfigs[node.data.kind].awsReference}</p><p>{t(advancedResourceConfigs[node.data.kind].purposeKey)}</p>
@@ -220,7 +225,7 @@ export function ResourceDetailsPanel({
               ['advanced.connectionCapacity', simulation.database.connectionCapacity],
               ['advanced.queryLatency', `${simulation.database.queryLatencyMs} ms`],
               ['metric.status', t(statusTranslationKeys[simulation.database.status])],
-              ['resource.costPerPeriod', t('common.credits', { value: simulation.database.costPerPeriod })],
+              ['resource.costPerPeriod', t('common.credits', { value: formatCredits(simulation.database.costPerPeriod) })],
             ] as const).map(([key, value]) => <div key={key}><dt><TechnicalTerm translationKey={key} /></dt><dd>{key === 'metric.currentTier' || key === 'metric.status' || key === 'resource.costPerPeriod' ? value : <TechnicalValue>{value}</TechnicalValue>}</dd></div>)}
           </dl>
           {campaign.unlockedControls?.includes('backups') && <DatabaseBackupControls settings={campaign.infrastructure.resources.find(resource => resource.type === 'database')?.backups ?? defaultBackupSettings} data={simulation.databaseData} balance={simulation.balance} onRestore={onRestoreDatabase} restoreRemainingSeconds={simulation.databaseRestoreCompletesAt === null ? null : Math.max(0, simulation.databaseRestoreCompletesAt - simulation.gameTimeSeconds)} onChange={onConfigureBackups} />}
@@ -252,7 +257,7 @@ export function ResourceDetailsPanel({
           </div>
           <div>
             <dt><TechnicalTerm translationKey="resource.costPerPeriod" /> · {appServerResourceConfig.costPeriodSeconds}s</dt>
-            <dd>{t('common.credits', { value: loadBalancerResourceConfig.costPerPeriod })}</dd>
+            <dd>{t('common.credits', { value: formatCredits(loadBalancerResourceConfig.costPerPeriod) })}</dd>
           </div>
         </dl>
       ) : (
@@ -299,10 +304,10 @@ export function ResourceDetailsPanel({
                 </strong>
               </div>
               <p>
-                {t('common.credits', { value: serverUpgradeConfig.upgradeCost })} ·{' '}
+                {t('common.credits', { value: upgradeCost })} ·{' '}
                 {t('common.gameSeconds', { value: serverUpgradeConfig.deploymentDurationSeconds })}
               </p>
-              <p>{t('resource.availableBalance')}: {t('common.credits', { value: simulation.balance })}</p>
+              <p>{t('resource.availableBalance')}: {t('common.credits', { value: formatCredits(simulation.balance) })}</p>
               <button
                 type="button"
                 className="resource-panel__upgrade-button"

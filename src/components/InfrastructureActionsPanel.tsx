@@ -14,6 +14,7 @@ import type { TrafficSimulationState } from '../simulation/trafficSimulation'
 import { useLanguage } from '../i18n/useLanguage'
 import type { TranslationKey } from '../i18n/translations'
 import { TechnicalTerm } from './TechnicalTerm'
+import { formatCredits } from '../data/creditPresentation'
 
 type InfrastructureActionsPanelProps = {
   campaign: CampaignState
@@ -192,7 +193,7 @@ function BuildOption({
         <span>{awsReference}</span>
       </div>
       {purposeKey && <p>{t(purposeKey)}</p>}
-      <p>{t('common.credits', { value: cost })} · {t('common.gameSeconds', { value: duration })}</p>
+      <p>{t('common.credits', { value: formatCredits(cost) })} · {t('common.gameSeconds', { value: duration })}</p>
       <button type="button" disabled={disabled} onClick={onDeploy}>
         {disabledReason ?? (disabled ? t('resource.insufficientBalance') : t('common.purchasePrepare'))}
       </button>

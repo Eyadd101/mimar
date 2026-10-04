@@ -45,6 +45,7 @@ import { useGameSimulation } from './hooks/useGameSimulation'
 import {
   additionalAppServerConfig,
   appServerResourceConfig,
+  getServerUpgradeCost,
   loadBalancerResourceConfig,
   serverUpgradeConfig,
 } from './simulation/config'
@@ -332,7 +333,7 @@ function App() {
       ? {
           title: t('resource.upgradeMedium'),
           description: t('action.upgradeDescription'),
-          cost: serverUpgradeConfig.upgradeCost,
+          cost: getServerUpgradeCost(stage.sequence),
           durationSeconds: serverUpgradeConfig.deploymentDurationSeconds,
           confirmLabel: t('action.startUpgrade'),
         }
@@ -615,6 +616,7 @@ function App() {
               <ResourceDetailsPanel
                 node={selectedNode}
                 campaign={campaign}
+                stageSequence={stage.sequence}
                 onRestoreDatabase={() => setPendingAction({ kind: 'database-restore' })}
                 onConfigureBackups={configureBackups}
                 onConfigureSecurity={configureSecurity}

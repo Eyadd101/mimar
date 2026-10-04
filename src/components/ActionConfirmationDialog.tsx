@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { useLanguage } from '../i18n/useLanguage'
+import { formatCredits } from '../data/creditPresentation'
 
 type ActionConfirmationDialogProps = {
   title: string
@@ -39,7 +40,7 @@ export function ActionConfirmationDialog({
         <dl>
           <div>
             <dt>{t('action.immediateCost')}</dt>
-            <dd>{t('common.credits', { value: cost })}</dd>
+            <dd>{t('common.credits', { value: formatCredits(cost) })}</dd>
           </div>
           <div>
             <dt>{t('action.deployment')}</dt>

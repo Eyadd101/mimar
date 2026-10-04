@@ -15,19 +15,14 @@ export function useStableScrollPosition<T extends HTMLElement>(panelId: string) 
     if (!element) return
 
     const savedPosition = savedScrollPositions.get(panelId) ?? 0
-    if (element.scrollTop !== savedPosition) {
-      element.scrollTop = savedPosition
-    }
-  })
+    element.scrollTop = savedPosition
 
-  useLayoutEffect(
-    () => () => {
-      if (ref.current) {
-        savedScrollPositions.set(panelId, ref.current.scrollTop)
-      }
-    },
-    [panelId],
-  )
+    // Restore only when this panel mounts or changes identity. A simulation
+    // tick must never write an old position over the player's current scroll.
+    return () => {
+      savedScrollPositions.set(panelId, element.scrollTop)
+    }
+  }, [panelId])
 
   const onScroll: UIEventHandler<T> = (event) => {
     savedScrollPositions.set(panelId, event.currentTarget.scrollTop)

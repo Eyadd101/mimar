@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { runnerImport } from 'vite'
 const { module: s } = await runnerImport(new URL('./simulationHarness.ts', import.meta.url).pathname, { root: process.cwd(), logLevel: 'silent' })
 const { gameStateSimulation: game, campaignSimulation: campaign, campaignSave: saves, customerSentiment, databaseSimulation: db, cacheSimulation: cache, queueSimulation: queue, storageSimulation: storage, securitySimulation: security, backupSimulation: backup, expansionConfig: config, baseConfig, stages, trafficSimulation: traffic } = s
@@ -296,6 +298,92 @@ test('Stage 4 warns before deployment time and early campaign economy requires c
   assert.ok(launch.trafficEvents[0].startsAtSecond >= 120)
   assert.ok(launch.trafficEvents[0].startsAtSecond > 20 + 30)
   assert.equal(baseConfig.additionalAppServerConfig.initialTierId, 'small')
+})
+test('localized player copy uses natural time terms', () => {
+  for (const [language, catalog] of Object.entries(s.translations.translations)) {
+    for (const [key, message] of Object.entries(catalog)) {
+      assert.doesNotMatch(message, /game[ -](?:time|seconds?|minutes?)|ثانية لعب|ثواني لعب|وقت اللعبة|وقت لعب|من اللعب/i,
+        `${language}.${key} uses an obsolete time term`)
+    }
+  }
+  assert.equal(s.translations.translate('ar', 'resource.deploymentRemaining', { seconds: 8 }), 'متبقي 8 ثوانٍ')
+  assert.equal(s.translations.translate('en', 'metric.gameTime'), 'Time')
+  assert.equal(s.translations.translate('ar', 'metric.duration'), 'المدة')
+})
+test('Stage 4 upgrade costs more and a prepared two-server launch still earns three stars', () => {
+  assert.equal(baseConfig.getServerUpgradeCost(3), 100)
+  assert.equal(baseConfig.getServerUpgradeCost(4), 120)
+  assert.equal(baseConfig.getServerUpgradeCost(5), 100)
+
+  let campaignState = builtCampaign(3)
+  campaignState = {
+    ...campaignState,
+    balance: baseConfig.campaignProgressionConfig.minimumBalanceByStage[3],
+    infrastructure: {
+      ...campaignState.infrastructure,
+      resources: campaignState.infrastructure.resources.map(resource =>
+        resource.id === 'server' ? { ...resource, tierId: 'medium' } : resource,
+      ),
+    },
+  }
+  let state = game.dismissStageBriefing(game.createInitialGameState(campaignState))
+  state = game.beginLoadBalancerDeployment(state)
+  state = game.advanceGameState(state, baseConfig.loadBalancerResourceConfig.deploymentDurationSeconds)
+  state = game.placePurchasedResource(state, 'load-balancer')
+  state = game.disconnectInfrastructure(state, ['users-server'])
+  state = game.connectInfrastructure(state, 'users', 'load-balancer')
+  state = game.connectInfrastructure(state, 'load-balancer', 'server')
+  state = game.beginAdditionalAppServerDeployment(state)
+  state = game.advanceGameState(state, baseConfig.additionalAppServerConfig.deploymentDurationSeconds)
+  state = game.placePurchasedResource(state, 'server-b')
+  state = game.connectInfrastructure(state, 'load-balancer', 'server-b')
+  state = game.connectInfrastructure(state, 'server-b', 'database')
+
+  const beforeUpgrade = state.stageRuntime.simulation.balance
+  state = game.beginServerUpgrade(state, 'server-b')
+  assert.equal(state.stageRuntime.simulation.serverDeployment?.cost, 120)
+  assert.equal(state.stageRuntime.simulation.balance, beforeUpgrade - 120)
+  assert.ok(state.stageRuntime.simulation.balance > 0)
+  state = game.advanceGameState(state, baseConfig.serverUpgradeConfig.deploymentDurationSeconds)
+  assert.equal(state.campaign.infrastructure.resources.find(resource => resource.id === 'server-b').tierId, 'medium')
+
+  while (state.stageRuntime.status === 'playing' && state.stageRuntime.simulation.gameTimeSeconds < 450) {
+    state = game.advanceGameState(state)
+  }
+  assert.equal(state.stageRuntime.status, 'stage-won')
+  assert.equal(state.stageRuntime.stageRating?.stars, 3)
+  assert.ok(state.stageRuntime.simulation.balance >= 90)
+
+  const formatCredits = s.creditPresentation.formatCredits
+  assert.equal(formatCredits(1151.9397575), '1151.9')
+  assert.equal(formatCredits(82.53512225), '82.5')
+  assert.equal(formatCredits(-0.001), '0')
+  const arabic = {
+    language: 'ar',
+    direction: 'rtl',
+    setLanguage: () => {},
+    t: (key, variables) => s.translations.translate('ar', key, variables),
+  }
+  const resultHtml = renderToStaticMarkup(createElement(s.LanguageContext.Provider, { value: arabic },
+    createElement(s.GameStateOverlay, {
+      status: state.stageRuntime.status,
+      reason: null,
+      simulation: state.stageRuntime.simulation,
+      stage: stages.campaignStageConfigs[3],
+      stageRating: state.stageRuntime.stageRating,
+      stageStatistics: state.stageRuntime.statistics,
+      campaign: state.campaign,
+      hasNextStage: true,
+      onRestartStage: () => {},
+      onRestartCampaign: () => {},
+      onContinueToNextStage: () => {},
+    }),
+  ))
+  assert.match(resultHtml, /المدة/)
+  assert.match(resultHtml, /رصيد/)
+  assert.ok(resultHtml.includes(`${formatCredits(state.stageRuntime.statistics.totalInfrastructureCost)} cr`))
+  assert.ok(resultHtml.includes(`${formatCredits(state.stageRuntime.simulation.balance)} cr`))
+  assert.doesNotMatch(resultHtml, /game seconds|ثانية لعب|\d+\.\d{2,} cr/i)
 })
 test('Stage 5 identifies database pressure while application compute still has room', () => {
   let graph = builtCampaign(4)

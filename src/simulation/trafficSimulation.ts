@@ -189,6 +189,7 @@ export function createInitialTrafficState(
 export function startServerUpgrade(
   currentState: TrafficSimulationState,
   resourceId: string,
+  upgradeCost: number = serverUpgradeConfig.upgradeCost,
 ): TrafficSimulationState {
   const appServer = currentState.appServers.find(
     (server) => server.resourceId === resourceId,
@@ -198,7 +199,7 @@ export function startServerUpgrade(
     !appServer ||
     appServer.tierId === serverUpgradeConfig.targetTierId ||
     currentState.serverDeployment ||
-    !canAffordCost(currentState.balance, serverUpgradeConfig.upgradeCost)
+    !canAffordCost(currentState.balance, upgradeCost)
   ) {
     return currentState
   }
@@ -207,7 +208,7 @@ export function startServerUpgrade(
     ...currentState,
     balance: deductCost(
       currentState.balance,
-      serverUpgradeConfig.upgradeCost,
+      upgradeCost,
     ),
     serverDeployment: {
       resourceId,
@@ -216,7 +217,7 @@ export function startServerUpgrade(
       completesAtGameTimeSeconds:
         currentState.gameTimeSeconds +
         serverUpgradeConfig.deploymentDurationSeconds,
-      cost: serverUpgradeConfig.upgradeCost,
+      cost: upgradeCost,
     },
   }
 }
