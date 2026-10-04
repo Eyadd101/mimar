@@ -61,10 +61,14 @@ export function RequestFlowEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        interactionWidth={24}
+        interactionWidth={36}
         style={{
           ...style,
-          ...(selected ? { stroke: '#b9e7c7', strokeWidth: 3 } : {}),
+          ...(selected ? {
+            stroke: '#d8f5aa',
+            strokeWidth: 4,
+            filter: 'drop-shadow(0 0 6px #b5f0cc)',
+          } : {}),
         }}
       />
       <path

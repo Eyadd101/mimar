@@ -225,6 +225,81 @@ test('player-created connections can be deleted and reconnected without changing
   assert.equal(state.campaign.infrastructure.connections.some(connection => connection.sourceId === 'load-balancer' && connection.targetId === 'server'), false)
   assert.deepEqual(state.campaign.infrastructure.resources, resources)
 })
+
+test('Stage 1 wires can be removed before and after launch, saved, and rebuilt', () => {
+  let state = game.createInitialGameState()
+  for (const type of ['users', 'app-server', 'database']) {
+    state = game.placeStageOneResource(state, type)
+  }
+  state = game.connectInfrastructure(state, 'users', 'server')
+  state = game.disconnectInfrastructure(state, ['users-server'])
+  assert.equal(state.stageRuntime.serviceStarted, false)
+  assert.equal(state.stageRuntime.simulation.activeUsers, 0)
+  assert.equal(state.stageRuntime.simulation.applicationLatencyMs, 0)
+  assert.equal(state.stageRuntime.simulation.infrastructureCostPerPeriod, 0)
+  assert.equal(s.stageOneOnboardingSimulation.getStageOneBuildStep(state.campaign.infrastructure).id, 'connect-users-app-server')
+  state = roundTrip(state)
+  state = game.connectInfrastructure(state, 'users', 'server')
+  state = game.connectInfrastructure(state, 'server', 'database')
+  assert.equal(state.stageRuntime.serviceStarted, true)
+
+  state = game.dismissStageBriefing(state)
+  state = game.advanceGameState(state, 1)
+  const gameTime = state.stageRuntime.simulation.gameTimeSeconds
+  const resources = structuredClone(state.campaign.infrastructure.resources)
+  state = game.disconnectInfrastructure(state, ['server-database'])
+  assert.equal(state.campaign.infrastructure.connections.length, 1)
+  assert.equal(state.stageRuntime.simulation.appServers[0].requestsPerSecond, 0)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, gameTime)
+  assert.deepEqual(state.campaign.infrastructure.resources, resources)
+  state = roundTrip(state)
+
+  state = game.advanceGameState(state, 1)
+  assert.equal(state.stageRuntime.simulation.gameTimeSeconds, gameTime + 1)
+  state = game.connectInfrastructure(state, 'server', 'database')
+  assert.deepEqual(state.campaign.infrastructure.connections.map(connection => connection.id), ['users-server', 'server-database'])
+  assert.ok(state.stageRuntime.simulation.appServers[0].requestsPerSecond > 0)
+  state = game.disconnectInfrastructure(state, ['users-server'])
+  assert.equal(state.stageRuntime.simulation.appServers[0].requestsPerSecond, 0)
+  state = roundTrip(state)
+  state = game.connectInfrastructure(state, 'users', 'server')
+  assert.equal(state.campaign.infrastructure.connections.length, 2)
+  assert.ok(state.stageRuntime.simulation.appServers[0].requestsPerSecond > 0)
+  assert.deepEqual(roundTrip(state).campaign.infrastructure.resources, resources)
+})
+
+test('all six owner-tested wire types delete and reconnect through saved topology in both languages', () => {
+  const graph = campaign.connectCampaignResources(expandedCampaign(), 'users', 'server')
+  const pairs = [
+    ['users', 'server'],
+    ['server', 'database'],
+    ['load-balancer', 'server'],
+    ['server', 'cache'],
+    ['server', 'queue'],
+    ['queue', 'worker'],
+  ]
+
+  for (const language of ['en', 'ar']) {
+    assert.ok(s.translations.translate(language, 'connection.selected'))
+    assert.ok(s.translations.translate(language, 'connection.remove'))
+    assert.match(s.translations.translate(language, 'connection.deleteHelp'), /Delete.*Backspace/)
+
+    for (const [sourceId, targetId] of pairs) {
+      const edgeId = `${sourceId}-${targetId}`
+      const initial = game.createInitialGameState(graph)
+      const originalConnections = initial.campaign.infrastructure.connections
+      const originalResources = initial.campaign.infrastructure.resources
+      let state = game.disconnectInfrastructure(initial, [edgeId])
+      assert.equal(state.campaign.infrastructure.connections.length, originalConnections.length - 1, `${language}: ${edgeId} removed`)
+      assert.equal(state.campaign.infrastructure.connections.some(connection => connection.id === edgeId), false)
+      assert.deepEqual(state.campaign.infrastructure.resources, originalResources)
+      state = roundTrip(state)
+      state = game.connectInfrastructure(state, sourceId, targetId)
+      assert.deepEqual(state.campaign.infrastructure.connections.map(connection => connection.id).sort(), originalConnections.map(connection => connection.id).sort(), `${language}: ${edgeId} rebuilt`)
+      assert.deepEqual(roundTrip(state).campaign.infrastructure.resources, originalResources)
+    }
+  }
+})
 test('only servers on a complete player-created path receive traffic', () => {
   let graph = builtCampaign(3)
   graph = campaign.placeInventoryResource(campaign.addLoadBalancerResource(graph), 'load-balancer')

@@ -337,7 +337,9 @@ export function connectInfrastructure(
 ): GameState {
   if (state.stageRuntime.status !== 'playing') return state
   if (state.campaign.currentStageIndex === 0) {
-    return connectStageOneResources(state, sourceId, targetId, handles)
+    if (!state.stageRuntime.serviceStarted) {
+      return connectStageOneResources(state, sourceId, targetId, handles)
+    }
   }
   const campaign = connectCampaignResources(
     state.campaign,
@@ -366,7 +368,7 @@ export function disconnectInfrastructure(
   state: GameState,
   connectionIds: readonly string[],
 ): GameState {
-  if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
+  if (state.stageRuntime.status !== 'playing') return state
   const campaign = disconnectCampaignResources(state.campaign, connectionIds)
   return campaign === state.campaign
     ? state
@@ -380,7 +382,7 @@ export function reconnectInfrastructure(
   targetId: string,
   handles: CampaignConnectionHandles = {},
 ): GameState {
-  if (state.stageRuntime.status !== 'playing' || state.campaign.currentStageIndex === 0) return state
+  if (state.stageRuntime.status !== 'playing') return state
   const campaign = reconnectCampaignResource(
     state.campaign,
     connectionId,
@@ -397,6 +399,27 @@ function applyInfrastructureCampaignChange(
   state: GameState,
   campaign: CampaignState,
 ): GameState {
+  if (campaign.currentStageIndex === 0 && !state.stageRuntime.serviceStarted) {
+    const serviceStarted = hasOperationalServicePath(campaign)
+    const simulation = createInitialTrafficState({
+      infrastructure: createTrafficInfrastructure(campaign),
+      balance: state.stageRuntime.simulation.balance,
+      trafficProfile: getCurrentStage(state).trafficProfile,
+      serviceActive: serviceStarted,
+    })
+
+    return {
+      ...state,
+      campaign,
+      stageRuntime: {
+        ...state.stageRuntime,
+        simulation,
+        serviceStarted,
+        statistics: createInitialStageStatistics(simulation),
+      },
+    }
+  }
+
   const simulation = reconcileTrafficInfrastructure(
     state.stageRuntime.simulation,
     getCurrentStage(state).trafficProfile,

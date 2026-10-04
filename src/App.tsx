@@ -200,7 +200,7 @@ function App() {
       selected: node.id === selectedNodeId,
       data: {
         ...node.data,
-        canConnect: gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted),
+        canConnect: gameStatus === 'playing',
         portHint: stage.sequence === 1 && !serviceStarted
           ? getStageOnePortHint(stageOneBuildStep.id, node.id)
           : undefined,
@@ -390,13 +390,13 @@ function App() {
     }
   }
   const handleEdgesDelete = (edges: Edge[]) => {
-    if (stage.sequence === 1 || edges.length === 0) return
+    if (gameStatus !== 'playing' || edges.length === 0) return
     disconnectResources(edges.map((edge) => edge.id))
     setSelectedEdgeId(null)
     setConnectionFeedback({ key: 'connection.removed', valid: true })
   }
   const handleReconnect = (oldEdge: Edge, connection: Connection) => {
-    if (!connection.source || !connection.target || stage.sequence === 1) return
+    if (!connection.source || !connection.target || gameStatus !== 'playing') return
     const infrastructureWithoutOldEdge = {
       ...campaign.infrastructure,
       connections: campaign.infrastructure.connections.filter(
@@ -502,10 +502,10 @@ function App() {
           connectionRadius={
             infrastructureHandleInteraction.connectionRadiusPixels
           }
-          nodesConnectable={gameStatus === 'playing' && (stage.sequence > 1 || !serviceStarted)}
-          edgesReconnectable={gameStatus === 'playing' && stage.sequence > 1}
-          edgesFocusable={gameStatus === 'playing' && stage.sequence > 1}
-          deleteKeyCode={stage.sequence > 1 ? ['Backspace', 'Delete'] : null}
+          nodesConnectable={gameStatus === 'playing'}
+          edgesReconnectable={gameStatus === 'playing'}
+          edgesFocusable={gameStatus === 'playing'}
+          deleteKeyCode={gameStatus === 'playing' ? ['Backspace', 'Delete'] : null}
         >
           <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#293532" />
           <Panel position="top-left" className="canvas-heading" dir={direction}>
@@ -569,7 +569,7 @@ function App() {
               </aside>
             </Panel>
           )}
-          {selectedConnection && stage.sequence > 1 && (
+          {selectedConnection && gameStatus === 'playing' && (
             <Panel position="bottom-center" className="connection-editor-position">
               <aside className="connection-editor nodrag nopan" dir={direction}>
                 <div>
@@ -590,6 +590,7 @@ function App() {
                     </bdi>
                   </strong>
                   <small>{t('connection.reconnectHelp')}</small>
+                  <small>{t('connection.deleteHelp')}</small>
                 </div>
                 <button
                   type="button"
@@ -606,7 +607,7 @@ function App() {
               </aside>
             </Panel>
           )}
-          {stage.sequence === 1 && !serviceStarted && (
+          {stage.sequence === 1 && !serviceStarted && !selectedConnection && (
             <Panel position="bottom-center" className="guided-build-position">
               <GuidedBuildPanel step={stageOneBuildStep} />
             </Panel>
