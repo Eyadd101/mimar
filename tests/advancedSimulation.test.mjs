@@ -15,7 +15,12 @@ function builtCampaign(stageIndex = 0) {
   for (const type of ['users', 'app-server', 'database']) state = game.placeStageOneResource(state, type)
   state = game.connectStageOneResources(state, 'users', 'server')
   state = game.connectStageOneResources(state, 'server', 'database')
-  let result = { ...state.campaign, currentStageIndex: stageIndex, balance: 500 }
+  let result = {
+    ...state.campaign,
+    currentStageIndex: stageIndex,
+    balance: 500,
+    completedStages: stages.campaignStageConfigs.slice(0, stageIndex).map(stage => ({ stageId: stage.id, stars: 1 })),
+  }
   for (let i = 0; i <= stageIndex; i++) result = campaign.applyResourceUnlocks(result, stages.campaignStageConfigs[i].unlocksResourceTypes)
   return result
 }
@@ -806,6 +811,54 @@ test('corrupt runtime checkpoints are rejected without crashing or silently disc
     value => { value.checkpoint.gameSpeed = 99 },
     value => { value.checkpoint.stageRuntime.status = 'invalid' },
     value => { value.checkpoint.stageRuntime.simulation.serverDeployment = { cost: 0 } },
+  ]
+  for (const corrupt of corruptions) {
+    const store = memoryStorage()
+    saves.saveGameCheckpoint(ready(), 0, store)
+    const data = JSON.parse(store.getItem(saves.campaignSaveKey))
+    corrupt(data)
+    store.setItem(saves.campaignSaveKey, JSON.stringify(data))
+    assert.equal(saves.loadCampaignSave(store).status, 'corrupt')
+  }
+})
+test('untrusted saves reject inherited tier names, impossible progression, and oversized topology', () => {
+  const corruptions = [
+    value => { value.campaign.infrastructure.resources.find(resource => resource.type === 'app-server').tierId = 'toString' },
+    value => { value.campaign.infrastructure.resources.find(resource => resource.type === 'app-server').tierId = '__proto__' },
+    value => { value.campaign.infrastructure.resources.find(resource => resource.type === 'app-server').position.x = 1e308 },
+    value => { value.campaign.balance = 1e308 },
+    value => { value.campaign.seed = 1e308 },
+    value => { value.campaign.unlockedResourceTypes.push('object-storage') },
+    value => { value.campaign.inventory.push({ id: 'server-b', name: 'App Server B', type: 'app-server', tierId: 'small' }) },
+    value => { value.campaign.currentStageIndex = 1 },
+    value => { value.campaign.infrastructure.resources.push(...Array.from({ length: 10 }, (_, index) => ({ id: `extra-${index}`, name: 'Extra', type: 'users', position: { x: 0, y: 0 } }))) },
+    value => { value.campaign.infrastructure.connections = Array.from({ length: 17 }, () => ({ id: 'users-server', sourceId: 'users', targetId: 'server' })) },
+    value => { value.campaign.infrastructure.connections[0].id = 'unexpected-edge-id' },
+    value => { value.campaign.infrastructure.resources[0].name = 'X'.repeat(500) },
+    value => { value.version = '4' },
+    value => { value.version = 999 },
+  ]
+  for (const corrupt of corruptions) {
+    const store = memoryStorage()
+    saves.saveGameCheckpoint(ready(), 0, store)
+    const data = JSON.parse(store.getItem(saves.campaignSaveKey))
+    corrupt(data)
+    store.setItem(saves.campaignSaveKey, JSON.stringify(data))
+    assert.equal(saves.loadCampaignSave(store).status, 'corrupt')
+  }
+  const store = memoryStorage()
+  store.setItem(saves.campaignSaveKey, ' '.repeat(300_000))
+  assert.deepEqual(saves.loadCampaignSave(store), { status: 'corrupt', error: 'invalid' })
+  store.setItem(saves.campaignSaveKey, '{bad json')
+  assert.equal(saves.loadCampaignSave(store).status, 'corrupt')
+})
+test('untrusted checkpoint metrics reject extreme numbers and unbounded failure lists', () => {
+  const corruptions = [
+    value => { value.checkpoint.stageRuntime.simulation.activeUsers = 1e308 },
+    value => { value.checkpoint.stageRuntime.simulation.gameTimeSeconds = 1e308 },
+    value => { value.checkpoint.stageRuntime.simulation.netCashFlowPerPeriod = -1e308 },
+    value => { value.checkpoint.stageRuntime.simulation.failedResourceIds = Array(100).fill('server') },
+    value => { value.checkpoint.stageRuntime.simulation.satisfactionReason = { key: 'metric.balance', variables: { amount: 1e308 } } },
   ]
   for (const corrupt of corruptions) {
     const store = memoryStorage()

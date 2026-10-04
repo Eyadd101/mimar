@@ -23,7 +23,7 @@ English and Arabic share one localization system. Arabic explanatory text uses R
 
 ## Run locally
 
-Requirements: Node.js 20 or newer and npm.
+Requirements: Node.js 20.19+ within the 20.x line, or 22.12+ and npm (the installed Vite major version does not support Node 21).
 
 ```bash
 npm install
@@ -68,6 +68,14 @@ The same infrastructure continues through all ten stages. Stage durations are ex
 ## Production build
 
 `npm run build` writes the static site to `dist`. The application uses no client-side URL routes, backend, credentials, or external runtime services, so the generated files can be served by a normal static host at the site root. Run `npm run preview` to inspect that build locally.
+
+The production game fetches only its own static files. It does not call an API, load remote fonts or images, or send analytics/telemetry. Clicking an external attribution link, if shown by React Flow, is a separate user-initiated navigation.
+
+## Security boundary and deployment
+
+This is a client-side educational simulation. It has no accounts, server-side authorization, real AWS operations, production infrastructure access, or cloud credentials. Campaign saves live in the player's browser `localStorage`; a player can edit or delete their own save, so it is not a security or anti-cheat boundary. The loader validates save shape, size, numbers, progression, and topology to prevent malformed local data from destabilizing the game. No secrets belong in Vite client environment variables: values exposed through `import.meta.env` are included in the public bundle.
+
+Configure response headers on the eventual static host, not in an HTML meta tag. Recommended production headers are `Content-Security-Policy` (start in report-only mode and verify React Flow's inline styles; a candidate policy is `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a restrictive `Permissions-Policy` for unused device APIs. `frame-ancestors` needs an HTTP response header to prevent embedding. Serve over HTTPS; configure HSTS at the host after confirming HTTPS for the whole origin. These headers are deployment responsibilities and are not asserted by the local build.
 
 ## Project status
 

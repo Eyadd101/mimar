@@ -4,6 +4,7 @@ import type { CampaignState } from './campaignSimulation'
 import { simulationSpeedOptions, type SimulationSpeed } from './config'
 import { createInitialGameState, type StageRuntimeState } from './gameStateSimulation'
 import { securityRiskKeys } from './securitySimulation'
+import { saveValidationConfig } from './saveValidationConfig'
 import { advanceStageTrafficEvents, createStageTrafficEvents } from './trafficEventSimulation'
 
 export type CampaignCheckpoint = {
@@ -15,12 +16,18 @@ export type CampaignCheckpoint = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 const nonnegative = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= saveValidationConfig.maximumSavedNumber
 const oneOf = (value: unknown, values: readonly unknown[]) => values.includes(value)
 
 function isMessage(value: unknown) {
   return isRecord(value) && typeof value.key === 'string' && Object.hasOwn(translations.en, value.key) &&
-    (value.variables === undefined || (isRecord(value.variables) && Object.values(value.variables).every(item => typeof item === 'string' || (typeof item === 'number' && Number.isFinite(item)))))
+    (value.variables === undefined || (isRecord(value.variables) &&
+      Object.entries(value.variables).length <= saveValidationConfig.maximumMessageVariables &&
+      Object.entries(value.variables).every(([name, item]) =>
+        name.length <= saveValidationConfig.maximumVariableNameLength &&
+        (typeof item === 'string'
+          ? item.length <= saveValidationConfig.maximumResourceNameLength
+          : typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= saveValidationConfig.maximumSavedNumber))))
 }
 
 function isDeployment(value: unknown) {
@@ -33,8 +40,8 @@ function isDeployment(value: unknown) {
  * never becomes runtime state merely because JSON parsing succeeded.
  */
 function matchesRuntimeShape(value: unknown, template: unknown, key = ''): boolean {
-  if (key === 'failedResourceIds') return Array.isArray(value) && value.every(id => typeof id === 'string')
-  if (key === 'risks') return Array.isArray(value) && value.every(risk => oneOf(risk, securityRiskKeys))
+  if (key === 'failedResourceIds') return Array.isArray(value) && value.length <= saveValidationConfig.maximumFailureIds && value.every(id => typeof id === 'string' && id.length <= saveValidationConfig.maximumResourceNameLength)
+  if (key === 'risks') return Array.isArray(value) && value.length <= securityRiskKeys.length && new Set(value).size === value.length && value.every(risk => oneOf(risk, securityRiskKeys))
   if (key === 'satisfactionReason' || key === 'businessConsequenceReason') return value === null || isMessage(value)
   if (key === 'backupRevision' || key === 'databaseRestoreCompletesAt') return value === null || nonnegative(value)
   if (key === 'gameOverReason') return value === null || (isRecord(value) && oneOf(value.code, ['bankruptcy', 'service-failure']))
@@ -43,7 +50,7 @@ function matchesRuntimeShape(value: unknown, template: unknown, key = ''): boole
   if (key === 'stageRating') return value === null || (isRecord(value) && oneOf(value.stars, [1, 2, 3]) && Array.isArray(value.explanations) && value.explanations.length === 3 && value.explanations.every((item, index) => isRecord(item) && item.star === index + 1 && typeof item.earned === 'boolean'))
   if (template === null) return value === null
   if (typeof template === 'number') {
-    if (typeof value !== 'number' || !Number.isFinite(value) || (key !== 'netCashFlowPerPeriod' && value < 0)) return false
+    if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > saveValidationConfig.maximumSavedNumber || (key !== 'netCashFlowPerPeriod' && value < 0)) return false
     return !['cpuUsage', 'memoryUsage', 'customerSatisfaction', 'hitRate', 'lowestSatisfaction'].includes(key) || value <= 100
   }
   if (typeof template === 'string') {
