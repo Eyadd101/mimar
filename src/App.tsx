@@ -459,7 +459,6 @@ function App() {
         />
         <div className="header-tools">
           <LanguageSelector />
-          <span className="prototype-badge">{t('app.prototype')} <span>01</span></span>
         </div>
       </header>
 

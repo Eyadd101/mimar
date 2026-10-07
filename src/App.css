@@ -579,18 +579,6 @@
   letter-spacing: 0;
 }
 
-.prototype-badge {
-  justify-self: end;
-  padding: 7px 9px;
-  border: 1px solid #35463c;
-  border-radius: 5px;
-  color: #b1c2b8;
-  font: 10px var(--mono);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .header-tools {
   display: flex;
   align-items: center;
@@ -634,11 +622,6 @@
   font: 7px var(--mono);
   letter-spacing: 0;
   text-transform: none;
-}
-
-.prototype-badge span {
-  margin-left: 8px;
-  color: var(--accent);
 }
 
 .traffic-hud-shell {
@@ -2714,7 +2697,6 @@
   font-size: var(--font-body);
 }
 
-.prototype-badge,
 .language-selector select,
 .language-selector span {
   font-size: var(--font-meta);
