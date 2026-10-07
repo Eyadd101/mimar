@@ -1,8 +1,10 @@
 # Mimar — مِعمار
 
-Build. Scale. Stay reliable. — ابنِ. وسّع. حافظ على الخدمة.
+Build. Scale. Stay reliable.
 
-An interactive cloud infrastructure learning game. You operate a growing SaaS startup, observe how traffic affects the system, and evolve one persistent architecture through a ten-stage bilingual campaign.
+ابنِ. وسّع. حافظ على الخدمة.
+
+Mimar is a bilingual educational cloud infrastructure simulation game. Players build, connect, scale, and troubleshoot a growing SaaS architecture through a persistent ten-stage campaign.
 
 The campaign introduces vertical and horizontal scaling, load balancing, managed databases, caching, queues and workers, object storage, security configuration, and backup recovery. All infrastructure and AWS references are simulated; the project does not create real cloud resources or use a backend.
 
