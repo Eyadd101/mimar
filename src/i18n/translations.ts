@@ -1,6 +1,7 @@
 import { expansionEnglish, expansionArabic } from './expansionTranslations'
 export type Language = 'en' | 'ar'
 
+// Keep the legacy storage key so language preference survives the product rename.
 export const languagePreferenceKey = 'cloud-game-language'
 
 const english = {
@@ -8,7 +9,9 @@ const english = {
   'language.english': 'English',
   'language.arabic': 'العربية',
   'language.selector': 'Interface language',
-  'app.brand': 'Cloud Game',
+  'app.brand': 'Mimar',
+  'app.pageTitle': 'Mimar — Cloud Infrastructure Game',
+  'app.metaDescription': 'An interactive educational game for learning cloud infrastructure, scaling, performance, and cost trade-offs.',
   'app.caption': 'Infrastructure campaign',
   'app.prototype': 'Prototype',
   'app.infrastructureCanvas': 'Infrastructure canvas',
@@ -421,7 +424,9 @@ const arabic: Record<TranslationKey, string> = {
   'language.english': 'English',
   'language.arabic': 'العربية',
   'language.selector': 'لغة الواجهة',
-  'app.brand': 'Cloud Game',
+  'app.brand': 'مِعمار',
+  'app.pageTitle': 'مِعمار — لعبة البنية السحابية',
+  'app.metaDescription': 'لعبة تعليمية تفاعلية لفهم بنية الأنظمة السحابية واتخاذ قرارات التوسع والأداء والتكلفة.',
   'app.caption': 'حملة البنية التحتية',
   'app.prototype': 'نموذج أولي',
   'app.infrastructureCanvas': 'لوحة البنية التحتية',

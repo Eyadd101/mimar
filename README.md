@@ -1,6 +1,6 @@
-# Cloud Game
+# Mimar — مِعمار
 
-Cloud Game is a bilingual educational infrastructure management game for cloud beginners. You operate a growing SaaS startup, observe how traffic affects the system, and evolve one persistent architecture through a ten-stage campaign.
+An interactive cloud infrastructure learning game. You operate a growing SaaS startup, observe how traffic affects the system, and evolve one persistent architecture through a ten-stage bilingual campaign.
 
 The campaign introduces vertical and horizontal scaling, load balancing, managed databases, caching, queues and workers, object storage, security configuration, and backup recovery. All infrastructure and AWS references are simulated; the project does not create real cloud resources or use a backend.
 

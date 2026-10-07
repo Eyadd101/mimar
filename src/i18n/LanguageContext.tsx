@@ -34,6 +34,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     writeLanguagePreference(language, getBrowserStorage())
     document.documentElement.lang = language
+    document.title = translate(language, 'app.pageTitle')
+    document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute(
+      'content',
+      translate(language, 'app.metaDescription'),
+    )
     // The graph uses a stable left-to-right coordinate system. Individual
     // Arabic text surfaces opt into RTL without mirroring the application.
     document.documentElement.dir = 'ltr'

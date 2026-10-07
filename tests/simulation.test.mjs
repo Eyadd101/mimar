@@ -402,6 +402,10 @@ test('language preference defaults safely and persists supported languages', () 
   const englishKeys = Object.keys(translations.translations.en)
   const arabicKeys = Object.keys(translations.translations.ar)
   assert.deepEqual(arabicKeys, englishKeys)
+  assert.equal(translations.translate('en', 'app.brand'), 'Mimar')
+  assert.equal(translations.translate('ar', 'app.brand'), 'مِعمار')
+  assert.equal(translations.translate('en', 'app.pageTitle'), 'Mimar — Cloud Infrastructure Game')
+  assert.equal(translations.translate('ar', 'app.pageTitle'), 'مِعمار — لعبة البنية السحابية')
   assert.ok(
     Object.values(translations.translations.ar).every(
       (translation) => translation.trim().length > 0,

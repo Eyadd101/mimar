@@ -20,6 +20,7 @@ import {
   type TrafficSimulationState,
 } from './trafficSimulation'
 
+// Keep the legacy storage key so existing campaigns remain available after the rename.
 export const campaignSaveKey = 'cloud-game-campaign'
 export const campaignSaveVersion = 4
 
