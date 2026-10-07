@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import type { CampaignSaveResult } from '../simulation/campaignSave'
 import { useLanguage } from '../i18n/useLanguage'
 import { CampaignResetDialog } from './CampaignResetDialog'
+import { MimarMark } from './MimarMark'
 
 type CampaignStartOverlayProps = {
   saveResult: CampaignSaveResult
@@ -35,9 +36,12 @@ export function CampaignStartOverlay({
       aria-hidden={isResetConfirmationOpen || undefined}
     >
       <section className="campaign-start-card" dir={direction}>
-        <p className="campaign-start-card__eyebrow">{t('app.brand')}</p>
-        <h1 id={titleId}>{t('campaign.title')}</h1>
-        <p id={descriptionId}>{t('campaign.description')}</p>
+        <div className="campaign-start-card__brand">
+          <span className="campaign-start-card__mark" aria-hidden="true"><MimarMark /></span>
+          <h1 id={titleId}>{t('app.brand')}</h1>
+        </div>
+        <p className="campaign-start-card__tagline">{t('campaign.title')}</p>
+        <p className="campaign-start-card__description" id={descriptionId}>{t('campaign.description')}</p>
 
         {saveResult.status === 'corrupt' && (
           <div className="campaign-start-card__save-error" role="alert">

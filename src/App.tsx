@@ -24,6 +24,7 @@ import { HintPanel } from './components/HintPanel'
 import { InfrastructureActionsPanel } from './components/InfrastructureActionsPanel'
 import { InfrastructureNode } from './components/InfrastructureNode'
 import { LanguageSelector } from './components/LanguageSelector'
+import { MimarMark } from './components/MimarMark'
 import { ResourceDetailsPanel } from './components/ResourceDetailsPanel'
 import { RequestFlowEdge } from './components/RequestFlowEdge'
 import { ResourcePalette } from './components/ResourcePalette'
@@ -428,12 +429,9 @@ function App() {
       <header className="game-header">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7 17H6a4 4 0 0 1-.7-7.94 6.5 6.5 0 0 1 12.3-1.4A4.75 4.75 0 0 1 18 17h-1" />
-              <path d="M9 14l3-3 3 3M12 11v10" />
-            </svg>
+            <MimarMark />
           </span>
-          <span className="brand-name">{t('app.brand')}</span>
+          <span className="brand-name" dir={direction}>{t('app.brand')}</span>
           <span className="brand-divider" aria-hidden="true" />
           <span className="header-caption">{t('app.caption')}</span>
         </div>

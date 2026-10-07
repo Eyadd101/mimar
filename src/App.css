@@ -128,22 +128,45 @@
   box-shadow: 0 28px 80px #00000080;
 }
 
-.campaign-start-card__eyebrow {
-  margin-bottom: 12px;
-  color: #8fc59e;
-  font: 9px var(--mono);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
+.campaign-start-card__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.campaign-start-card__mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  height: 44px;
+  border: 1px solid #3c5946;
+  border-radius: 11px;
+  color: var(--accent);
+  background: #203328;
+}
+
+.campaign-start-card__mark svg {
+  width: 29px;
+  height: 29px;
 }
 
 .campaign-start-card h1 {
   color: #edf5f0;
   font-size: 28px;
-  font-weight: 550;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
-.campaign-start-card > p:not(.campaign-start-card__eyebrow) {
-  margin-top: 13px;
+.campaign-start-card__tagline {
+  margin-top: 19px;
+  color: #d7ebdd;
+  font-size: 17px;
+  font-weight: 550;
+  line-height: 1.5;
+}
+
+.campaign-start-card__description {
+  margin-top: 9px;
   color: #a9b7af;
   font-size: 13px;
   line-height: 1.6;
@@ -520,6 +543,10 @@
 
 .brand-name {
   white-space: nowrap;
+  color: #edf5f0;
+  font-size: clamp(1.125rem, 1.02rem + 0.22vw, 1.3125rem);
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .brand-mark {
@@ -541,14 +568,14 @@
 .brand-divider {
   width: 1px;
   height: 18px;
-  margin-inline: 8px;
+  margin-inline: 6px;
   background: var(--border);
 }
 
 .header-caption {
   color: var(--text-muted);
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 450;
   letter-spacing: 0;
 }
 
@@ -2613,14 +2640,13 @@
   line-height: 1.25;
 }
 
-.campaign-start-card > p:not(.campaign-start-card__eyebrow),
+.campaign-start-card__description,
 .stage-briefing-card > p:not(.stage-briefing-card__eyebrow),
 .game-state-card__message {
   font-size: var(--font-body);
   line-height: 1.75;
 }
 
-.campaign-start-card__eyebrow,
 .stage-briefing-card__eyebrow,
 .game-state-card__eyebrow,
 .action-confirmation__card > p,
@@ -2658,7 +2684,7 @@
 }
 
 .stage-briefing-card[dir='rtl'] > p:not(.stage-briefing-card__eyebrow),
-.campaign-start-card[dir='rtl'] > p:not(.campaign-start-card__eyebrow),
+.campaign-start-card[dir='rtl'] .campaign-start-card__description,
 .game-state-card[dir='rtl'] .game-state-card__message,
 .game-state-card[dir='rtl'] .failure-chain li,
 .game-state-card[dir='rtl'] .stage-recap li {

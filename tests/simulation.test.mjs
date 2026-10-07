@@ -404,8 +404,10 @@ test('language preference defaults safely and persists supported languages', () 
   assert.deepEqual(arabicKeys, englishKeys)
   assert.equal(translations.translate('en', 'app.brand'), 'Mimar')
   assert.equal(translations.translate('ar', 'app.brand'), 'مِعمار')
-  assert.equal(translations.translate('en', 'app.pageTitle'), 'Mimar — Cloud Infrastructure Game')
-  assert.equal(translations.translate('ar', 'app.pageTitle'), 'مِعمار — لعبة البنية السحابية')
+  assert.equal(translations.translate('en', 'app.pageTitle'), 'Mimar — Infrastructure Campaign')
+  assert.equal(translations.translate('ar', 'app.pageTitle'), 'مِعمار — حملة البنية التحتية')
+  assert.equal(translations.translate('en', 'campaign.title'), 'Build. Scale. Stay reliable.')
+  assert.equal(translations.translate('ar', 'campaign.title'), 'ابنِ. وسّع. حافظ على الخدمة.')
   assert.ok(
     Object.values(translations.translations.ar).every(
       (translation) => translation.trim().length > 0,
