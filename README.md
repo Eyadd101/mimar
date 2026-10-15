@@ -83,4 +83,4 @@ Configure response headers on the eventual static host, not in an HTML meta tag.
 
 ## Project status
 
-The complete ten-stage campaign is a release candidate for owner playtesting. The current milestone focuses on a single-player browser experience and local persistence; it has no accounts, multiplayer, backend, or real cloud integration.
+Mimar is publicly available as a playable, ten-stage educational simulation at [mimar-game.vercel.app](https://mimar-game.vercel.app/). The project is open source under the MIT License. It is a single-player browser game with campaign progress saved locally in the player's browser; it has no accounts, multiplayer, backend, or real cloud integration.
